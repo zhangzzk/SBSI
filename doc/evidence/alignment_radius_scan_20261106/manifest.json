@@ -1,0 +1,653 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084,
+    1124,
+    1005,
+    1045,
+    1085,
+    1125,
+    1006,
+    1046,
+    1086,
+    1126,
+    1007,
+    1047,
+    1087,
+    1127,
+    1008,
+    1048,
+    1088,
+    1128,
+    1009,
+    1049,
+    1089,
+    1129
+  ],
+  "pilot_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "arms": [
+    "retained",
+    "cartesian"
+  ],
+  "tasks": [
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1000
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1000
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1040
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1040
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1080
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1080
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1120
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1120
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1001
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1001
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1041
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1041
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1081
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1081
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1121
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1121
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1002
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1002
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1042
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1042
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1082
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1082
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1122
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1122
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1003
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1003
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1043
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1043
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1083
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1083
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1123
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1123
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1004
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1004
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1044
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1044
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1084
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1084
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1124
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1124
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1005
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1005
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1045
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1045
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1085
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1085
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1125
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1125
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1006
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1006
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1046
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1046
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1086
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1086
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1126
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1126
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1007
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1007
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1047
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1047
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1087
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1087
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1127
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1127
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1008
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1008
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1048
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1048
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1088
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1088
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1128
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1128
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1009
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1009
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1049
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1049
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1089
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1089
+    },
+    {
+      "arm": "cartesian",
+      "axis": 1,
+      "case": 1129
+    },
+    {
+      "arm": "cartesian",
+      "axis": 2,
+      "case": 1129
+    }
+  ],
+  "checkpoints": {
+    "cartesian": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb"
+    }
+  },
+  "baseline_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_grid_20261104",
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.45",
+      [
+        ">=",
+        2.25
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.50",
+      [
+        ">=",
+        2.5
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.55",
+      [
+        ">=",
+        2.75
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.65",
+      [
+        ">=",
+        3.25
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.70",
+      [
+        ">=",
+        3.5
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.80",
+      [
+        ">=",
+        4.0
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.85",
+      [
+        ">=",
+        4.25
+      ],
+      25.0
+    ],
+    [
+      "mag25_radius_ge0.90",
+      [
+        ">=",
+        4.5
+      ],
+      25.0
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.45",
+      [
+        ">=",
+        2.25
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.50",
+      [
+        ">=",
+        2.5
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.55",
+      [
+        ">=",
+        2.75
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.65",
+      [
+        ">=",
+        3.25
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.70",
+      [
+        ">=",
+        3.5
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.80",
+      [
+        ">=",
+        4.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.85",
+      [
+        ">=",
+        4.25
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.90",
+      [
+        ">=",
+        4.5
+      ],
+      25.8
+    ]
+  ],
+  "sim_root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+  "axis": 2,
+  "intrinsic_size_edges_arcsec": [
+    0.15,
+    0.25,
+    0.4,
+    0.7
+  ],
+  "sim_roots": {
+    "1": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+    "2": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims"
+  }
+}

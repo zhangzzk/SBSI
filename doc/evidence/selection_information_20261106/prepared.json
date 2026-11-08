@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "case": 1000,
+      "rows": 290456,
+      "source_receipt_sha256": "956e49a8d85badaa2a5fb7f577b85eb85c2a9708e774b26e431d42f8687c7688"
+    },
+    {
+      "case": 1040,
+      "rows": 290409,
+      "source_receipt_sha256": "69a3a261773cd6c75522f952f34b4fe39930a5b5d4e15c833da81a879c9b4152"
+    },
+    {
+      "case": 1080,
+      "rows": 290517,
+      "source_receipt_sha256": "b2f03d7a7b56f6d35c443692b68f82158e6399e18085773966c1d9e69a5e173f"
+    },
+    {
+      "case": 1120,
+      "rows": 290473,
+      "source_receipt_sha256": "2a824f36283b71b66a37b016aa2848d8e1a366b96e5374a73d6814f6e80f49ef"
+    }
+  ],
+  "features": [
+    "e1",
+    "e2",
+    "sersic_n",
+    "intrinsic_mag",
+    "circularized_Re",
+    "close050",
+    "close100",
+    "close200",
+    "reference_coefficient"
+  ],
+  "source_sha256": "59e1b728627ce6f669eb6e0a983a04e7ff454da59942c87d675e9c3b709b8391",
+  "target": "mean actual selection over four states, common U"
+}

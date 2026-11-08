@@ -1,0 +1,15 @@
+{
+  "model": "Older 16-cut GalSBI-dev; unchanged checkpoints",
+  "flow_sha256": "e3e38f7f6aaf85669b892daf4f362767f7fc92e0e5685035bcdc063e6b989adc",
+  "jobs": {
+    "joint_array": 17750012,
+    "joint_reduce": 17750016,
+    "standalone_flow": 17750022
+  },
+  "source_hashes": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/true_selection_flags_20261105/flow.py": "0618bb57b93ac98b50b68b6d3560e0b3eaac9460d257fd8c912971be8a0803de",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/true_selection_flags_20261105/replay.py": "2aabc0df496ae76ec610c69d60024e3ecd40341fe98fc8fe10b090e84d9901b2",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/true_selection_flags_20261105/reduce.py": "16cc887eaa50df6dbd1578177c2b96e5fd3821f860e5f179ba4dccc451ac8506"
+  },
+  "validation": "Four old joint branches replayed; true selected masses exactly agree; original flow soft-cut points agree within 6e-15. All jobs completed 0:0."
+}

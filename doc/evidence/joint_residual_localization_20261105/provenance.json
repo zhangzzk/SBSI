@@ -1,0 +1,27 @@
+{
+  "jobs": {
+    "neighbour_selection": 17750063,
+    "joint_array": 17750068,
+    "joint_reduction": 17750080,
+    "neighbour_step": 17750106,
+    "flow_cells": 17750130,
+    "flow_reduction": 17750131
+  },
+  "cancelled_before_start": [
+    17750127,
+    17750128
+  ],
+  "source_sha256": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/joint_residual_localization_20261105/compare_populations.py": "51aa68af756e3e15383452e13070c6f0b30c9b948d1ac402b333e2a940182ce1",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/joint_residual_localization_20261105/flow_cells.py": "f5e7a710ef3dc3c7090c10a00f7630ff15364519431c437e4dceade9176c6a65",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/joint_residual_localization_20261105/flow_components.py": "575d6689b0e361984733331b2941037c29fb6be02de6fb0743f8c3c264b37a99",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/joint_residual_localization_20261105/joint_cells.py": "648792b0958286456ea577fccf4dd06651ac56b50b89c660a0c6936e1071b3e8",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/joint_residual_localization_20261105/neighbour_selection.py": "233367a3c38eb8f72ef888d9366c18c9a7e5a01e0f43a2cadd5cfc807bea4750",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/joint_residual_localization_20261105/neighbour_steps.py": "d92aaf13441547ed21983fe22b93974ffd7c25694c3a4427184a4cbda420ddf2",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/joint_residual_localization_20261105/reduce_flow_cells.py": "6ae9d0cbf3a10ef3b648c66eaaaf38d0672c27d929236cf6e82f65010382ff45",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/joint_residual_localization_20261105/reduce_joint.py": "464f399e1d8a544290d46d8df52e8fc9368616bff0999684017cd326fe1dbf74"
+  },
+  "model_identity": "Unchanged original older16-cut GalSBI-dev; joint preset hashes checked by evaluator; standalone flow hash asserted",
+  "validation": "Original joint four-cut sums and standalone global flow sums replay; neighbour original target-cut counts/labels/predictions replay; exact cell decompositions checked",
+  "limits": "Fixed-model case bootstrap only; four constant cases; standalone experiments are not an additive error budget"
+}

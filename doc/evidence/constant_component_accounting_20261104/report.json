@@ -1,0 +1,89 @@
+{
+  "model": "original GalSBI-dev, older16-cut base guard; later refinement selected unchanged weights",
+  "cases": [
+    1000,
+    1139
+  ],
+  "cut": "own-leg measured radius>3 pixels AND MAG_AUTO<25",
+  "shear": "whole scene g1=+/-0.02, g2=0",
+  "bootstrap": {
+    "replicates": 10000,
+    "seed": 20260925,
+    "unit": "case, paired across all component sums; own-leg selected mass recomputed"
+  },
+  "R_sim_total": {
+    "value": 0.907368191360551,
+    "se": 0.0012743571103850338
+  },
+  "flags": {
+    "C8": {
+      "R_flow": {
+        "value": 0.7128435431707203,
+        "se": 0.00011455281597313849
+      },
+      "R_emulator_contribution": {
+        "value": 0.17266942026558207,
+        "se": 7.640599593972584e-05
+      },
+      "R_joint": {
+        "value": 0.8855129634363024,
+        "se": 0.0001313650892859884
+      },
+      "joint_m_percent": {
+        "value": 2.4680867278823015,
+        "se": 0.14390910271132237
+      },
+      "flow_without_emulator_vs_total_m_percent": {
+        "value": 27.288547403345653,
+        "se": 0.17913749024753026
+      },
+      "emulator_contribution_without_flow_vs_total_m_percent": {
+        "value": 425.4944332151761,
+        "se": 0.7666248780919127
+      },
+      "R_joint_minus_sim": {
+        "value": -0.021855227924248655,
+        "se": 0.0012741678387401753
+      },
+      "component_bootstrap_covariance": -8.517185899007204e-10
+    },
+    "true flags": {
+      "R_flow": {
+        "value": 0.712696697925392,
+        "se": 0.00011442966745177333
+      },
+      "R_emulator_contribution": {
+        "value": 0.17095254556786357,
+        "se": 7.743829508822565e-05
+      },
+      "R_joint": {
+        "value": 0.8836492434932556,
+        "se": 0.00013377663910726407
+      },
+      "joint_m_percent": {
+        "value": 2.6842039465262646,
+        "se": 0.14491815736955255
+      },
+      "flow_without_emulator_vs_total_m_percent": {
+        "value": 27.314774153133236,
+        "se": 0.18023556297778
+      },
+      "emulator_contribution_without_flow_vs_total_m_percent": {
+        "value": 430.771968528746,
+        "se": 0.7754545382687161
+      },
+      "R_joint_minus_sim": {
+        "value": -0.023718947867295448,
+        "se": 0.0012802189082187878
+      },
+      "component_bootstrap_covariance": -5.973245842297521e-10
+    }
+  },
+  "limitations": [
+    "Component contributions are not independent component calibration errors: constant-shear measurements supply only the total true response.",
+    "Emulator contribution is the actual Mobius-induced shift averaged on flow-generated outputs with the same selection/weights, not a standalone emulator forward model.",
+    "Case errors condition on the model and latent realizations; retraining, model-selection and independent finite-draw uncertainty are excluded."
+  ],
+  "job_id": "17730923",
+  "saved_summary_replay": "both point values and case errors match within 1e-10"
+}

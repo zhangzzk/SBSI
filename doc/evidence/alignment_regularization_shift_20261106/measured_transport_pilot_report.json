@@ -1,0 +1,3580 @@
+{
+  "cases": [
+    1000
+  ],
+  "definition": "Common-all-four usability. Exact measured edge shape/selection terms versus unchanged emulator anchored to measured endpoints. Equal group average uses separately normalized A/B responses; it is not the coherent total.",
+  "limitations": [
+    "Conditional diagnostic uses observed endpoint information; not a generative prediction.",
+    "Four development scenes; fixed-model case SE. Anchor averaging is reported alongside each endpoint.",
+    "Selection and photometry population differ from generated-selection evaluation."
+  ],
+  "bootstrap_seed": 202611069301,
+  "cuts": {
+    "uncut": {
+      "A": {
+        "simulation_shape": {
+          "value": 0.09441385838195988,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.0,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.09441385838195988,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.0879734023902435,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.08802714160217975,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.08800027199621163,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.08799466740190515,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.00641358638574826,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.00641358638574826,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": -5.3739211936255724e-05,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 5.604594306488429e-06,
+          "case_se": null
+        },
+        "size_contributions": {
+          "simulation_shape": [
+            {
+              "value": 0.019001612899001118,
+              "case_se": null
+            },
+            {
+              "value": 0.04686865089222446,
+              "case_se": null
+            },
+            {
+              "value": 0.02068729051737394,
+              "case_se": null
+            },
+            {
+              "value": 0.006961986825488353,
+              "case_se": null
+            },
+            {
+              "value": 0.0008943172478720208,
+              "case_se": null
+            }
+          ],
+          "simulation_selection": [
+            {
+              "value": 0.0,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            }
+          ],
+          "simulation_total": [
+            {
+              "value": 0.019001612899001118,
+              "case_se": null
+            },
+            {
+              "value": 0.04686865089222446,
+              "case_se": null
+            },
+            {
+              "value": 0.02068729051737394,
+              "case_se": null
+            },
+            {
+              "value": 0.006961986825488353,
+              "case_se": null
+            },
+            {
+              "value": 0.0008943172478720208,
+              "case_se": null
+            }
+          ],
+          "anchor_plus": [
+            {
+              "value": 0.017038378265418805,
+              "case_se": null
+            },
+            {
+              "value": 0.04571054183889406,
+              "case_se": null
+            },
+            {
+              "value": 0.020844279040212316,
+              "case_se": null
+            },
+            {
+              "value": 0.0039103422261907664,
+              "case_se": null
+            },
+            {
+              "value": 0.00046986101952755364,
+              "case_se": null
+            }
+          ],
+          "anchor_minus": [
+            {
+              "value": 0.01694124355927721,
+              "case_se": null
+            },
+            {
+              "value": 0.045810967254460544,
+              "case_se": null
+            },
+            {
+              "value": 0.020879559910405906,
+              "case_se": null
+            },
+            {
+              "value": 0.003914518122979421,
+              "case_se": null
+            },
+            {
+              "value": 0.0004808527550566727,
+              "case_se": null
+            }
+          ],
+          "anchored_model_shape": [
+            {
+              "value": 0.01698981091234801,
+              "case_se": null
+            },
+            {
+              "value": 0.0457607545466773,
+              "case_se": null
+            },
+            {
+              "value": 0.02086191947530911,
+              "case_se": null
+            },
+            {
+              "value": 0.003912430174585094,
+              "case_se": null
+            },
+            {
+              "value": 0.0004753568872921132,
+              "case_se": null
+            }
+          ],
+          "linear_model_shape": [
+            {
+              "value": 0.01699199271487465,
+              "case_se": null
+            },
+            {
+              "value": 0.0457565213132422,
+              "case_se": null
+            },
+            {
+              "value": 0.020860405372964366,
+              "case_se": null
+            },
+            {
+              "value": 0.0039107806041245394,
+              "case_se": null
+            },
+            {
+              "value": 0.00047496739669938934,
+              "case_se": null
+            }
+          ],
+          "shape_error": [
+            {
+              "value": 0.002011801986653108,
+              "case_se": null
+            },
+            {
+              "value": 0.0011078963455471579,
+              "case_se": null
+            },
+            {
+              "value": -0.00017462895793517153,
+              "case_se": null
+            },
+            {
+              "value": 0.0030495566509032585,
+              "case_se": null
+            },
+            {
+              "value": 0.00041896036057990763,
+              "case_se": null
+            }
+          ],
+          "total_error": [
+            {
+              "value": 0.002011801986653108,
+              "case_se": null
+            },
+            {
+              "value": 0.0011078963455471579,
+              "case_se": null
+            },
+            {
+              "value": -0.00017462895793517153,
+              "case_se": null
+            },
+            {
+              "value": 0.0030495566509032585,
+              "case_se": null
+            },
+            {
+              "value": 0.00041896036057990763,
+              "case_se": null
+            }
+          ],
+          "anchor_plus_minus_difference": [
+            {
+              "value": 9.713470614159438e-05,
+              "case_se": null
+            },
+            {
+              "value": -0.0001004254155664863,
+              "case_se": null
+            },
+            {
+              "value": -3.528087019359015e-05,
+              "case_se": null
+            },
+            {
+              "value": -4.175896788654628e-06,
+              "case_se": null
+            },
+            {
+              "value": -1.099173552911904e-05,
+              "case_se": null
+            }
+          ],
+          "finite_minus_linear": [
+            {
+              "value": -2.1818025266385935e-06,
+              "case_se": null
+            },
+            {
+              "value": 4.2332334351075866e-06,
+              "case_se": null
+            },
+            {
+              "value": 1.5141023447415e-06,
+              "case_se": null
+            },
+            {
+              "value": 1.649570460554158e-06,
+              "case_se": null
+            },
+            {
+              "value": 3.894905927237778e-07,
+              "case_se": null
+            }
+          ]
+        }
+      },
+      "B": {
+        "simulation_shape": {
+          "value": 0.09247322289207005,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.0,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.09247322289207005,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.08904826650384925,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.08884768860838982,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.08894797755611952,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.08893608727547611,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.0035252453359505232,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.0035252453359505232,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": 0.00020057789545942128,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 1.1890280643425055e-05,
+          "case_se": null
+        },
+        "size_contributions": {
+          "simulation_shape": [
+            {
+              "value": 0.017884488323711062,
+              "case_se": null
+            },
+            {
+              "value": 0.044293681199228746,
+              "case_se": null
+            },
+            {
+              "value": 0.024652151669771548,
+              "case_se": null
+            },
+            {
+              "value": 0.004744918623145347,
+              "case_se": null
+            },
+            {
+              "value": 0.0008979830762133475,
+              "case_se": null
+            }
+          ],
+          "simulation_selection": [
+            {
+              "value": 0.0,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            }
+          ],
+          "simulation_total": [
+            {
+              "value": 0.017884488323711062,
+              "case_se": null
+            },
+            {
+              "value": 0.044293681199228746,
+              "case_se": null
+            },
+            {
+              "value": 0.024652151669771548,
+              "case_se": null
+            },
+            {
+              "value": 0.004744918623145347,
+              "case_se": null
+            },
+            {
+              "value": 0.0008979830762133475,
+              "case_se": null
+            }
+          ],
+          "anchor_plus": [
+            {
+              "value": 0.017011885444105444,
+              "case_se": null
+            },
+            {
+              "value": 0.04678870105479249,
+              "case_se": null
+            },
+            {
+              "value": 0.020534094241465028,
+              "case_se": null
+            },
+            {
+              "value": 0.00428685083941392,
+              "case_se": null
+            },
+            {
+              "value": 0.00042673492407235294,
+              "case_se": null
+            }
+          ],
+          "anchor_minus": [
+            {
+              "value": 0.01699768172015956,
+              "case_se": null
+            },
+            {
+              "value": 0.04663399032583519,
+              "case_se": null
+            },
+            {
+              "value": 0.020488846326178242,
+              "case_se": null
+            },
+            {
+              "value": 0.00429686069708476,
+              "case_se": null
+            },
+            {
+              "value": 0.0004303095391320687,
+              "case_se": null
+            }
+          ],
+          "anchored_model_shape": [
+            {
+              "value": 0.017004783582132504,
+              "case_se": null
+            },
+            {
+              "value": 0.046711345690313835,
+              "case_se": null
+            },
+            {
+              "value": 0.020511470283821637,
+              "case_se": null
+            },
+            {
+              "value": 0.004291855768249341,
+              "case_se": null
+            },
+            {
+              "value": 0.0004285222316022108,
+              "case_se": null
+            }
+          ],
+          "linear_model_shape": [
+            {
+              "value": 0.017004184429026903,
+              "case_se": null
+            },
+            {
+              "value": 0.04670292318417357,
+              "case_se": null
+            },
+            {
+              "value": 0.020509663840120505,
+              "case_se": null
+            },
+            {
+              "value": 0.0042912962351218786,
+              "case_se": null
+            },
+            {
+              "value": 0.0004280195870332397,
+              "case_se": null
+            }
+          ],
+          "shape_error": [
+            {
+              "value": 0.0008797047415785601,
+              "case_se": null
+            },
+            {
+              "value": -0.0024176644910850927,
+              "case_se": null
+            },
+            {
+              "value": 0.004140681385949913,
+              "case_se": null
+            },
+            {
+              "value": 0.0004530628548960061,
+              "case_se": null
+            },
+            {
+              "value": 0.0004694608446111367,
+              "case_se": null
+            }
+          ],
+          "total_error": [
+            {
+              "value": 0.0008797047415785601,
+              "case_se": null
+            },
+            {
+              "value": -0.0024176644910850927,
+              "case_se": null
+            },
+            {
+              "value": 0.004140681385949913,
+              "case_se": null
+            },
+            {
+              "value": 0.0004530628548960061,
+              "case_se": null
+            },
+            {
+              "value": 0.0004694608446111367,
+              "case_se": null
+            }
+          ],
+          "anchor_plus_minus_difference": [
+            {
+              "value": 1.4203723945881716e-05,
+              "case_se": null
+            },
+            {
+              "value": 0.00015471072895731038,
+              "case_se": null
+            },
+            {
+              "value": 4.5247915286784294e-05,
+              "case_se": null
+            },
+            {
+              "value": -1.0009857670839316e-05,
+              "case_se": null
+            },
+            {
+              "value": -3.5746150597158065e-06,
+              "case_se": null
+            }
+          ],
+          "finite_minus_linear": [
+            {
+              "value": 5.991531055974807e-07,
+              "case_se": null
+            },
+            {
+              "value": 8.422506140264149e-06,
+              "case_se": null
+            },
+            {
+              "value": 1.8064437011308253e-06,
+              "case_se": null
+            },
+            {
+              "value": 5.595331274614541e-07,
+              "case_se": null
+            },
+            {
+              "value": 5.026445689711461e-07,
+              "case_se": null
+            }
+          ]
+        }
+      },
+      "equal_group_average": {
+        "simulation_shape": {
+          "value": 0.09344354063701496,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.0,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.09344354063701496,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.08851083444704635,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.0884374151052848,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.08847412477616558,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.08846537733869062,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.004969415860849391,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.004969415860849391,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": 7.341934176158276e-05,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 8.747437474956742e-06,
+          "case_se": null
+        }
+      },
+      "equal_group_size_contributions": {
+        "simulation_shape": [
+          {
+            "value": 0.01844305061135609,
+            "case_se": null
+          },
+          {
+            "value": 0.0455811660457266,
+            "case_se": null
+          },
+          {
+            "value": 0.022669721093572744,
+            "case_se": null
+          },
+          {
+            "value": 0.00585345272431685,
+            "case_se": null
+          },
+          {
+            "value": 0.0008961501620426841,
+            "case_se": null
+          }
+        ],
+        "simulation_selection": [
+          {
+            "value": 0.0,
+            "case_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null
+          }
+        ],
+        "simulation_total": [
+          {
+            "value": 0.01844305061135609,
+            "case_se": null
+          },
+          {
+            "value": 0.0455811660457266,
+            "case_se": null
+          },
+          {
+            "value": 0.022669721093572744,
+            "case_se": null
+          },
+          {
+            "value": 0.00585345272431685,
+            "case_se": null
+          },
+          {
+            "value": 0.0008961501620426841,
+            "case_se": null
+          }
+        ],
+        "anchor_plus": [
+          {
+            "value": 0.017025131854762125,
+            "case_se": null
+          },
+          {
+            "value": 0.046249621446843275,
+            "case_se": null
+          },
+          {
+            "value": 0.020689186640838672,
+            "case_se": null
+          },
+          {
+            "value": 0.004098596532802343,
+            "case_se": null
+          },
+          {
+            "value": 0.0004482979717999533,
+            "case_se": null
+          }
+        ],
+        "anchor_minus": [
+          {
+            "value": 0.016969462639718387,
+            "case_se": null
+          },
+          {
+            "value": 0.04622247879014787,
+            "case_se": null
+          },
+          {
+            "value": 0.020684203118292076,
+            "case_se": null
+          },
+          {
+            "value": 0.004105689410032091,
+            "case_se": null
+          },
+          {
+            "value": 0.0004555811470943707,
+            "case_se": null
+          }
+        ],
+        "anchored_model_shape": [
+          {
+            "value": 0.016997297247240258,
+            "case_se": null
+          },
+          {
+            "value": 0.04623605011849557,
+            "case_se": null
+          },
+          {
+            "value": 0.020686694879565374,
+            "case_se": null
+          },
+          {
+            "value": 0.004102142971417217,
+            "case_se": null
+          },
+          {
+            "value": 0.000451939559447162,
+            "case_se": null
+          }
+        ],
+        "linear_model_shape": [
+          {
+            "value": 0.016998088571950776,
+            "case_se": null
+          },
+          {
+            "value": 0.04622972224870789,
+            "case_se": null
+          },
+          {
+            "value": 0.020685034606542436,
+            "case_se": null
+          },
+          {
+            "value": 0.004101038419623209,
+            "case_se": null
+          },
+          {
+            "value": 0.0004514934918663145,
+            "case_se": null
+          }
+        ],
+        "shape_error": [
+          {
+            "value": 0.001445753364115834,
+            "case_se": null
+          },
+          {
+            "value": -0.0006548840727689674,
+            "case_se": null
+          },
+          {
+            "value": 0.0019830262140073706,
+            "case_se": null
+          },
+          {
+            "value": 0.0017513097528996323,
+            "case_se": null
+          },
+          {
+            "value": 0.0004442106025955222,
+            "case_se": null
+          }
+        ],
+        "total_error": [
+          {
+            "value": 0.001445753364115834,
+            "case_se": null
+          },
+          {
+            "value": -0.0006548840727689674,
+            "case_se": null
+          },
+          {
+            "value": 0.0019830262140073706,
+            "case_se": null
+          },
+          {
+            "value": 0.0017513097528996323,
+            "case_se": null
+          },
+          {
+            "value": 0.0004442106025955222,
+            "case_se": null
+          }
+        ],
+        "anchor_plus_minus_difference": [
+          {
+            "value": 5.566921504373805e-05,
+            "case_se": null
+          },
+          {
+            "value": 2.7142656695412044e-05,
+            "case_se": null
+          },
+          {
+            "value": 4.983522546597074e-06,
+            "case_se": null
+          },
+          {
+            "value": -7.092877229746972e-06,
+            "case_se": null
+          },
+          {
+            "value": -7.283175294417423e-06,
+            "case_se": null
+          }
+        ],
+        "finite_minus_linear": [
+          {
+            "value": -7.913247105205564e-07,
+            "case_se": null
+          },
+          {
+            "value": 6.327869787685868e-06,
+            "case_se": null
+          },
+          {
+            "value": 1.6602730229361626e-06,
+            "case_se": null
+          },
+          {
+            "value": 1.104551794007806e-06,
+            "case_se": null
+          },
+          {
+            "value": 4.4606758084746195e-07,
+            "case_se": null
+          }
+        ]
+      }
+    },
+    "mag25": {
+      "A": {
+        "simulation_shape": {
+          "value": 0.08156196518753056,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.001217826098721488,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.08277979128625204,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.07838754772178366,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.07853643634925798,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.07846199203552083,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.07845541704327162,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.003099973152009733,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.004317799250731223,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": -0.00014888862747430511,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 6.574992249211608e-06,
+          "case_se": null
+        },
+        "size_contributions": {
+          "simulation_shape": [
+            {
+              "value": 0.016041466128262787,
+              "case_se": null
+            },
+            {
+              "value": 0.032639035735558916,
+              "case_se": null
+            },
+            {
+              "value": 0.02097466315464702,
+              "case_se": null
+            },
+            {
+              "value": 0.010776878695040286,
+              "case_se": null
+            },
+            {
+              "value": 0.001129921474021554,
+              "case_se": null
+            }
+          ],
+          "simulation_selection": [
+            {
+              "value": 0.00018948611050382627,
+              "case_se": null
+            },
+            {
+              "value": 0.0007139071842807159,
+              "case_se": null
+            },
+            {
+              "value": 0.0002672075585002326,
+              "case_se": null
+            },
+            {
+              "value": 5.1337038406542215e-05,
+              "case_se": null
+            },
+            {
+              "value": -4.111792969829072e-06,
+              "case_se": null
+            }
+          ],
+          "simulation_total": [
+            {
+              "value": 0.016230952238766614,
+              "case_se": null
+            },
+            {
+              "value": 0.03335294291983963,
+              "case_se": null
+            },
+            {
+              "value": 0.02124187071314725,
+              "case_se": null
+            },
+            {
+              "value": 0.01082821573344683,
+              "case_se": null
+            },
+            {
+              "value": 0.0011258096810517247,
+              "case_se": null
+            }
+          ],
+          "anchor_plus": [
+            {
+              "value": 0.010363445304077613,
+              "case_se": null
+            },
+            {
+              "value": 0.03733096357461242,
+              "case_se": null
+            },
+            {
+              "value": 0.024573952302599962,
+              "case_se": null
+            },
+            {
+              "value": 0.005402722029006661,
+              "case_se": null
+            },
+            {
+              "value": 0.0007164645114870168,
+              "case_se": null
+            }
+          ],
+          "anchor_minus": [
+            {
+              "value": 0.01034767707583472,
+              "case_se": null
+            },
+            {
+              "value": 0.03741426652052804,
+              "case_se": null
+            },
+            {
+              "value": 0.024630579588344567,
+              "case_se": null
+            },
+            {
+              "value": 0.005405918804504613,
+              "case_se": null
+            },
+            {
+              "value": 0.0007379943600460477,
+              "case_se": null
+            }
+          ],
+          "anchored_model_shape": [
+            {
+              "value": 0.010355561189956166,
+              "case_se": null
+            },
+            {
+              "value": 0.03737261504757023,
+              "case_se": null
+            },
+            {
+              "value": 0.024602265945472268,
+              "case_se": null
+            },
+            {
+              "value": 0.005404320416755637,
+              "case_se": null
+            },
+            {
+              "value": 0.0007272294357665323,
+              "case_se": null
+            }
+          ],
+          "linear_model_shape": [
+            {
+              "value": 0.01035621370904171,
+              "case_se": null
+            },
+            {
+              "value": 0.0373700092329539,
+              "case_se": null
+            },
+            {
+              "value": 0.024601448550990546,
+              "case_se": null
+            },
+            {
+              "value": 0.0054011893178580505,
+              "case_se": null
+            },
+            {
+              "value": 0.0007265562324274154,
+              "case_se": null
+            }
+          ],
+          "shape_error": [
+            {
+              "value": 0.005685904938306622,
+              "case_se": null
+            },
+            {
+              "value": -0.0047335793120113125,
+              "case_se": null
+            },
+            {
+              "value": -0.003627602790825248,
+              "case_se": null
+            },
+            {
+              "value": 0.00537255827828465,
+              "case_se": null
+            },
+            {
+              "value": 0.0004026920382550217,
+              "case_se": null
+            }
+          ],
+          "total_error": [
+            {
+              "value": 0.005875391048810448,
+              "case_se": null
+            },
+            {
+              "value": -0.004019672127730594,
+              "case_se": null
+            },
+            {
+              "value": -0.0033603952323250164,
+              "case_se": null
+            },
+            {
+              "value": 0.005423895316691193,
+              "case_se": null
+            },
+            {
+              "value": 0.0003985802452851926,
+              "case_se": null
+            }
+          ],
+          "anchor_plus_minus_difference": [
+            {
+              "value": 1.5768228242891047e-05,
+              "case_se": null
+            },
+            {
+              "value": -8.330294591560859e-05,
+              "case_se": null
+            },
+            {
+              "value": -5.662728574460502e-05,
+              "case_se": null
+            },
+            {
+              "value": -3.1967754979516093e-06,
+              "case_se": null
+            },
+            {
+              "value": -2.1529848559030933e-05,
+              "case_se": null
+            }
+          ],
+          "finite_minus_linear": [
+            {
+              "value": -6.525190855431241e-07,
+              "case_se": null
+            },
+            {
+              "value": 2.6058146163315636e-06,
+              "case_se": null
+            },
+            {
+              "value": 8.173944817199295e-07,
+              "case_se": null
+            },
+            {
+              "value": 3.1310988975863764e-06,
+              "case_se": null
+            },
+            {
+              "value": 6.732033391168627e-07,
+              "case_se": null
+            }
+          ]
+        }
+      },
+      "B": {
+        "simulation_shape": {
+          "value": 0.07748136077323607,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.0018143104610025668,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.07929567123423863,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.07972717602281419,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.07949246054912033,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.07960981828596728,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.07959484777910558,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": -0.0021284575127311976,
+          "case_se": null
+        },
+        "total_error": {
+          "value": -0.00031414705172863025,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": 0.00023471547369387086,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 1.4970506861684347e-05,
+          "case_se": null
+        },
+        "size_contributions": {
+          "simulation_shape": [
+            {
+              "value": 0.010536384943389293,
+              "case_se": null
+            },
+            {
+              "value": 0.036401907016251976,
+              "case_se": null
+            },
+            {
+              "value": 0.0221945120082605,
+              "case_se": null
+            },
+            {
+              "value": 0.007153349980042588,
+              "case_se": null
+            },
+            {
+              "value": 0.001195206825291716,
+              "case_se": null
+            }
+          ],
+          "simulation_selection": [
+            {
+              "value": 0.0005667644507923754,
+              "case_se": null
+            },
+            {
+              "value": 0.002184351600183473,
+              "case_se": null
+            },
+            {
+              "value": -0.0005535689216226119,
+              "case_se": null
+            },
+            {
+              "value": -0.0003832366683506694,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            }
+          ],
+          "simulation_total": [
+            {
+              "value": 0.011103149394181668,
+              "case_se": null
+            },
+            {
+              "value": 0.03858625861643545,
+              "case_se": null
+            },
+            {
+              "value": 0.021640943086637887,
+              "case_se": null
+            },
+            {
+              "value": 0.006770113311691917,
+              "case_se": null
+            },
+            {
+              "value": 0.001195206825291716,
+              "case_se": null
+            }
+          ],
+          "anchor_plus": [
+            {
+              "value": 0.01049592258443309,
+              "case_se": null
+            },
+            {
+              "value": 0.03794286074397192,
+              "case_se": null
+            },
+            {
+              "value": 0.02460384255693749,
+              "case_se": null
+            },
+            {
+              "value": 0.006003989069503546,
+              "case_se": null
+            },
+            {
+              "value": 0.0006805610679681594,
+              "case_se": null
+            }
+          ],
+          "anchor_minus": [
+            {
+              "value": 0.010419422325062787,
+              "case_se": null
+            },
+            {
+              "value": 0.03777873493255131,
+              "case_se": null
+            },
+            {
+              "value": 0.02458412215301661,
+              "case_se": null
+            },
+            {
+              "value": 0.006025076283588955,
+              "case_se": null
+            },
+            {
+              "value": 0.0006851048549006806,
+              "case_se": null
+            }
+          ],
+          "anchored_model_shape": [
+            {
+              "value": 0.010457672454747938,
+              "case_se": null
+            },
+            {
+              "value": 0.037860797838261614,
+              "case_se": null
+            },
+            {
+              "value": 0.024593982354977048,
+              "case_se": null
+            },
+            {
+              "value": 0.00601453267654625,
+              "case_se": null
+            },
+            {
+              "value": 0.00068283296143442,
+              "case_se": null
+            }
+          ],
+          "linear_model_shape": [
+            {
+              "value": 0.010456801839797657,
+              "case_se": null
+            },
+            {
+              "value": 0.037848261583601266,
+              "case_se": null
+            },
+            {
+              "value": 0.02459424022880012,
+              "case_se": null
+            },
+            {
+              "value": 0.006013541487533688,
+              "case_se": null
+            },
+            {
+              "value": 0.0006820026393728504,
+              "case_se": null
+            }
+          ],
+          "shape_error": [
+            {
+              "value": 7.871248864135317e-05,
+              "case_se": null
+            },
+            {
+              "value": -0.0014588908220096355,
+              "case_se": null
+            },
+            {
+              "value": -0.0023994703467165486,
+              "case_se": null
+            },
+            {
+              "value": 0.0011388173034963375,
+              "case_se": null
+            },
+            {
+              "value": 0.0005123738638572959,
+              "case_se": null
+            }
+          ],
+          "total_error": [
+            {
+              "value": 0.0006454769394337288,
+              "case_se": null
+            },
+            {
+              "value": 0.0007254607781738373,
+              "case_se": null
+            },
+            {
+              "value": -0.00295303926833916,
+              "case_se": null
+            },
+            {
+              "value": 0.0007555806351456679,
+              "case_se": null
+            },
+            {
+              "value": 0.0005123738638572959,
+              "case_se": null
+            }
+          ],
+          "anchor_plus_minus_difference": [
+            {
+              "value": 7.650025937030609e-05,
+              "case_se": null
+            },
+            {
+              "value": 0.00016412581142061494,
+              "case_se": null
+            },
+            {
+              "value": 1.9720403920879905e-05,
+              "case_se": null
+            },
+            {
+              "value": -2.108721408540897e-05,
+              "case_se": null
+            },
+            {
+              "value": -4.543786932521117e-06,
+              "case_se": null
+            }
+          ],
+          "finite_minus_linear": [
+            {
+              "value": 8.706149502828175e-07,
+              "case_se": null
+            },
+            {
+              "value": 1.2536254660343218e-05,
+              "case_se": null
+            },
+            {
+              "value": -2.5787382307372163e-07,
+              "case_se": null
+            },
+            {
+              "value": 9.911890125624556e-07,
+              "case_se": null
+            },
+            {
+              "value": 8.303220615695778e-07,
+              "case_se": null
+            }
+          ]
+        }
+      },
+      "equal_group_average": {
+        "simulation_shape": {
+          "value": 0.07952166298038332,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.0015160682798620274,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.08103773126024534,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.07905736187229893,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.07901444844918917,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.07903590516074406,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.0790251324111886,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.00048575781963926777,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.0020018260995012965,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": 4.2913423109782874e-05,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 1.0772749555447978e-05,
+          "case_se": null
+        }
+      },
+      "equal_group_size_contributions": {
+        "simulation_shape": [
+          {
+            "value": 0.01328892553582604,
+            "case_se": null
+          },
+          {
+            "value": 0.03452047137590544,
+            "case_se": null
+          },
+          {
+            "value": 0.02158458758145376,
+            "case_se": null
+          },
+          {
+            "value": 0.008965114337541437,
+            "case_se": null
+          },
+          {
+            "value": 0.001162564149656635,
+            "case_se": null
+          }
+        ],
+        "simulation_selection": [
+          {
+            "value": 0.00037812528064810083,
+            "case_se": null
+          },
+          {
+            "value": 0.0014491293922320944,
+            "case_se": null
+          },
+          {
+            "value": -0.00014318068156118967,
+            "case_se": null
+          },
+          {
+            "value": -0.0001659498149720636,
+            "case_se": null
+          },
+          {
+            "value": -2.055896484914536e-06,
+            "case_se": null
+          }
+        ],
+        "simulation_total": [
+          {
+            "value": 0.013667050816474142,
+            "case_se": null
+          },
+          {
+            "value": 0.035969600768137544,
+            "case_se": null
+          },
+          {
+            "value": 0.021441406899892566,
+            "case_se": null
+          },
+          {
+            "value": 0.008799164522569373,
+            "case_se": null
+          },
+          {
+            "value": 0.0011605082531717203,
+            "case_se": null
+          }
+        ],
+        "anchor_plus": [
+          {
+            "value": 0.010429683944255351,
+            "case_se": null
+          },
+          {
+            "value": 0.03763691215929217,
+            "case_se": null
+          },
+          {
+            "value": 0.024588897429768726,
+            "case_se": null
+          },
+          {
+            "value": 0.0057033555492551034,
+            "case_se": null
+          },
+          {
+            "value": 0.0006985127897275881,
+            "case_se": null
+          }
+        ],
+        "anchor_minus": [
+          {
+            "value": 0.010383549700448753,
+            "case_se": null
+          },
+          {
+            "value": 0.037596500726539674,
+            "case_se": null
+          },
+          {
+            "value": 0.02460735087068059,
+            "case_se": null
+          },
+          {
+            "value": 0.005715497544046784,
+            "case_se": null
+          },
+          {
+            "value": 0.0007115496074733642,
+            "case_se": null
+          }
+        ],
+        "anchored_model_shape": [
+          {
+            "value": 0.010406616822352052,
+            "case_se": null
+          },
+          {
+            "value": 0.037616706442915926,
+            "case_se": null
+          },
+          {
+            "value": 0.024598124150224658,
+            "case_se": null
+          },
+          {
+            "value": 0.005709426546650943,
+            "case_se": null
+          },
+          {
+            "value": 0.0007050311986004762,
+            "case_se": null
+          }
+        ],
+        "linear_model_shape": [
+          {
+            "value": 0.010406507774419683,
+            "case_se": null
+          },
+          {
+            "value": 0.03760913540827758,
+            "case_se": null
+          },
+          {
+            "value": 0.024597844389895332,
+            "case_se": null
+          },
+          {
+            "value": 0.005707365402695869,
+            "case_se": null
+          },
+          {
+            "value": 0.0007042794359001329,
+            "case_se": null
+          }
+        ],
+        "shape_error": [
+          {
+            "value": 0.0028823087134739874,
+            "case_se": null
+          },
+          {
+            "value": -0.003096235067010474,
+            "case_se": null
+          },
+          {
+            "value": -0.0030135365687708983,
+            "case_se": null
+          },
+          {
+            "value": 0.003255687790890494,
+            "case_se": null
+          },
+          {
+            "value": 0.0004575329510561588,
+            "case_se": null
+          }
+        ],
+        "total_error": [
+          {
+            "value": 0.003260433994122088,
+            "case_se": null
+          },
+          {
+            "value": -0.0016471056747783782,
+            "case_se": null
+          },
+          {
+            "value": -0.0031567172503320882,
+            "case_se": null
+          },
+          {
+            "value": 0.0030897379759184307,
+            "case_se": null
+          },
+          {
+            "value": 0.00045547705457124426,
+            "case_se": null
+          }
+        ],
+        "anchor_plus_minus_difference": [
+          {
+            "value": 4.613424380659857e-05,
+            "case_se": null
+          },
+          {
+            "value": 4.0411432752503174e-05,
+            "case_se": null
+          },
+          {
+            "value": -1.8453440911862557e-05,
+            "case_se": null
+          },
+          {
+            "value": -1.214199479168029e-05,
+            "case_se": null
+          },
+          {
+            "value": -1.3036817745776025e-05,
+            "case_se": null
+          }
+        ],
+        "finite_minus_linear": [
+          {
+            "value": 1.0904793236984672e-07,
+            "case_se": null
+          },
+          {
+            "value": 7.571034638337391e-06,
+            "case_se": null
+          },
+          {
+            "value": 2.7976032932310393e-07,
+            "case_se": null
+          },
+          {
+            "value": 2.061143955074416e-06,
+            "case_se": null
+          },
+          {
+            "value": 7.517627003432202e-07,
+            "case_se": null
+          }
+        ]
+      }
+    },
+    "radius3": {
+      "A": {
+        "simulation_shape": {
+          "value": 0.10934518549398914,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.004944642899148307,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.11428982839313745,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.10539935122020547,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.10554753850650393,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.10547344486335469,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.10546711507566837,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.0038717406306344624,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.00881638352978277,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": -0.00014818728629845896,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 6.329787686337837e-06,
+          "case_se": null
+        },
+        "size_contributions": {
+          "simulation_shape": [
+            {
+              "value": 0.013312244133525091,
+              "case_se": null
+            },
+            {
+              "value": 0.0520232239936809,
+              "case_se": null
+            },
+            {
+              "value": 0.031574889432604884,
+              "case_se": null
+            },
+            {
+              "value": 0.010951351603936121,
+              "case_se": null
+            },
+            {
+              "value": 0.0014834763302421523,
+              "case_se": null
+            }
+          ],
+          "simulation_selection": [
+            {
+              "value": -0.0009450957924631073,
+              "case_se": null
+            },
+            {
+              "value": 0.004671954600159618,
+              "case_se": null
+            },
+            {
+              "value": 0.001161970410267545,
+              "case_se": null
+            },
+            {
+              "value": 5.5813681184251355e-05,
+              "case_se": null
+            },
+            {
+              "value": 0.0,
+              "case_se": null
+            }
+          ],
+          "simulation_total": [
+            {
+              "value": 0.012367148341061984,
+              "case_se": null
+            },
+            {
+              "value": 0.05669517859384052,
+              "case_se": null
+            },
+            {
+              "value": 0.03273685984287243,
+              "case_se": null
+            },
+            {
+              "value": 0.011007165285120373,
+              "case_se": null
+            },
+            {
+              "value": 0.0014834763302421523,
+              "case_se": null
+            }
+          ],
+          "anchor_plus": [
+            {
+              "value": 0.016532407681823676,
+              "case_se": null
+            },
+            {
+              "value": 0.053351568728202126,
+              "case_se": null
+            },
+            {
+              "value": 0.029016660630050945,
+              "case_se": null
+            },
+            {
+              "value": 0.005783163407512233,
+              "case_se": null
+            },
+            {
+              "value": 0.0007155507726164806,
+              "case_se": null
+            }
+          ],
+          "anchor_minus": [
+            {
+              "value": 0.016415175821180693,
+              "case_se": null
+            },
+            {
+              "value": 0.053516433786647846,
+              "case_se": null
+            },
+            {
+              "value": 0.0290866875629529,
+              "case_se": null
+            },
+            {
+              "value": 0.005795523254638774,
+              "case_se": null
+            },
+            {
+              "value": 0.0007337180810837065,
+              "case_se": null
+            }
+          ],
+          "anchored_model_shape": [
+            {
+              "value": 0.01647379175150218,
+              "case_se": null
+            },
+            {
+              "value": 0.05343400125742499,
+              "case_se": null
+            },
+            {
+              "value": 0.02905167409650192,
+              "case_se": null
+            },
+            {
+              "value": 0.005789343331075504,
+              "case_se": null
+            },
+            {
+              "value": 0.0007246344268500935,
+              "case_se": null
+            }
+          ],
+          "linear_model_shape": [
+            {
+              "value": 0.016478045294786796,
+              "case_se": null
+            },
+            {
+              "value": 0.05342806933487596,
+              "case_se": null
+            },
+            {
+              "value": 0.029050176124353965,
+              "case_se": null
+            },
+            {
+              "value": 0.005786810403093735,
+              "case_se": null
+            },
+            {
+              "value": 0.0007240139185578993,
+              "case_se": null
+            }
+          ],
+          "shape_error": [
+            {
+              "value": -0.0031615476179770938,
+              "case_se": null
+            },
+            {
+              "value": -0.0014107772637440858,
+              "case_se": null
+            },
+            {
+              "value": 0.0025232153361029663,
+              "case_se": null
+            },
+            {
+              "value": 0.005162008272860617,
+              "case_se": null
+            },
+            {
+              "value": 0.0007588419033920587,
+              "case_se": null
+            }
+          ],
+          "total_error": [
+            {
+              "value": -0.004106643410440201,
+              "case_se": null
+            },
+            {
+              "value": 0.0032611773364155314,
+              "case_se": null
+            },
+            {
+              "value": 0.003685185746370512,
+              "case_se": null
+            },
+            {
+              "value": 0.005217821954044868,
+              "case_se": null
+            },
+            {
+              "value": 0.0007588419033920587,
+              "case_se": null
+            }
+          ],
+          "anchor_plus_minus_difference": [
+            {
+              "value": 0.00011723186064298215,
+              "case_se": null
+            },
+            {
+              "value": -0.00016486505844572194,
+              "case_se": null
+            },
+            {
+              "value": -7.002693290195257e-05,
+              "case_se": null
+            },
+            {
+              "value": -1.2359847126540595e-05,
+              "case_se": null
+            },
+            {
+              "value": -1.8167308467226003e-05,
+              "case_se": null
+            }
+          ],
+          "finite_minus_linear": [
+            {
+              "value": -4.2535432846101855e-06,
+              "case_se": null
+            },
+            {
+              "value": 5.931922549028742e-06,
+              "case_se": null
+            },
+            {
+              "value": 1.4979721479565795e-06,
+              "case_se": null
+            },
+            {
+              "value": 2.5329279817683687e-06,
+              "case_se": null
+            },
+            {
+              "value": 6.205082921943325e-07,
+              "case_se": null
+            }
+          ]
+        }
+      },
+      "B": {
+        "simulation_shape": {
+          "value": 0.11026845636682224,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.0017731256183394618,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.1120415819851617,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.10742402730093015,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.10710715214308689,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.10726558972200853,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.10724938526885296,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.003002866644813712,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.004775992263153177,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": 0.0003168751578432345,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 1.620445315555788e-05,
+          "case_se": null
+        },
+        "size_contributions": {
+          "simulation_shape": [
+            {
+              "value": 0.019007693070913653,
+              "case_se": null
+            },
+            {
+              "value": 0.049962600727734646,
+              "case_se": null
+            },
+            {
+              "value": 0.03369086442598758,
+              "case_se": null
+            },
+            {
+              "value": 0.0063399337822231654,
+              "case_se": null
+            },
+            {
+              "value": 0.001267364359963193,
+              "case_se": null
+            }
+          ],
+          "simulation_selection": [
+            {
+              "value": 0.0009785878493389641,
+              "case_se": null
+            },
+            {
+              "value": 0.001807965743988649,
+              "case_se": null
+            },
+            {
+              "value": -0.0009319391781012202,
+              "case_se": null
+            },
+            {
+              "value": -5.779476836623951e-06,
+              "case_se": null
+            },
+            {
+              "value": -7.570932005030743e-05,
+              "case_se": null
+            }
+          ],
+          "simulation_total": [
+            {
+              "value": 0.019986280920252616,
+              "case_se": null
+            },
+            {
+              "value": 0.051770566471723296,
+              "case_se": null
+            },
+            {
+              "value": 0.03275892524788636,
+              "case_se": null
+            },
+            {
+              "value": 0.0063341543053865405,
+              "case_se": null
+            },
+            {
+              "value": 0.0011916550399128857,
+              "case_se": null
+            }
+          ],
+          "anchor_plus": [
+            {
+              "value": 0.0165677197193089,
+              "case_se": null
+            },
+            {
+              "value": 0.05498550221281802,
+              "case_se": null
+            },
+            {
+              "value": 0.028635893390581292,
+              "case_se": null
+            },
+            {
+              "value": 0.006566218004707192,
+              "case_se": null
+            },
+            {
+              "value": 0.0006686939735147408,
+              "case_se": null
+            }
+          ],
+          "anchor_minus": [
+            {
+              "value": 0.016522668802197597,
+              "case_se": null
+            },
+            {
+              "value": 0.05474552250073904,
+              "case_se": null
+            },
+            {
+              "value": 0.028582480052289572,
+              "case_se": null
+            },
+            {
+              "value": 0.0065831146229662265,
+              "case_se": null
+            },
+            {
+              "value": 0.0006733661648944723,
+              "case_se": null
+            }
+          ],
+          "anchored_model_shape": [
+            {
+              "value": 0.016545194260753248,
+              "case_se": null
+            },
+            {
+              "value": 0.05486551235677853,
+              "case_se": null
+            },
+            {
+              "value": 0.028609186721435434,
+              "case_se": null
+            },
+            {
+              "value": 0.006574666313836708,
+              "case_se": null
+            },
+            {
+              "value": 0.0006710300692046065,
+              "case_se": null
+            }
+          ],
+          "linear_model_shape": [
+            {
+              "value": 0.016544022716592006,
+              "case_se": null
+            },
+            {
+              "value": 0.05485503782321932,
+              "case_se": null
+            },
+            {
+              "value": 0.028606363534894513,
+              "case_se": null
+            },
+            {
+              "value": 0.006573721338150133,
+              "case_se": null
+            },
+            {
+              "value": 0.0006702398559969874,
+              "case_se": null
+            }
+          ],
+          "shape_error": [
+            {
+              "value": 0.0024624988101604067,
+              "case_se": null
+            },
+            {
+              "value": -0.004902911629043883,
+              "case_se": null
+            },
+            {
+              "value": 0.0050816777045521455,
+              "case_se": null
+            },
+            {
+              "value": -0.00023473253161354353,
+              "case_se": null
+            },
+            {
+              "value": 0.0005963342907585864,
+              "case_se": null
+            }
+          ],
+          "total_error": [
+            {
+              "value": 0.0034410866594993695,
+              "case_se": null
+            },
+            {
+              "value": -0.0030949458850552313,
+              "case_se": null
+            },
+            {
+              "value": 0.004149738526450927,
+              "case_se": null
+            },
+            {
+              "value": -0.00024051200845016777,
+              "case_se": null
+            },
+            {
+              "value": 0.000520624970708279,
+              "case_se": null
+            }
+          ],
+          "anchor_plus_minus_difference": [
+            {
+              "value": 4.505091711130252e-05,
+              "case_se": null
+            },
+            {
+              "value": 0.00023997971207897735,
+              "case_se": null
+            },
+            {
+              "value": 5.341333829172112e-05,
+              "case_se": null
+            },
+            {
+              "value": -1.6896618259035055e-05,
+              "case_se": null
+            },
+            {
+              "value": -4.67219137973139e-06,
+              "case_se": null
+            }
+          ],
+          "finite_minus_linear": [
+            {
+              "value": 1.1715441612376691e-06,
+              "case_se": null
+            },
+            {
+              "value": 1.0474533559208434e-05,
+              "case_se": null
+            },
+            {
+              "value": 2.823186540917692e-06,
+              "case_se": null
+            },
+            {
+              "value": 9.449756865748918e-07,
+              "case_se": null
+            },
+            {
+              "value": 7.902132076191953e-07,
+              "case_se": null
+            }
+          ]
+        }
+      },
+      "equal_group_average": {
+        "simulation_shape": {
+          "value": 0.10980682093040568,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.0033588842587438843,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.11316570518914958,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.10641168926056781,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.10632734532479543,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.1063695172926816,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.10635825017226065,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.003437303637724087,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.006796187896467973,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": 8.43439357723878e-05,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 1.126712042094786e-05,
+          "case_se": null
+        }
+      },
+      "equal_group_size_contributions": {
+        "simulation_shape": [
+          {
+            "value": 0.016159968602219372,
+            "case_se": null
+          },
+          {
+            "value": 0.05099291236070777,
+            "case_se": null
+          },
+          {
+            "value": 0.03263287692929623,
+            "case_se": null
+          },
+          {
+            "value": 0.008645642693079644,
+            "case_se": null
+          },
+          {
+            "value": 0.0013754203451026726,
+            "case_se": null
+          }
+        ],
+        "simulation_selection": [
+          {
+            "value": 1.6746028437928436e-05,
+            "case_se": null
+          },
+          {
+            "value": 0.0032399601720741336,
+            "case_se": null
+          },
+          {
+            "value": 0.0001150156160831624,
+            "case_se": null
+          },
+          {
+            "value": 2.5017102173813702e-05,
+            "case_se": null
+          },
+          {
+            "value": -3.785466002515371e-05,
+            "case_se": null
+          }
+        ],
+        "simulation_total": [
+          {
+            "value": 0.0161767146306573,
+            "case_se": null
+          },
+          {
+            "value": 0.0542328725327819,
+            "case_se": null
+          },
+          {
+            "value": 0.032747892545379395,
+            "case_se": null
+          },
+          {
+            "value": 0.008670659795253458,
+            "case_se": null
+          },
+          {
+            "value": 0.001337565685077519,
+            "case_se": null
+          }
+        ],
+        "anchor_plus": [
+          {
+            "value": 0.01655006370056629,
+            "case_se": null
+          },
+          {
+            "value": 0.05416853547051007,
+            "case_se": null
+          },
+          {
+            "value": 0.02882627701031612,
+            "case_se": null
+          },
+          {
+            "value": 0.006174690706109712,
+            "case_se": null
+          },
+          {
+            "value": 0.0006921223730656106,
+            "case_se": null
+          }
+        ],
+        "anchor_minus": [
+          {
+            "value": 0.016468922311689144,
+            "case_se": null
+          },
+          {
+            "value": 0.05413097814369344,
+            "case_se": null
+          },
+          {
+            "value": 0.028834583807621238,
+            "case_se": null
+          },
+          {
+            "value": 0.0061893189388025,
+            "case_se": null
+          },
+          {
+            "value": 0.0007035421229890894,
+            "case_se": null
+          }
+        ],
+        "anchored_model_shape": [
+          {
+            "value": 0.016509493006127716,
+            "case_se": null
+          },
+          {
+            "value": 0.05414975680710176,
+            "case_se": null
+          },
+          {
+            "value": 0.028830430408968676,
+            "case_se": null
+          },
+          {
+            "value": 0.006182004822456106,
+            "case_se": null
+          },
+          {
+            "value": 0.00069783224802735,
+            "case_se": null
+          }
+        ],
+        "linear_model_shape": [
+          {
+            "value": 0.0165110340056894,
+            "case_se": null
+          },
+          {
+            "value": 0.05414155357904764,
+            "case_se": null
+          },
+          {
+            "value": 0.02882826982962424,
+            "case_se": null
+          },
+          {
+            "value": 0.006180265870621935,
+            "case_se": null
+          },
+          {
+            "value": 0.0006971268872774433,
+            "case_se": null
+          }
+        ],
+        "shape_error": [
+          {
+            "value": -0.00034952440390834355,
+            "case_se": null
+          },
+          {
+            "value": -0.0031568444463939845,
+            "case_se": null
+          },
+          {
+            "value": 0.003802446520327556,
+            "case_se": null
+          },
+          {
+            "value": 0.0024636378706235367,
+            "case_se": null
+          },
+          {
+            "value": 0.0006775880970753225,
+            "case_se": null
+          }
+        ],
+        "total_error": [
+          {
+            "value": -0.00033277837547041576,
+            "case_se": null
+          },
+          {
+            "value": 8.311572568015001e-05,
+            "case_se": null
+          },
+          {
+            "value": 0.0039174621364107196,
+            "case_se": null
+          },
+          {
+            "value": 0.0024886549727973504,
+            "case_se": null
+          },
+          {
+            "value": 0.0006397334370501688,
+            "case_se": null
+          }
+        ],
+        "anchor_plus_minus_difference": [
+          {
+            "value": 8.114138887714234e-05,
+            "case_se": null
+          },
+          {
+            "value": 3.755732681662771e-05,
+            "case_se": null
+          },
+          {
+            "value": -8.306797305115726e-06,
+            "case_se": null
+          },
+          {
+            "value": -1.4628232692787825e-05,
+            "case_se": null
+          },
+          {
+            "value": -1.1419749923478696e-05,
+            "case_se": null
+          }
+        ],
+        "finite_minus_linear": [
+          {
+            "value": -1.5409995616862582e-06,
+            "case_se": null
+          },
+          {
+            "value": 8.203228054118588e-06,
+            "case_se": null
+          },
+          {
+            "value": 2.1605793444371356e-06,
+            "case_se": null
+          },
+          {
+            "value": 1.7389518341716302e-06,
+            "case_se": null
+          },
+          {
+            "value": 7.053607499067639e-07,
+            "case_se": null
+          }
+        ]
+      }
+    },
+    "mag25_radius_gt0.60": {
+      "A": {
+        "simulation_shape": {
+          "value": 0.08729387212975603,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.003383668443190095,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.09067754057294612,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.08936423899251571,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.08950649785722972,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.08943536842487272,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.0894279974850632,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": -0.0021414962951166842,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.00124217214807341,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": -0.00014225886471402438,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 7.3709398095200815e-06,
+          "case_se": null
+        },
+        "size_contributions": {
+          "simulation_shape": [
+            {
+              "value": 0.013916400742846799,
+              "case_se": null
+            },
+            {
+              "value": 0.034699963217708574,
+              "case_se": null
+            },
+            {
+              "value": 0.024586606722729658,
+              "case_se": null
+            },
+            {
+              "value": 0.012757237658643755,
+              "case_se": null
+            },
+            {
+              "value": 0.001333663787827248,
+              "case_se": null
+            }
+          ],
+          "simulation_selection": [
+            {
+              "value": -0.0008313283086173281,
+              "case_se": null
+            },
+            {
+              "value": 0.003360943439469079,
+              "case_se": null
+            },
+            {
+              "value": 0.0006304073792246939,
+              "case_se": null
+            },
+            {
+              "value": 0.00022796115670979498,
+              "case_se": null
+            },
+            {
+              "value": -4.315223596144502e-06,
+              "case_se": null
+            }
+          ],
+          "simulation_total": [
+            {
+              "value": 0.01308507243422947,
+              "case_se": null
+            },
+            {
+              "value": 0.03806090665717765,
+              "case_se": null
+            },
+            {
+              "value": 0.02521701410195435,
+              "case_se": null
+            },
+            {
+              "value": 0.012985198815353552,
+              "case_se": null
+            },
+            {
+              "value": 0.0013293485642311034,
+              "case_se": null
+            }
+          ],
+          "anchor_plus": [
+            {
+              "value": 0.010848409496547782,
+              "case_se": null
+            },
+            {
+              "value": 0.042458861293249245,
+              "case_se": null
+            },
+            {
+              "value": 0.02879274549670993,
+              "case_se": null
+            },
+            {
+              "value": 0.006417671426499309,
+              "case_se": null
+            },
+            {
+              "value": 0.0008465512795094389,
+              "case_se": null
+            }
+          ],
+          "anchor_minus": [
+            {
+              "value": 0.01082977300197536,
+              "case_se": null
+            },
+            {
+              "value": 0.04253322825435003,
+              "case_se": null
+            },
+            {
+              "value": 0.02884980492255598,
+              "case_se": null
+            },
+            {
+              "value": 0.00642163290539151,
+              "case_se": null
+            },
+            {
+              "value": 0.0008720587729568474,
+              "case_se": null
+            }
+          ],
+          "anchored_model_shape": [
+            {
+              "value": 0.010839091249261572,
+              "case_se": null
+            },
+            {
+              "value": 0.04249604477379964,
+              "case_se": null
+            },
+            {
+              "value": 0.028821275209632957,
+              "case_se": null
+            },
+            {
+              "value": 0.00641965216594541,
+              "case_se": null
+            },
+            {
+              "value": 0.0008593050262331431,
+              "case_se": null
+            }
+          ],
+          "linear_model_shape": [
+            {
+              "value": 0.01084056900614717,
+              "case_se": null
+            },
+            {
+              "value": 0.042492397034518965,
+              "case_se": null
+            },
+            {
+              "value": 0.02882061060381129,
+              "case_se": null
+            },
+            {
+              "value": 0.006415917394614633,
+              "case_se": null
+            },
+            {
+              "value": 0.0008585034459711385,
+              "case_se": null
+            }
+          ],
+          "shape_error": [
+            {
+              "value": 0.003077309493585227,
+              "case_se": null
+            },
+            {
+              "value": -0.007796081556091064,
+              "case_se": null
+            },
+            {
+              "value": -0.004234668486903299,
+              "case_se": null
+            },
+            {
+              "value": 0.006337585492698347,
+              "case_se": null
+            },
+            {
+              "value": 0.0004743587615941048,
+              "case_se": null
+            }
+          ],
+          "total_error": [
+            {
+              "value": 0.002245981184967899,
+              "case_se": null
+            },
+            {
+              "value": -0.004435138116621985,
+              "case_se": null
+            },
+            {
+              "value": -0.0036042611076786057,
+              "case_se": null
+            },
+            {
+              "value": 0.006565546649408141,
+              "case_se": null
+            },
+            {
+              "value": 0.00047004353799796027,
+              "case_se": null
+            }
+          ],
+          "anchor_plus_minus_difference": [
+            {
+              "value": 1.8636494572420875e-05,
+              "case_se": null
+            },
+            {
+              "value": -7.436696110078801e-05,
+              "case_se": null
+            },
+            {
+              "value": -5.70594258460477e-05,
+              "case_se": null
+            },
+            {
+              "value": -3.961478892201175e-06,
+              "case_se": null
+            },
+            {
+              "value": -2.5507493447408373e-05,
+              "case_se": null
+            }
+          ],
+          "finite_minus_linear": [
+            {
+              "value": -1.477756885599307e-06,
+              "case_se": null
+            },
+            {
+              "value": 3.647739280670712e-06,
+              "case_se": null
+            },
+            {
+              "value": 6.64605821667618e-07,
+              "case_se": null
+            },
+            {
+              "value": 3.7347713307765414e-06,
+              "case_se": null
+            },
+            {
+              "value": 8.015802620045171e-07,
+              "case_se": null
+            }
+          ]
+        }
+      },
+      "B": {
+        "simulation_shape": {
+          "value": 0.09310914375816569,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.002402537997894316,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.09551168175606001,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.09143242902488902,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.09111381093794681,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.0912731199814179,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.09125727878077486,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": 0.0018360237767477887,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.004238561774642105,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": 0.0003186180869422283,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 1.5841200643052204e-05,
+          "case_se": null
+        },
+        "size_contributions": {
+          "simulation_shape": [
+            {
+              "value": 0.010235457218539431,
+              "case_se": null
+            },
+            {
+              "value": 0.0480742146849056,
+              "case_se": null
+            },
+            {
+              "value": 0.024819277186097836,
+              "case_se": null
+            },
+            {
+              "value": 0.008548191098107534,
+              "case_se": null
+            },
+            {
+              "value": 0.0014320035705152928,
+              "case_se": null
+            }
+          ],
+          "simulation_selection": [
+            {
+              "value": 0.001035319163304156,
+              "case_se": null
+            },
+            {
+              "value": 0.004119493651023588,
+              "case_se": null
+            },
+            {
+              "value": -0.0021481944712674044,
+              "case_se": null
+            },
+            {
+              "value": -0.0005045089284875933,
+              "case_se": null
+            },
+            {
+              "value": -9.957141667843046e-05,
+              "case_se": null
+            }
+          ],
+          "simulation_total": [
+            {
+              "value": 0.011270776381843588,
+              "case_se": null
+            },
+            {
+              "value": 0.05219370833592919,
+              "case_se": null
+            },
+            {
+              "value": 0.022671082714830433,
+              "case_se": null
+            },
+            {
+              "value": 0.008043682169619941,
+              "case_se": null
+            },
+            {
+              "value": 0.0013324321538368625,
+              "case_se": null
+            }
+          ],
+          "anchor_plus": [
+            {
+              "value": 0.011094717334821248,
+              "case_se": null
+            },
+            {
+              "value": 0.043431036288081815,
+              "case_se": null
+            },
+            {
+              "value": 0.028929685357604613,
+              "case_se": null
+            },
+            {
+              "value": 0.0071600824870945694,
+              "case_se": null
+            },
+            {
+              "value": 0.0008169075572867792,
+              "case_se": null
+            }
+          ],
+          "anchor_minus": [
+            {
+              "value": 0.010977169982043079,
+              "case_se": null
+            },
+            {
+              "value": 0.04323985430875447,
+              "case_se": null
+            },
+            {
+              "value": 0.028889321405860813,
+              "case_se": null
+            },
+            {
+              "value": 0.007184717009451622,
+              "case_se": null
+            },
+            {
+              "value": 0.0008227482318368142,
+              "case_se": null
+            }
+          ],
+          "anchored_model_shape": [
+            {
+              "value": 0.011035943658432162,
+              "case_se": null
+            },
+            {
+              "value": 0.04333544529841814,
+              "case_se": null
+            },
+            {
+              "value": 0.028909503381732714,
+              "case_se": null
+            },
+            {
+              "value": 0.007172399748273096,
+              "case_se": null
+            },
+            {
+              "value": 0.0008198278945617966,
+              "case_se": null
+            }
+          ],
+          "linear_model_shape": [
+            {
+              "value": 0.011035671169661325,
+              "case_se": null
+            },
+            {
+              "value": 0.043321581293517125,
+              "case_se": null
+            },
+            {
+              "value": 0.02890998838067542,
+              "case_se": null
+            },
+            {
+              "value": 0.007171204882620075,
+              "case_se": null
+            },
+            {
+              "value": 0.000818833054300913,
+              "case_se": null
+            }
+          ],
+          "shape_error": [
+            {
+              "value": -0.000800486439892732,
+              "case_se": null
+            },
+            {
+              "value": 0.004738769386487463,
+              "case_se": null
+            },
+            {
+              "value": -0.004090226195634878,
+              "case_se": null
+            },
+            {
+              "value": 0.001375791349834439,
+              "case_se": null
+            },
+            {
+              "value": 0.0006121756759534965,
+              "case_se": null
+            }
+          ],
+          "total_error": [
+            {
+              "value": 0.0002348327234114241,
+              "case_se": null
+            },
+            {
+              "value": 0.008858263037511053,
+              "case_se": null
+            },
+            {
+              "value": -0.006238420666902283,
+              "case_se": null
+            },
+            {
+              "value": 0.0008712824213468456,
+              "case_se": null
+            },
+            {
+              "value": 0.000512604259275066,
+              "case_se": null
+            }
+          ],
+          "anchor_plus_minus_difference": [
+            {
+              "value": 0.00011754735277816846,
+              "case_se": null
+            },
+            {
+              "value": 0.00019118197932734698,
+              "case_se": null
+            },
+            {
+              "value": 4.036395174380049e-05,
+              "case_se": null
+            },
+            {
+              "value": -2.4634522357052573e-05,
+              "case_se": null
+            },
+            {
+              "value": -5.840674550035036e-06,
+              "case_se": null
+            }
+          ],
+          "finite_minus_linear": [
+            {
+              "value": 2.724887708375513e-07,
+              "case_se": null
+            },
+            {
+              "value": 1.3864004901016158e-05,
+              "case_se": null
+            },
+            {
+              "value": -4.84998942705062e-07,
+              "case_se": null
+            },
+            {
+              "value": 1.1948656530199578e-06,
+              "case_se": null
+            },
+            {
+              "value": 9.948402608835986e-07,
+              "case_se": null
+            }
+          ]
+        }
+      },
+      "equal_group_average": {
+        "simulation_shape": {
+          "value": 0.09020150794396087,
+          "case_se": null
+        },
+        "simulation_selection": {
+          "value": 0.0028931032205422053,
+          "case_se": null
+        },
+        "simulation_total": {
+          "value": 0.09309461116450307,
+          "case_se": null
+        },
+        "anchor_plus": {
+          "value": 0.09039833400870238,
+          "case_se": null
+        },
+        "anchor_minus": {
+          "value": 0.09031015439758827,
+          "case_se": null
+        },
+        "anchored_model_shape": {
+          "value": 0.0903542442031453,
+          "case_se": null
+        },
+        "linear_model_shape": {
+          "value": 0.09034263813291903,
+          "case_se": null
+        },
+        "shape_error": {
+          "value": -0.00015273625918444842,
+          "case_se": null
+        },
+        "total_error": {
+          "value": 0.0027403669613577583,
+          "case_se": null
+        },
+        "anchor_plus_minus_difference": {
+          "value": 8.817961111410197e-05,
+          "case_se": null
+        },
+        "finite_minus_linear": {
+          "value": 1.1606070226286143e-05,
+          "case_se": null
+        }
+      },
+      "equal_group_size_contributions": {
+        "simulation_shape": [
+          {
+            "value": 0.012075928980693115,
+            "case_se": null
+          },
+          {
+            "value": 0.04138708895130709,
+            "case_se": null
+          },
+          {
+            "value": 0.02470294195441375,
+            "case_se": null
+          },
+          {
+            "value": 0.010652714378375644,
+            "case_se": null
+          },
+          {
+            "value": 0.0013828336791712704,
+            "case_se": null
+          }
+        ],
+        "simulation_selection": [
+          {
+            "value": 0.00010199542734341398,
+            "case_se": null
+          },
+          {
+            "value": 0.0037402185452463333,
+            "case_se": null
+          },
+          {
+            "value": -0.0007588935460213553,
+            "case_se": null
+          },
+          {
+            "value": -0.00013827388588889917,
+            "case_se": null
+          },
+          {
+            "value": -5.194332013728748e-05,
+            "case_se": null
+          }
+        ],
+        "simulation_total": [
+          {
+            "value": 0.012177924408036528,
+            "case_se": null
+          },
+          {
+            "value": 0.04512730749655342,
+            "case_se": null
+          },
+          {
+            "value": 0.023944048408392392,
+            "case_se": null
+          },
+          {
+            "value": 0.010514440492486746,
+            "case_se": null
+          },
+          {
+            "value": 0.001330890359033983,
+            "case_se": null
+          }
+        ],
+        "anchor_plus": [
+          {
+            "value": 0.010971563415684515,
+            "case_se": null
+          },
+          {
+            "value": 0.04294494879066553,
+            "case_se": null
+          },
+          {
+            "value": 0.02886121542715727,
+            "case_se": null
+          },
+          {
+            "value": 0.0067888769567969395,
+            "case_se": null
+          },
+          {
+            "value": 0.000831729418398109,
+            "case_se": null
+          }
+        ],
+        "anchor_minus": [
+          {
+            "value": 0.01090347149200922,
+            "case_se": null
+          },
+          {
+            "value": 0.042886541281552254,
+            "case_se": null
+          },
+          {
+            "value": 0.028869563164208398,
+            "case_se": null
+          },
+          {
+            "value": 0.006803174957421566,
+            "case_se": null
+          },
+          {
+            "value": 0.0008474035023968308,
+            "case_se": null
+          }
+        ],
+        "anchored_model_shape": [
+          {
+            "value": 0.010937517453846867,
+            "case_se": null
+          },
+          {
+            "value": 0.042915745036108885,
+            "case_se": null
+          },
+          {
+            "value": 0.028865389295682838,
+            "case_se": null
+          },
+          {
+            "value": 0.006796025957109253,
+            "case_se": null
+          },
+          {
+            "value": 0.0008395664603974699,
+            "case_se": null
+          }
+        ],
+        "linear_model_shape": [
+          {
+            "value": 0.010938120087904249,
+            "case_se": null
+          },
+          {
+            "value": 0.04290698916401804,
+            "case_se": null
+          },
+          {
+            "value": 0.028865299492243354,
+            "case_se": null
+          },
+          {
+            "value": 0.006793561138617354,
+            "case_se": null
+          },
+          {
+            "value": 0.0008386682501360257,
+            "case_se": null
+          }
+        ],
+        "shape_error": [
+          {
+            "value": 0.0011384115268462474,
+            "case_se": null
+          },
+          {
+            "value": -0.0015286560848018003,
+            "case_se": null
+          },
+          {
+            "value": -0.004162447341269089,
+            "case_se": null
+          },
+          {
+            "value": 0.003856688421266393,
+            "case_se": null
+          },
+          {
+            "value": 0.0005432672187738007,
+            "case_se": null
+          }
+        ],
+        "total_error": [
+          {
+            "value": 0.0012404069541896614,
+            "case_se": null
+          },
+          {
+            "value": 0.0022115624604445343,
+            "case_se": null
+          },
+          {
+            "value": -0.004921340887290444,
+            "case_se": null
+          },
+          {
+            "value": 0.0037184145353774934,
+            "case_se": null
+          },
+          {
+            "value": 0.0004913238986365132,
+            "case_se": null
+          }
+        ],
+        "anchor_plus_minus_difference": [
+          {
+            "value": 6.809192367529467e-05,
+            "case_se": null
+          },
+          {
+            "value": 5.840750911327949e-05,
+            "case_se": null
+          },
+          {
+            "value": -8.347737051123605e-06,
+            "case_se": null
+          },
+          {
+            "value": -1.4298000624626874e-05,
+            "case_se": null
+          },
+          {
+            "value": -1.5674083998721704e-05,
+            "case_se": null
+          }
+        ],
+        "finite_minus_linear": [
+          {
+            "value": -6.026340573808778e-07,
+            "case_se": null
+          },
+          {
+            "value": 8.755872090843435e-06,
+            "case_se": null
+          },
+          {
+            "value": 8.980343948127804e-08,
+            "case_se": null
+          },
+          {
+            "value": 2.4648184918982496e-06,
+            "case_se": null
+          },
+          {
+            "value": 8.982102614440579e-07,
+            "case_se": null
+          }
+        ]
+      }
+    }
+  },
+  "receipts": [
+    {
+      "case": 1000,
+      "emulator": {
+        "root": "BLENDEMU_RUNS_DIR",
+        "path": "disk_response_moment_galsbi_20261103/model/model.json",
+        "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+        "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+        "backend": "disk_response_moment",
+        "composition": "mobius",
+        "response_coordinate": "disk_velocity",
+        "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+        "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+      },
+      "source_sha256": "8d6bbd176f1113305c3696ba796650a991d6e62cfb3e5a6daccb84eb02c1e834",
+      "measured": [
+        {
+          "cross_rows": 292879,
+          "shape_rows": 294441,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 883944,
+          "parent_usable": 292842,
+          "parent_absent_crossmatch": 591065,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292800,
+          "shape_rows": 294366,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1566,
+          "parent_rows": 883944,
+          "parent_usable": 292753,
+          "parent_absent_crossmatch": 591144,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292786,
+          "shape_rows": 294357,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1571,
+          "parent_rows": 883944,
+          "parent_usable": 292751,
+          "parent_absent_crossmatch": 591158,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292734,
+          "shape_rows": 294330,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1596,
+          "parent_rows": 883944,
+          "parent_usable": 292699,
+          "parent_absent_crossmatch": 591210,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_usable": 290456,
+      "pairs": 5257132,
+      "size_bins_arcsec": [
+        0,
+        0.15,
+        0.25,
+        0.4,
+        0.7,
+        "infinity"
+      ],
+      "seconds": 75.49757033301285,
+      "definition": "Measured endpoint anchors; fixed output-conditioned coefficients during each predicted edge. Conditional diagnostic, not generative prediction.",
+      "prediction_columns": [
+        "anchor_plus",
+        "anchor_minus",
+        "infinitesimal_endpoint_average"
+      ],
+      "measured_replay_passed": true
+    }
+  ]
+}

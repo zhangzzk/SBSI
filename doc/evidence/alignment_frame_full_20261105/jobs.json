@@ -1,0 +1,20 @@
+{
+  "train": "17762865",
+  "evaluate": "17762866",
+  "report": "17762867",
+  "check": "17762868",
+  "utc": "2026-11-05T14:45:11.319114+00:00",
+  "source_sha256": {
+    "run_check.sh": "c89b5c774870669052e9aea6a455bd609adac6099d089f6ee34966e885e21ff4",
+    "rule.md": "d2cae9d62ca1a2b85656ca839184109f8177c3de9929cd462f91f25e53749182",
+    "evaluate.py": "6428cef8ffb769b78bde3181133533e446d7eb866d68ee870c07f97f26acf3a7",
+    "frame_model.py": "ee834c08bcde3d8377070166534ba1e061a2530a189625ef2c3f5c86f6821cb9",
+    "run_evaluate.sh": "f369346472b81d1f7818c64fee5235c1f89b487b086cb7226dfbdad33aea9d22",
+    "train.py": "7c17c8d7dc772f687b5e61a0ffcf32ea1e0c25ba231464f83ce070b73d0fd798",
+    "report.py": "8ee275cf0abb7d7682f26492141dbfc29467f7fd48ccdd61fe36d331ab095b26",
+    "check.py": "d2eb73ba5aded14b8e8b2ec25cfa017d72a38896d939e5b5b70c3a13a84377e6",
+    "run.sh": "d7b1b914c9e8c8963871baeccde5a1ffccc7e159b293a64ca97a2e8ce9313ff8",
+    "verify.py": "d3a7db92968a2236442af4c95fa3b3a6bcd07dc3c902fda6b78278b2fddf7ca5",
+    "run_report.sh": "762c5847ccd24770f34c92cece180db5309ee94dae4d512327e73df4f221a04f"
+  }
+}

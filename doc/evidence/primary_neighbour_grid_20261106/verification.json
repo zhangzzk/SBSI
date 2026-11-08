@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "definition": "Analytical design fixtures; no simulated images or calibration result",
+  "checks": [
+    "Four-corner additivity with different selected denominators",
+    "Primary and neighbour finite contrasts for known nonlinear example",
+    "Axis-only sum need not equal coherent finite difference"
+  ]
+}

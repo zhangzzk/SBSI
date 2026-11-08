@@ -1,0 +1,36 @@
+{
+  "definition": "Signed response discrepancy: R_sim-R_model; positive means model underprediction.",
+  "bootstrap": "10000 whole-case paired resamples, seed20260925; fixed models and latent realizations",
+  "rows": {
+    "flow_validation": {
+      "simulation": 0.7222342836933386,
+      "model": 0.7165354477185718,
+      "sim_minus_model": 0.005698835974766836,
+      "paired_case_se": 0.002486866585735864,
+      "unit": "half-trace per galaxy; fixed-baseline soft-cut response on matched usable pairs"
+    },
+    "emulator_development": {
+      "simulation": 0.00735336601755861,
+      "model": 0.007590101752533774,
+      "sim_minus_model": -0.00023673573497516413,
+      "paired_case_se": 0.00021239908135003405,
+      "unit": "projected neighbour-shear response per pair, measured g0 inputs"
+    },
+    "joint_C8": {
+      "simulation": 0.907368191360551,
+      "model": 0.8855129634363024,
+      "sim_minus_model": 0.021855227924248655,
+      "paired_case_se": 0.0012741678387401753,
+      "unit": "R11 per selected galaxy; independent own-leg hard cuts"
+    },
+    "joint_true flags": {
+      "simulation": 0.907368191360551,
+      "model": 0.8836492434932556,
+      "sim_minus_model": 0.023718947867295448,
+      "paired_case_se": 0.0012802189082187878,
+      "unit": "R11 per selected galaxy; independent own-leg hard cuts"
+    }
+  },
+  "cut": "radius>3 pixels and magnitude<25, using each original study selection convention",
+  "limitations": "Component absolute errors have different denominators (galaxy versus pair), populations and response definitions; do not add them into a joint error budget."
+}

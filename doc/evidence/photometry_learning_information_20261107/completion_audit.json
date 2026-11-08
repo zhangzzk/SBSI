@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "scalar_or_vector_statistics_checked": 8160,
+  "checks": [
+    "saved data hashes and checkpoint receipts",
+    "simulation equality across arms",
+    "independent reconstruction of pooled leg responses",
+    "all-cut biases and flow/emulator terms",
+    "all paired contrast and RMS jackknife statistics",
+    "hard and soft conditional scores and contrasts on both data splits"
+  ],
+  "job_id": "17818561"
+}

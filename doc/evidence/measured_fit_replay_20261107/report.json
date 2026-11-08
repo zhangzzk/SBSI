@@ -1,0 +1,1096 @@
+{
+  "cases": [
+    1000,
+    1001,
+    1041,
+    1081
+  ],
+  "original_sample_n": 2048,
+  "all_modes_legs_valid_n": 2036,
+  "all_modes_legs_flags_zero_n": 2036,
+  "mode_recorded_nonzero_flags": [
+    0,
+    0,
+    0
+  ],
+  "mode_missing_flag_or_shape": [
+    1,
+    2,
+    27
+  ],
+  "mode_invalid_fits": [
+    1,
+    2,
+    27
+  ],
+  "definition": "Fixed originally selected common IDs; every contrast uses exactly the same valid rows. Conditional row errors describe this subset; four-scene errors are unstable and not acceptance evidence.",
+  "populations": {
+    "all_valid": {
+      "n": 2036,
+      "results": {
+        "historical": {
+          "matrix": {
+            "value": [
+              [
+                0.7937978741944564,
+                -0.11769238394683172
+              ],
+              [
+                -0.11424004272489081,
+                0.7541195521825594
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.12576251612431855,
+                0.12983345696245843
+              ],
+              [
+                0.1276537570474934,
+                0.12422344546849165
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.1663600487032412,
+                0.16797235595189333
+              ],
+              [
+                0.15426800600293236,
+                0.21004542041531452
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.03967832201189805,
+            "conditional_row_se": 0.16951521167707012,
+            "four_scene_jackknife_se": 0.17131013906735182
+          }
+        },
+        "seed_A": {
+          "matrix": {
+            "value": [
+              [
+                0.9783221415189222,
+                0.08028974490886383
+              ],
+              [
+                -0.0038596304326367773,
+                0.8555881093731182
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.060886900416600324,
+                0.05828124146999489
+              ],
+              [
+                0.06729265993709305,
+                0.057468077807835215
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.08533198745450919,
+                0.03789589028083595
+              ],
+              [
+                0.04647693262141942,
+                0.03686938085097782
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.12273403214580463,
+            "conditional_row_se": 0.07756121221476357,
+            "four_scene_jackknife_se": 0.048702677612917376
+          }
+        },
+        "seed_B": {
+          "matrix": {
+            "value": [
+              [
+                0.9135301101929177,
+                -0.009667686704456788
+              ],
+              [
+                0.13487956725886036,
+                0.7837151162207527
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.05506656891931326,
+                0.06362332991062
+              ],
+              [
+                0.05897079929429947,
+                0.07342382132767798
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.04461902224885444,
+                0.036276844222678344
+              ],
+              [
+                0.054347959177037414,
+                0.04367883722424411
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.12981499397216548,
+            "conditional_row_se": 0.09315454843694682,
+            "four_scene_jackknife_se": 0.04508975712790478
+          }
+        },
+        "tight_A": {
+          "matrix": {
+            "value": [
+              [
+                0.9565013462995012,
+                0.05082079001287411
+              ],
+              [
+                0.04042677938952628,
+                0.8892356435903849
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.059729680824031274,
+                0.056364559078014125
+              ],
+              [
+                0.0648620954299718,
+                0.06359270421945484
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.06498695821467712,
+                0.04624026394828664
+              ],
+              [
+                0.05740049366756631,
+                0.03703937693651974
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.06726570270911551,
+            "conditional_row_se": 0.08141894327244419,
+            "four_scene_jackknife_se": 0.04312079510625827
+          }
+        },
+        "seed_A_minus_historical": {
+          "matrix": {
+            "value": [
+              [
+                0.1845242673244679,
+                0.19798212885569574
+              ],
+              [
+                0.11038041229225393,
+                0.10146855719056162
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.1359423231578743,
+                0.14422337178361946
+              ],
+              [
+                0.1415434484640749,
+                0.1350186073919927
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.20087046219068924,
+                0.14239599615746398
+              ],
+              [
+                0.14661873087132107,
+                0.1886568773129031
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.08305571013390657,
+            "conditional_row_se": 0.1843708512358117,
+            "four_scene_jackknife_se": 0.21861041950287208
+          }
+        },
+        "seed_B_minus_seed_A": {
+          "matrix": {
+            "value": [
+              [
+                -0.06479203132600499,
+                -0.08995743161332068
+              ],
+              [
+                0.13873919769149734,
+                -0.07187299315236576
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.0757260697640196,
+                0.07989416936522879
+              ],
+              [
+                0.08498840441446426,
+                0.08447989929890422
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.0755950919932207,
+                0.06885411599655722
+              ],
+              [
+                0.09056056400478874,
+                0.0342568937310824
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.007080961826360847,
+            "conditional_row_se": 0.1162782772926934,
+            "four_scene_jackknife_se": 0.07490749254145948
+          }
+        },
+        "tight_A_minus_seed_A": {
+          "matrix": {
+            "value": [
+              [
+                -0.021820795219422384,
+                -0.029468954895989906
+              ],
+              [
+                0.044286409822162996,
+                0.033647534217266704
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.037674486674159624,
+                0.03220565737901482
+              ],
+              [
+                0.0323563837376769,
+                0.04277358268818222
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.033880056927075124,
+                0.012708707568585774
+              ],
+              [
+                0.03431104132853927,
+                0.01289419669043397
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": -0.05546832943668909,
+            "conditional_row_se": 0.053783567618976874,
+            "four_scene_jackknife_se": 0.041185725254327864
+          }
+        },
+        "tight_A_minus_historical": {
+          "matrix": {
+            "value": [
+              [
+                0.16270347210504574,
+                0.16851317395970553
+              ],
+              [
+                0.15466682211441676,
+                0.13511609140782782
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.13304200502172456,
+                0.14377654333250114
+              ],
+              [
+                0.1412452415077298,
+                0.13688828414409437
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.17695194816222623,
+                0.1452976155768255
+              ],
+              [
+                0.16949335435698093,
+                0.20062897340864433
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.02758738069721757,
+            "conditional_row_se": 0.18289050587956132,
+            "four_scene_jackknife_se": 0.20464750877407328
+          }
+        }
+      }
+    },
+    "all_valid_zero_flags": {
+      "n": 2036,
+      "results": {
+        "historical": {
+          "matrix": {
+            "value": [
+              [
+                0.7937978741944564,
+                -0.11769238394683172
+              ],
+              [
+                -0.11424004272489081,
+                0.7541195521825594
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.12576251612431855,
+                0.12983345696245843
+              ],
+              [
+                0.1276537570474934,
+                0.12422344546849165
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.1663600487032412,
+                0.16797235595189333
+              ],
+              [
+                0.15426800600293236,
+                0.21004542041531452
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.03967832201189805,
+            "conditional_row_se": 0.16951521167707012,
+            "four_scene_jackknife_se": 0.17131013906735182
+          }
+        },
+        "seed_A": {
+          "matrix": {
+            "value": [
+              [
+                0.9783221415189222,
+                0.08028974490886383
+              ],
+              [
+                -0.0038596304326367773,
+                0.8555881093731182
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.060886900416600324,
+                0.05828124146999489
+              ],
+              [
+                0.06729265993709305,
+                0.057468077807835215
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.08533198745450919,
+                0.03789589028083595
+              ],
+              [
+                0.04647693262141942,
+                0.03686938085097782
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.12273403214580463,
+            "conditional_row_se": 0.07756121221476357,
+            "four_scene_jackknife_se": 0.048702677612917376
+          }
+        },
+        "seed_B": {
+          "matrix": {
+            "value": [
+              [
+                0.9135301101929177,
+                -0.009667686704456788
+              ],
+              [
+                0.13487956725886036,
+                0.7837151162207527
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.05506656891931326,
+                0.06362332991062
+              ],
+              [
+                0.05897079929429947,
+                0.07342382132767798
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.04461902224885444,
+                0.036276844222678344
+              ],
+              [
+                0.054347959177037414,
+                0.04367883722424411
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.12981499397216548,
+            "conditional_row_se": 0.09315454843694682,
+            "four_scene_jackknife_se": 0.04508975712790478
+          }
+        },
+        "tight_A": {
+          "matrix": {
+            "value": [
+              [
+                0.9565013462995012,
+                0.05082079001287411
+              ],
+              [
+                0.04042677938952628,
+                0.8892356435903849
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.059729680824031274,
+                0.056364559078014125
+              ],
+              [
+                0.0648620954299718,
+                0.06359270421945484
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.06498695821467712,
+                0.04624026394828664
+              ],
+              [
+                0.05740049366756631,
+                0.03703937693651974
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.06726570270911551,
+            "conditional_row_se": 0.08141894327244419,
+            "four_scene_jackknife_se": 0.04312079510625827
+          }
+        },
+        "seed_A_minus_historical": {
+          "matrix": {
+            "value": [
+              [
+                0.1845242673244679,
+                0.19798212885569574
+              ],
+              [
+                0.11038041229225393,
+                0.10146855719056162
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.1359423231578743,
+                0.14422337178361946
+              ],
+              [
+                0.1415434484640749,
+                0.1350186073919927
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.20087046219068924,
+                0.14239599615746398
+              ],
+              [
+                0.14661873087132107,
+                0.1886568773129031
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.08305571013390657,
+            "conditional_row_se": 0.1843708512358117,
+            "four_scene_jackknife_se": 0.21861041950287208
+          }
+        },
+        "seed_B_minus_seed_A": {
+          "matrix": {
+            "value": [
+              [
+                -0.06479203132600499,
+                -0.08995743161332068
+              ],
+              [
+                0.13873919769149734,
+                -0.07187299315236576
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.0757260697640196,
+                0.07989416936522879
+              ],
+              [
+                0.08498840441446426,
+                0.08447989929890422
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.0755950919932207,
+                0.06885411599655722
+              ],
+              [
+                0.09056056400478874,
+                0.0342568937310824
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.007080961826360847,
+            "conditional_row_se": 0.1162782772926934,
+            "four_scene_jackknife_se": 0.07490749254145948
+          }
+        },
+        "tight_A_minus_seed_A": {
+          "matrix": {
+            "value": [
+              [
+                -0.021820795219422384,
+                -0.029468954895989906
+              ],
+              [
+                0.044286409822162996,
+                0.033647534217266704
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.037674486674159624,
+                0.03220565737901482
+              ],
+              [
+                0.0323563837376769,
+                0.04277358268818222
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.033880056927075124,
+                0.012708707568585774
+              ],
+              [
+                0.03431104132853927,
+                0.01289419669043397
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": -0.05546832943668909,
+            "conditional_row_se": 0.053783567618976874,
+            "four_scene_jackknife_se": 0.041185725254327864
+          }
+        },
+        "tight_A_minus_historical": {
+          "matrix": {
+            "value": [
+              [
+                0.16270347210504574,
+                0.16851317395970553
+              ],
+              [
+                0.15466682211441676,
+                0.13511609140782782
+              ]
+            ],
+            "conditional_row_se": [
+              [
+                0.13304200502172456,
+                0.14377654333250114
+              ],
+              [
+                0.1412452415077298,
+                0.13688828414409437
+              ]
+            ],
+            "four_scene_jackknife_se": [
+              [
+                0.17695194816222623,
+                0.1452976155768255
+              ],
+              [
+                0.16949335435698093,
+                0.20062897340864433
+              ]
+            ]
+          },
+          "diagonal_gap": {
+            "value": 0.02758738069721757,
+            "conditional_row_se": 0.18289050587956132,
+            "four_scene_jackknife_se": 0.20464750877407328
+          }
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "case": 1000,
+      "n": 512,
+      "common_available": 134892,
+      "modes": [
+        "default_seed_A",
+        "default_seed_B",
+        "tight_seed_A"
+      ],
+      "same_seed_replay_exact": true,
+      "source_sha256": "395f8386811a9e1e259db4d0d5d74ed9edcf6de420a37c6bb7a14001e0a380f2",
+      "shape_source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+      "controlled_source_sha256": "87b2c801e629fe6ac41b34d5e51ef9f3485077a7416db691848bc8efc83d217c",
+      "exceptions": [],
+      "paths": [
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1000_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1000_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1562
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1000_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1000_-0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1596
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1000_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1000_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1566
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1000_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1000_-0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1551
+          }
+        }
+      ],
+      "data_sha256": "5e2e939048967cbd57933a9c5258a6bf12a681f7b4207598079f72fcb45269d5",
+      "seconds": 221.11187783256173
+    },
+    {
+      "case": 1001,
+      "n": 512,
+      "common_available": 135608,
+      "modes": [
+        "default_seed_A",
+        "default_seed_B",
+        "tight_seed_A"
+      ],
+      "same_seed_replay_exact": true,
+      "source_sha256": "395f8386811a9e1e259db4d0d5d74ed9edcf6de420a37c6bb7a14001e0a380f2",
+      "shape_source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+      "controlled_source_sha256": "87b2c801e629fe6ac41b34d5e51ef9f3485077a7416db691848bc8efc83d217c",
+      "exceptions": [
+        {
+          "leg": 0,
+          "row": 47,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 0,
+          "row": 247,
+          "mode": 1,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 1,
+          "row": 453,
+          "mode": 0,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 1,
+          "row": 453,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 2,
+          "row": 47,
+          "mode": 2,
+          "error": "KeyError('g')"
+        }
+      ],
+      "paths": [
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1001_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1001_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1508
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1001_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1001_-0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1486
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1001_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1001_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1487
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1001_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1001_-0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1491
+          }
+        }
+      ],
+      "data_sha256": "a89ea6b4d2909eeb9756a2aac0ed7430e218db01fab5bc27454d70c8c805db0c",
+      "seconds": 296.4831753978506
+    },
+    {
+      "case": 1041,
+      "n": 512,
+      "common_available": 135407,
+      "modes": [
+        "default_seed_A",
+        "default_seed_B",
+        "tight_seed_A"
+      ],
+      "same_seed_replay_exact": true,
+      "source_sha256": "395f8386811a9e1e259db4d0d5d74ed9edcf6de420a37c6bb7a14001e0a380f2",
+      "shape_source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+      "controlled_source_sha256": "87b2c801e629fe6ac41b34d5e51ef9f3485077a7416db691848bc8efc83d217c",
+      "exceptions": [],
+      "paths": [
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1041_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1041_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1347
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1041_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1041_-0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1379
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1041_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1041_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1369
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1041_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1041_-0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1361
+          }
+        }
+      ],
+      "data_sha256": "f32cda9a95cfc48fd2858c7109ca9f39099cec5598b327ccc996724aa28beb5a",
+      "seconds": 292.7694599563256
+    },
+    {
+      "case": 1081,
+      "n": 512,
+      "common_available": 135862,
+      "modes": [
+        "default_seed_A",
+        "default_seed_B",
+        "tight_seed_A"
+      ],
+      "same_seed_replay_exact": true,
+      "source_sha256": "395f8386811a9e1e259db4d0d5d74ed9edcf6de420a37c6bb7a14001e0a380f2",
+      "shape_source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+      "controlled_source_sha256": "87b2c801e629fe6ac41b34d5e51ef9f3485077a7416db691848bc8efc83d217c",
+      "exceptions": [
+        {
+          "leg": 0,
+          "row": 13,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 0,
+          "row": 126,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 0,
+          "row": 127,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 0,
+          "row": 230,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 0,
+          "row": 365,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 0,
+          "row": 373,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 1,
+          "row": 13,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 1,
+          "row": 126,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 1,
+          "row": 127,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 1,
+          "row": 229,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 1,
+          "row": 230,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 1,
+          "row": 365,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 2,
+          "row": 126,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 2,
+          "row": 127,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 2,
+          "row": 230,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 2,
+          "row": 365,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 2,
+          "row": 373,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 3,
+          "row": 13,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 3,
+          "row": 126,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 3,
+          "row": 127,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 3,
+          "row": 230,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 3,
+          "row": 365,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 3,
+          "row": 373,
+          "mode": 2,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 3,
+          "row": 406,
+          "mode": 1,
+          "error": "KeyError('g')"
+        },
+        {
+          "leg": 3,
+          "row": 435,
+          "mode": 2,
+          "error": "KeyError('g')"
+        }
+      ],
+      "paths": [
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1081_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1081_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1436
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1081_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1081_-0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1473
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1081_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1081_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1465
+          }
+        },
+        {
+          "image": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1081_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+          "psf": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims/case1081_-0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+          "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5",
+          "matching": {
+            "cross_without_shape": 0,
+            "shape_without_cross": 1457
+          }
+        }
+      ],
+      "data_sha256": "619e63e62d1ec3b781052b6c6c638921bf2faf0249da66a05acc4e043f130a13",
+      "seconds": 345.83852234017104
+    }
+  ],
+  "shape_change_counts": {
+    "seed_A_minus_historical": {
+      "valid_pair_n": 8191,
+      "counts": {
+        "0.001": 5466,
+        "0.01": 2843,
+        "0.1": 1041
+      },
+      "fraction_above_0.1": 0.12709070931510194
+    },
+    "seed_B_minus_A": {
+      "valid_pair_n": 8189,
+      "counts": {
+        "0.001": 5470,
+        "0.01": 2854,
+        "0.1": 1042
+      },
+      "fraction_above_0.1": 0.12724386371962387
+    },
+    "tight_minus_A": {
+      "valid_pair_n": 8165,
+      "counts": {
+        "0.001": 5430,
+        "0.01": 2180,
+        "0.1": 323
+      },
+      "fraction_above_0.1": 0.03955909369259032
+    }
+  }
+}

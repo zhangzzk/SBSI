@@ -1,0 +1,443 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084,
+    1124,
+    1005,
+    1045,
+    1085,
+    1125,
+    1006,
+    1046,
+    1086,
+    1126,
+    1007,
+    1047,
+    1087,
+    1127,
+    1008,
+    1048,
+    1088,
+    1128,
+    1009,
+    1049,
+    1089,
+    1129
+  ],
+  "pilot_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "arms": [
+    "retained",
+    "cartesian"
+  ],
+  "tasks": [
+    {
+      "arm": "retained",
+      "case": 1000
+    },
+    {
+      "arm": "cartesian",
+      "case": 1000
+    },
+    {
+      "arm": "retained",
+      "case": 1040
+    },
+    {
+      "arm": "cartesian",
+      "case": 1040
+    },
+    {
+      "arm": "retained",
+      "case": 1080
+    },
+    {
+      "arm": "cartesian",
+      "case": 1080
+    },
+    {
+      "arm": "retained",
+      "case": 1120
+    },
+    {
+      "arm": "cartesian",
+      "case": 1120
+    },
+    {
+      "arm": "retained",
+      "case": 1001
+    },
+    {
+      "arm": "cartesian",
+      "case": 1001
+    },
+    {
+      "arm": "retained",
+      "case": 1041
+    },
+    {
+      "arm": "cartesian",
+      "case": 1041
+    },
+    {
+      "arm": "retained",
+      "case": 1081
+    },
+    {
+      "arm": "cartesian",
+      "case": 1081
+    },
+    {
+      "arm": "retained",
+      "case": 1121
+    },
+    {
+      "arm": "cartesian",
+      "case": 1121
+    },
+    {
+      "arm": "retained",
+      "case": 1002
+    },
+    {
+      "arm": "cartesian",
+      "case": 1002
+    },
+    {
+      "arm": "retained",
+      "case": 1042
+    },
+    {
+      "arm": "cartesian",
+      "case": 1042
+    },
+    {
+      "arm": "retained",
+      "case": 1082
+    },
+    {
+      "arm": "cartesian",
+      "case": 1082
+    },
+    {
+      "arm": "retained",
+      "case": 1122
+    },
+    {
+      "arm": "cartesian",
+      "case": 1122
+    },
+    {
+      "arm": "retained",
+      "case": 1003
+    },
+    {
+      "arm": "cartesian",
+      "case": 1003
+    },
+    {
+      "arm": "retained",
+      "case": 1043
+    },
+    {
+      "arm": "cartesian",
+      "case": 1043
+    },
+    {
+      "arm": "retained",
+      "case": 1083
+    },
+    {
+      "arm": "cartesian",
+      "case": 1083
+    },
+    {
+      "arm": "retained",
+      "case": 1123
+    },
+    {
+      "arm": "cartesian",
+      "case": 1123
+    },
+    {
+      "arm": "retained",
+      "case": 1004
+    },
+    {
+      "arm": "cartesian",
+      "case": 1004
+    },
+    {
+      "arm": "retained",
+      "case": 1044
+    },
+    {
+      "arm": "cartesian",
+      "case": 1044
+    },
+    {
+      "arm": "retained",
+      "case": 1084
+    },
+    {
+      "arm": "cartesian",
+      "case": 1084
+    },
+    {
+      "arm": "retained",
+      "case": 1124
+    },
+    {
+      "arm": "cartesian",
+      "case": 1124
+    },
+    {
+      "arm": "retained",
+      "case": 1005
+    },
+    {
+      "arm": "cartesian",
+      "case": 1005
+    },
+    {
+      "arm": "retained",
+      "case": 1045
+    },
+    {
+      "arm": "cartesian",
+      "case": 1045
+    },
+    {
+      "arm": "retained",
+      "case": 1085
+    },
+    {
+      "arm": "cartesian",
+      "case": 1085
+    },
+    {
+      "arm": "retained",
+      "case": 1125
+    },
+    {
+      "arm": "cartesian",
+      "case": 1125
+    },
+    {
+      "arm": "retained",
+      "case": 1006
+    },
+    {
+      "arm": "cartesian",
+      "case": 1006
+    },
+    {
+      "arm": "retained",
+      "case": 1046
+    },
+    {
+      "arm": "cartesian",
+      "case": 1046
+    },
+    {
+      "arm": "retained",
+      "case": 1086
+    },
+    {
+      "arm": "cartesian",
+      "case": 1086
+    },
+    {
+      "arm": "retained",
+      "case": 1126
+    },
+    {
+      "arm": "cartesian",
+      "case": 1126
+    },
+    {
+      "arm": "retained",
+      "case": 1007
+    },
+    {
+      "arm": "cartesian",
+      "case": 1007
+    },
+    {
+      "arm": "retained",
+      "case": 1047
+    },
+    {
+      "arm": "cartesian",
+      "case": 1047
+    },
+    {
+      "arm": "retained",
+      "case": 1087
+    },
+    {
+      "arm": "cartesian",
+      "case": 1087
+    },
+    {
+      "arm": "retained",
+      "case": 1127
+    },
+    {
+      "arm": "cartesian",
+      "case": 1127
+    },
+    {
+      "arm": "retained",
+      "case": 1008
+    },
+    {
+      "arm": "cartesian",
+      "case": 1008
+    },
+    {
+      "arm": "retained",
+      "case": 1048
+    },
+    {
+      "arm": "cartesian",
+      "case": 1048
+    },
+    {
+      "arm": "retained",
+      "case": 1088
+    },
+    {
+      "arm": "cartesian",
+      "case": 1088
+    },
+    {
+      "arm": "retained",
+      "case": 1128
+    },
+    {
+      "arm": "cartesian",
+      "case": 1128
+    },
+    {
+      "arm": "retained",
+      "case": 1009
+    },
+    {
+      "arm": "cartesian",
+      "case": 1009
+    },
+    {
+      "arm": "retained",
+      "case": 1049
+    },
+    {
+      "arm": "cartesian",
+      "case": 1049
+    },
+    {
+      "arm": "retained",
+      "case": 1089
+    },
+    {
+      "arm": "cartesian",
+      "case": 1089
+    },
+    {
+      "arm": "retained",
+      "case": 1129
+    },
+    {
+      "arm": "cartesian",
+      "case": 1129
+    }
+  ],
+  "checkpoints": {
+    "cartesian": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb"
+    }
+  },
+  "baseline_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_grid_20261104",
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      null
+    ],
+    [
+      "radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      null
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ]
+  ],
+  "sim_root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+  "axis": 2
+}

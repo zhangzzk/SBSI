@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "cases": [
+    {
+      "case": 1000,
+      "rendered_rows": 883944,
+      "sampled_rows": 256,
+      "max_absolute_context_difference": 0.0
+    },
+    {
+      "case": 1040,
+      "rendered_rows": 883991,
+      "sampled_rows": 256,
+      "max_absolute_context_difference": 0.0
+    },
+    {
+      "case": 1080,
+      "rendered_rows": 884738,
+      "sampled_rows": 256,
+      "max_absolute_context_difference": 0.0
+    },
+    {
+      "case": 1120,
+      "rendered_rows": 886209,
+      "sampled_rows": 256,
+      "max_absolute_context_difference": 0.0
+    }
+  ],
+  "training_runtime_formula_fixture_passed": true,
+  "source_hashes": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/photometry_fixed_cell_20261106/audit_context.py": "2bd68b5b5e41fe373b035b30364efc4cad58432005037ae9131066eef8529e35",
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/sampler-recipe/sbsi/v39_inference.py": "bfb893db8544b58175127831eeefeae991b4398971bb02f95ae86b576da7150b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/scripts/build_close_crowding_lookup.py": "a1e2c48ca7e1392519baeabdca8e641a9c0a177f156431b5b730fcf2c752b7b7"
+  },
+  "limitations": "Training/runtime crowding formula parity on synthetic geometry plus256 cached context rows per constant scene. Not an audit of every training-cache row or conditional density calibration."
+}

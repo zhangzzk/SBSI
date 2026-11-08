@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "definition": "Synthetic implementation fixtures, not scientific data",
+  "checks": [
+    "Known two-target 2x2 response means and ordered effects",
+    "Correct symmetric effects and interaction",
+    "Selection remains paired with each individual draw"
+  ]
+}

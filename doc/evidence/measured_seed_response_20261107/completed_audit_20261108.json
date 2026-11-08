@@ -1,0 +1,7 @@
+{
+  "source_receipts_verified": 2667,
+  "report_scalars_reproduced": 36,
+  "case_sums_sha256": "66aae5dd58774091e8a885f662d9601b877b624c4ffe26c8c2dab2c61be6b901",
+  "mean_diagonal_response": 0.8961662618483841,
+  "mean_diagonal_jackknife_se": 0.0010655986886211931
+}

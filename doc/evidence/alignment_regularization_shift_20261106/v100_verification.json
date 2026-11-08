@@ -1,0 +1,127 @@
+{
+  "devices": [
+    {
+      "gpu": "NVIDIA A40-16Q",
+      "tf32": false,
+      "precision": "highest",
+      "banks": {
+        "1024": {
+          "portable_sha256": "ab7bded27059727275d2ee99a653d49e6cce7ab132547d4c103356f7d215ec63",
+          "legacy_sha256": "3df53416e21cdb299b89fd0876431efdf3435507b15b4ef11cab8c83e6df9fdc"
+        },
+        "232": {
+          "portable_sha256": "f009334f2492d2ea3cfc8076af8b76abac983b0ed5b1378da4d4e42d0f2d5145",
+          "legacy_sha256": "3ae727e1767293d16857e17c68dc22a2f5e137139739734823295b06a91b6405"
+        }
+      }
+    },
+    {
+      "gpu": "Tesla V100-SXM2-32GB",
+      "tf32": false,
+      "precision": "highest",
+      "banks": {
+        "1024": {
+          "portable_sha256": "ab7bded27059727275d2ee99a653d49e6cce7ab132547d4c103356f7d215ec63",
+          "legacy_sha256": "f408acab0bb73b92d73c9cf32c014cb515384f1f50876a76a7ebcc9d31f92c9e"
+        },
+        "232": {
+          "portable_sha256": "f009334f2492d2ea3cfc8076af8b76abac983b0ed5b1378da4d4e42d0f2d5145",
+          "legacy_sha256": "3ae727e1767293d16857e17c68dc22a2f5e137139739734823295b06a91b6405"
+        }
+      }
+    }
+  ],
+  "portable_source_sha256": "7a7b916b4da5113f406c73ef56d7537927133109587df1c3767023d1103ad086",
+  "new_max_abs_difference": {
+    "1024_0": 0.021506713990675053,
+    "1024_1": 0.027399683421208465,
+    "232_0": 0.0113878966728862,
+    "232_1": 0.014435675047934637
+  },
+  "legacy_hashes_equal": {
+    "1024": false,
+    "232": true
+  },
+  "original_tolerance_check": {
+    "1024_0": {
+      "passed": false,
+      "mismatched_elements": 4,
+      "total_elements": 262144
+    },
+    "1024_1": {
+      "passed": false,
+      "mismatched_elements": 4,
+      "total_elements": 262144
+    },
+    "232_0": {
+      "passed": false,
+      "mismatched_elements": 1,
+      "total_elements": 59392
+    },
+    "232_1": {
+      "passed": true,
+      "mismatched_elements": 0,
+      "total_elements": 59392
+    }
+  },
+  "roundoff_diagnostics": {
+    "1024_0": {
+      "max_abs_per_column": [
+        3.2373975393795718e-06,
+        7.524978243300673e-06,
+        0.00021547845163638613,
+        0.021506713990675053
+      ],
+      "mean_shape_difference": [
+        -8.402067381064946e-10,
+        8.34316644443814e-10
+      ],
+      "cut_mask_disagreements": 0,
+      "draw_count": 65536
+    },
+    "1024_1": {
+      "max_abs_per_column": [
+        3.4543271577036627e-06,
+        7.97093844261132e-06,
+        0.00012928711424464723,
+        0.027399683421208465
+      ],
+      "mean_shape_difference": [
+        2.368452527235071e-10,
+        -1.1321327519371486e-09
+      ],
+      "cut_mask_disagreements": 0,
+      "draw_count": 65536
+    },
+    "232_0": {
+      "max_abs_per_column": [
+        2.6017476197695566e-06,
+        5.649056164430677e-06,
+        6.577765461912577e-05,
+        0.0113878966728862
+      ],
+      "mean_shape_difference": [
+        -1.9067053856461475e-09,
+        1.0568157386263048e-09
+      ],
+      "cut_mask_disagreements": 0,
+      "draw_count": 14848
+    },
+    "232_1": {
+      "max_abs_per_column": [
+        3.212922243589489e-06,
+        7.650163815875466e-06,
+        6.1241264646128e-05,
+        0.014435675047934637
+      ],
+      "mean_shape_difference": [
+        -1.983203580208711e-10,
+        -2.774883182397899e-10
+      ],
+      "cut_mask_disagreements": 0,
+      "draw_count": 14848
+    }
+  },
+  "physical_allclose_passed": false,
+  "purpose": "Descriptive hardware-difference audit; records original pointwise tolerance failures rather than relaxing them. Independent whole-catalogue replay controls four-state acceptance."
+}

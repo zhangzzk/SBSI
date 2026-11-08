@@ -1,0 +1,4496 @@
+{
+  "cases": [
+    1000
+  ],
+  "definitions": "DeltaR=simulation-model. Own group includes same-group neighbours. Opposite group fixes target own shear. Global selected denominators; contributions add exactly. Four development cases; fixed-model case SEs.",
+  "arms": {
+    "baseline": {
+      "predicted_U": {
+        "uncut": {
+          "own_group": {
+            "simulation": {
+              "value": 0.4550653865833043,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.4672637429528114,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.012198356369507113,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.37843304786256193,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08883069509024948,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09466599388113728,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08820376068025722,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.00646223320088006,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -1.0017428998809752e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.0882038608545472,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.5497313804644416,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.5554675036330686,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.005736123168627039,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.37843294768827196,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.1770345559447967,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.4627474844507683,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.46847492237079247,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.005727437920024142,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.37951499911965303,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08895992325113941,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09460970391174255,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08756364274065927,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007046061171083279,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08756364274065927,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.44733715607699187,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.4660437523921358,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.018706596315143917,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.37734320141153266,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08870055098060313,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09471620022307448,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08884861805841093,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.005867582164663543,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08884861805841093,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6590697556456941,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.678892847107295,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.019823091461600884,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.602182599684256,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07671024742303902,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.0809110317319348,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.0760841269664967,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.004826904765438095,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 5.601956565293165e-09,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07608412136454014,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.7399807873776288,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7549769740737917,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.014996186696162872,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6021826052862126,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.15279436878757913,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6772154242094116,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6795172912759937,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.002301867066582128,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.60326159875291,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07625569252308377,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.08377190155177991,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07546867460387947,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.008303226947900436,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07546867460387947,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6407625383344129,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6782631010089795,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.03750056267456664,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.6010944449957523,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07716865601322725,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.07803745567777076,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07670478585195808,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0013326698258126768,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07670478585195808,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "radius3": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6899195721327432,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.706546406751842,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.01662683461909875,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6016391084874034,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10490729826443852,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.1137696657858939,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.10419046057294572,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.00957920521294818,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -3.1395625488261913e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.1041907745292006,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8036892379186372,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8107368673247877,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.007047629406150446,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6016387945311485,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.2090980727936391,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6944679545617504,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.7070408595837399,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.012572905021989544,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.6022670654791191,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10477379410462079,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11342683112298205,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10318383770466472,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.010242993418317331,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10318383770466472,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6853293868173007,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.7060462950320878,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.020716908214787152,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.601004145754948,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10504214927713988,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11411031570114602,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.1052078654262482,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.008902450274897819,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.1052078654262482,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "own_group": {
+            "simulation": {
+              "value": 0.8066504937566669,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8217086787894317,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.015058185032764793,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7345490240801608,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08715965470927084,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09257145145583844,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08640634204255729,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.006165109413281147,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -1.0165788234817175e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08640644370043964,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8992219452125053,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.9081150208319889,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.008893075619483604,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7345489224222784,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.17356609840971046,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.8154883142323629,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8216047726777752,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.006116458445412309,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7350253310140005,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08657944166377474,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09169709812832824,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08552591709668037,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.006171181031647877,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08552591709668037,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.7976918104952594,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8218135431601454,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.02412173266488607,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7340673969173755,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08774614624276991,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09347332515319923,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08729649792876074,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.006176827224438491,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08729649792876074,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "actual_U": {
+        "uncut": {
+          "own_group": {
+            "simulation": {
+              "value": 0.4550653865833043,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.4665297157154243,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.011464329132119977,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.37797312061442534,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08855659510099895,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09466599388113728,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08762478237545118,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.007041211505686096,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -0.00018044547805808747,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08780522785350928,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.5497313804644416,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.5541544980908755,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.004423117626433881,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.3777926751363673,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.17636182295450822,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.4627474844507683,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.46802331712342465,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.0052758326726563415,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.3793606743241393,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08866264279928536,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09460970391174255,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08700926560099975,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007600438310742794,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.0001429992651815204,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08715226486618127,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.44733715607699187,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.4650264450975671,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.017689289020575177,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.37657662303955264,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08844982205801441,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09471620022307448,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.0882439762746944,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.006472223948380082,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.00021869293497385478,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08846266920966825,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6590697556456941,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.6783114598822381,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.01924170423654392,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6019189867137547,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07639247316848345,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.0809110317319348,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.07522780191753325,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.005683229814401544,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -0.00018843610591842697,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07541623802345168,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.7399807873776288,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7535392617997714,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.01355847442214253,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6017305506078362,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.15180871119193515,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6772154242094116,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6793079576869373,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.0020925334775256793,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.603308425638188,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0759995320487493,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.08377190155177991,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07463215791474312,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.00913974363703679,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -2.873112696871738e-05,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07466088904171184,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6407625383344129,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6773058869777758,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.03654334864336292,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.6005172117685424,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07678867520923335,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.07803745567777076,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07582915709353405,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.002208298584236712,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.00034872332408300566,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07617788041761706,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "radius3": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6899195721327432,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7054884554262169,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.015568883293473612,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6011022928013015,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10438616262491537,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.1137696657858939,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.10304838586535438,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.01072127992053952,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -0.0003659893898910055,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10341437525524538,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8036892379186372,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8085368412915713,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.004847603372934106,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6007363034114105,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.2078005378801608,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6944679545617504,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.7065344309292514,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.012066476367501008,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.6022833609110114,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10425107001823995,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11342683112298205,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10207935930358362,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.011347471819398422,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.00028904946120567043,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.1023684087647893,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6853293868173007,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.7044315702225401,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.019102183405239392,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5999090105810343,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10452255964150581,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11411031570114602,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10402763124459338,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.010082684456552637,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.00044266649091898036,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10447029773551236,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "own_group": {
+            "simulation": {
+              "value": 0.8066504937566669,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8207925701587026,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.014142076402035686,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.73396313728992,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08682943286878256,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09257145145583844,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08537568144562227,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.007195770010216165,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -0.0003175408492372689,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08569322229485954,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8992219452125053,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.9061682516043249,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.00694630639181959,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7336455964406828,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.17252265516364207,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.8154883142323629,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8213556898100828,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.005867375577719838,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7350387827226283,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08631690708745439,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09169709812832824,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08462310437116666,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007073993757161584,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -5.372970079961514e-05,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08467683407196627,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.7976918104952594,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8202222311714285,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.022530420676169047,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7328748350755315,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08734739609589691,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09347332515319923,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.0861374074516869,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007335917701512332,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.0005829974950445627,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08672040494673146,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "common_U": {
+        "uncut": {
+          "own_group": {
+            "simulation": {
+              "value": 0.4588901752119979,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.46860477426717123,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.009714599055173356,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.3812368896728878,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08736788459428341,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09344710847293995,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08645881794666349,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.006988290526276461,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.0,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08645881794666349,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.5523372836849378,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.5550635922138347,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.0027263085288968814,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.3812368896728879,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.1738267025409469,
+              "case_se": null
+            }
+          },
+          "equal_group_opposite": {
+            "simulation": {
+              "value": 0.09344354063701438,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08646097193413879,
+              "case_se": null
+            },
+            "simulation_shape_term": {
+              "value": 0.09344354063701496,
+              "case_se": null
+            },
+            "simulation_selection_term": {
+              "value": 0.0,
+              "case_se": null
+            },
+            "shape_error": {
+              "value": 0.0069825687028761615,
+              "case_se": null
+            },
+            "total_error": {
+              "value": 0.006982568702875586,
+              "case_se": null
+            },
+            "definition": "Equal average of separately normalized A/B opposite-group responses; not a globally normalized coherent contribution."
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.46717372265612167,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.46986690131119535,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.002693178655073694,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.3823510963896965,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08751580492149887,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09441385838196108,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08587516801454396,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.008538690367417112,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08587516801454396,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.09441385838195987,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.008538690367415905,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.45054548612640777,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.46733333134492816,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.016787845218520392,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.3801144588916843,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08721887245324383,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09247322289206769,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08704677585373363,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.005426447038334059,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08704677585373363,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.09247322289207005,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.005426447038336418,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6644395784746207,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.6795666164967467,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.015127038022126005,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6040484735941245,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07551814290262218,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.08104164600704249,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.07438476419601481,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.006656881811027679,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -1.0292826480018391e-08,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07438477448884129,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.745481224481663,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7539513806927614,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.008470156211098367,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6040484633012979,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.14990291739146347,
+              "case_se": null
+            }
+          },
+          "equal_group_opposite": {
+            "simulation": {
+              "value": 0.0810377312602432,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.07438783582625133,
+              "case_se": null
+            },
+            "simulation_shape_term": {
+              "value": 0.07952166298038331,
+              "case_se": null
+            },
+            "simulation_selection_term": {
+              "value": 0.001516068279862028,
+              "case_se": null
+            },
+            "shape_error": {
+              "value": 0.0051338271541319785,
+              "case_se": null
+            },
+            "total_error": {
+              "value": 0.006649895433991873,
+              "case_se": null
+            },
+            "definition": "Equal average of separately normalized A/B opposite-group responses; not a globally normalized coherent contribution."
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6819592715413152,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6803945774279363,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0015646941133788395,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.6052032797557356,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07519129767220073,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.0827797912862501,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07368703956181369,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.00909275172443641,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07368703956181369,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.08156196518753056,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0012178260987214886,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.007874925625716872,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6467615913014754,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6787313680022771,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.0319697767008017,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.6028835117606319,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07584785624164514,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.07929567123423631,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07508863209068897,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0042070391435473364,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07508863209068897,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.07748136077323606,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0018143104610025675,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.002392728682547085,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "radius3": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6970317474532806,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7080992197989011,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.011067472345620555,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.6049803949458402,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10311882485306086,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.1131697206900762,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.1019613627623122,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.011208357927764007,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -2.5565270721228384e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10196161841501941,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8102014681433567,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8100605825612133,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.00014088558214342406,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.604980139293133,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.20508044326808025,
+              "case_se": null
+            }
+          },
+          "equal_group_opposite": {
+            "simulation": {
+              "value": 0.11316570518915073,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.10196648367562736,
+              "case_se": null
+            },
+            "simulation_shape_term": {
+              "value": 0.10980682093040568,
+              "case_se": null
+            },
+            "simulation_selection_term": {
+              "value": 0.0033588842587438847,
+              "case_se": null
+            },
+            "shape_error": {
+              "value": 0.00784033725477832,
+              "case_se": null
+            },
+            "total_error": {
+              "value": 0.011199221513523365,
+              "case_se": null
+            },
+            "definition": "Equal average of separately normalized A/B opposite-group responses; not a globally normalized coherent contribution."
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.699868636391376,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.7088887193707132,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.009020082979337249,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.605850069053669,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10303865031704422,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11428982839314028,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10099960797775284,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.013290220415387438,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10099960797775284,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.10934518549398915,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.004944642899148307,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.00834557751623631,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.694163882713517,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.7073012207661915,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.013137338052674488,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.6041014100513132,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10319981071487828,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11204158198516118,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10293335937350188,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.009108222611659292,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10293335937350188,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.11026845636682221,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0017731256183394627,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.007335096993320328,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "own_group": {
+            "simulation": {
+              "value": 0.813609913458243,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8228520058226341,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.009242092364391108,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7369474626627112,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08590454315992295,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09307282733535945,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08459805150715849,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.008474775828200956,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -1.4756368282853316e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08459819907084132,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.9066827407936024,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.9074500573297924,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.0007673165361899992,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7369473150990282,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.17050274223076425,
+              "case_se": null
+            }
+          },
+          "equal_group_opposite": {
+            "simulation": {
+              "value": 0.09309461116450207,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08460339525853931,
+              "case_se": null
+            },
+            "simulation_shape_term": {
+              "value": 0.09020150794396085,
+              "case_se": null
+            },
+            "simulation_selection_term": {
+              "value": 0.0028931032205422053,
+              "case_se": null
+            },
+            "shape_error": {
+              "value": 0.005598112685421541,
+              "case_se": null
+            },
+            "total_error": {
+              "value": 0.00849121590596276,
+              "case_se": null
+            },
+            "definition": "Equal average of separately normalized A/B opposite-group responses; not a globally normalized coherent contribution."
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.8218720481874531,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8230514809713764,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.001179432783923337,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7375969961532338,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08545448481814259,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09067754057294566,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08366550769495204,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007012032877993624,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08366550769495204,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.08729387212975602,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.003383668443190095,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.0036283644348039795,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.8052321419113351,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.822650027309471,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.017417885398135963,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7362904106833575,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0863596166261135,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09551168175605848,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08554128282212659,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.009970398933931895,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08554128282212659,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.09310914375816569,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.002402537997894316,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.007567860936039103,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "nine_weak": {
+      "predicted_U": {
+        "uncut": {
+          "own_group": {
+            "simulation": {
+              "value": 0.4550653865833043,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.4580027555232189,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.0029373689399145864,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.3694792215782964,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08852353394492254,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09466599388113728,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08789572950735222,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.0067702643737850565,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -4.89559906370618e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08789621906725859,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.5497313804644416,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.5458984850305711,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.0038328954338704424,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.36947873201839,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.17641975301218113,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.4627474844507683,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.45919855163610046,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0035489328146678656,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.37054850043021287,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08865005120588756,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09460970391174255,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.0872566267680171,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007353077143725448,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0872566267680171,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.44733715607699187,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.456797477400668,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.009460321323676135,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.3684013574529038,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0883961199477642,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09471620022307448,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08854034602558547,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.006175854197489006,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08854034602558547,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6590697556456941,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.6687416640871251,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.009671908441430954,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.592485118840549,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07625654524657605,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.0809110317319348,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.07562309245164729,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.005287939280287507,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 6.054099004754177e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07562248704174682,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.7399807873776288,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7443647565387724,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.004383969161143586,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5924857242504495,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.15187903228832286,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6772154242094116,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6694264183301215,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0077890058792901284,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5936268593958374,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07579955893428411,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.08377190155177991,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07501159697173132,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.008760304580048589,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07501159697173132,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6407625383344129,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.668052254109217,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.027289715774804144,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5913348152459621,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07671743886325492,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.07803745567777076,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07623860123694559,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0017988544408251705,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07623860123694559,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "radius3": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6899195721327432,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.696666823511415,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.006747251378671715,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5923639476291817,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10430287588223335,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.1137696657858939,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.10358646816225368,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.010183197623640214,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -2.4912678760202756e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10358671728904129,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8036892379186372,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8002532916736687,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.0034359462449685685,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.592363698502394,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.20788959317127462,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6944679545617504,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6973925460009032,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.0029245914391528433,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5932217567801672,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10417078922073601,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11342683112298205,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.1025788124062507,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.010848018716731342,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.1025788124062507,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6853293868173007,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6959332507418778,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.010603863924577073,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5914969502744056,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10443630046747215,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11411031570114602,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10460483053819508,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.009505485162950938,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10460483053819508,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "own_group": {
+            "simulation": {
+              "value": 0.8066504937566669,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8118407740391487,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.005190280282481807,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7252416809318707,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08659909310727798,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09257145145583844,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08584043023591616,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.0067310212199222785,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 6.417669986408248e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08583978846891752,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8992219452125053,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8976812042750648,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.001540740937440499,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7252423226988693,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.1724388815761955,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.8154883142323629,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8119043159753369,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.003583998257026072,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7258876292989693,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0860166866763675,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09169709812832824,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08496173516077307,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.00673536296755517,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08496173516077307,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.7976918104952594,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8117778632653174,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.014086052770058033,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7245900043844301,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08718785888088731,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09347332515319923,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08672743012986363,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.006745895023335599,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08672743012986363,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "actual_U": {
+        "uncut": {
+          "own_group": {
+            "simulation": {
+              "value": 0.4550653865833043,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.45728434446544947,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.002218957882145156,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.36902595720734455,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.0882583872581049,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09466599388113728,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08733363727256596,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.0073323566085713165,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -0.000173944787212367,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08750758205977832,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.5497313804644416,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.5446179817380153,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.005113398726426244,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.36885201242013216,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.1757659693178832,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.4627474844507683,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.45875561916726504,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.003991865283503232,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.3703937512417136,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08836186792555148,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09460970391174255,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08671625748959194,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007893446422150605,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.00013723998452944142,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08685349747412138,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.44733715607699187,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.45580551273045866,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.008468356653466819,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.36765131390798617,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08815419882247252,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09471620022307448,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08795274212048669,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0067634581025877855,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.00021341062858049042,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08816615274906718,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6590697556456941,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.6681774791610067,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.009107723515312527,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5922237577059641,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07595372145504252,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.0809110317319348,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.07477011852299714,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.006140913208937657,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -0.0001993408146723774,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07496945933766952,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.7399807873776288,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7429475976840038,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.002966810306374912,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5920244168912917,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.15092318079271203,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6772154242094116,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6691973112402472,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.00801811296916441,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5936395584580925,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07555775278215474,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.08377190155177991,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.0741962594550098,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.009575642096770115,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -3.056843887463967e-05,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07422682789388443,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6407625383344129,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6671492910188968,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.026386752684483913,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5907962852465172,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07635300577237962,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.07803745567777076,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.0753485784488971,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0026888772288736623,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.0003697501501441769,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07571832859904128,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "radius3": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6899195721327432,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.6956914032450663,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.005771831112323045,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5918909354561275,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10380046778893884,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.1137696657858939,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.10247945362267434,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.011290212163219557,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -0.0003493488634612879,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10282880248613563,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8036892379186372,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7981708568677407,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.005518381050896526,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5915415865926662,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.20662927027507447,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6944679545617504,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6968461543898268,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.002378199828076466,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5931840209370829,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10366213345274394,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11342683112298205,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10151548624734501,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.01191134487563704,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.0002649706454018186,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10178045689274683,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6853293868173007,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6945244544073496,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.009195067590048872,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.590584309231776,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10394014517557362,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11411031570114602,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10345380613299487,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.010656509568151146,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.00043336734628734996,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10388717347928222,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "own_group": {
+            "simulation": {
+              "value": 0.8066504937566669,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8109735696231101,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.0043230758664432045,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7246838121856864,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08628975743742365,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09257145145583844,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.0848234328393846,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.007748018616453842,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -0.00032373825499965037,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08514717109438424,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8992219452125053,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8957970024624946,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.0034249427500107066,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7243600739306867,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.1714369285318079,
+              "case_se": null
+            }
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.8154883142323629,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8116439236589459,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0038443905734170114,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7258724775033173,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0857714461556286,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09169709812832824,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08409043659394413,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007606661534384107,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -4.976215985033616e-05,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08414019875379447,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.7976918104952594,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8102957054073658,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.012603894912106409,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7234820912056118,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.086813614201754,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09347332515319923,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08556452832632976,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.007908796826869471,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": -0.0006003940644194183,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08616492239074917,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "common_U": {
+        "uncut": {
+          "own_group": {
+            "simulation": {
+              "value": 0.4588901752119979,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.45924157997142495,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.0003514047594270764,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.37216418045845834,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08707739951296661,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09344710847293995,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08617007022092117,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.00727703825201878,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.0,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08617007022092117,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.5523372836849378,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.5454116501923462,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.006925633492591676,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.37216418045845834,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.1732474697338878,
+              "case_se": null
+            }
+          },
+          "equal_group_opposite": {
+            "simulation": {
+              "value": 0.09344354063701438,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08617223112250487,
+              "case_se": null
+            },
+            "simulation_shape_term": {
+              "value": 0.09344354063701496,
+              "case_se": null
+            },
+            "simulation_selection_term": {
+              "value": 0.0,
+              "case_se": null
+            },
+            "shape_error": {
+              "value": 0.007271309514510091,
+              "case_se": null
+            },
+            "total_error": {
+              "value": 0.007271309514509515,
+              "case_se": null
+            },
+            "definition": "Equal average of separately normalized A/B opposite-group responses; not a globally normalized coherent contribution."
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.46717372265612167,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.4604875032219201,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.006686219434201557,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.3732648345702637,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0872226686516564,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09441385838196108,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08558454682438413,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.00882931155757695,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08558454682438413,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.09441385838195987,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.008829311557575742,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.45054548612640777,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.4579864604444322,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.007440974318024429,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.37105540231530804,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08693105812912416,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09247322289206769,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.08675991542062561,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.005713307471442081,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08675991542062561,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.09247322289207005,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.00571330747144444,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6644395784746207,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.6693603328785855,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.004920754403964889,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5942706008044193,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07508973207416628,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.08104164600704249,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.07395071020560277,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.007090935801439713,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 6.37838668035573e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.07395007236693474,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.745481224481663,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7433110430841883,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.002170181397474713,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5942712386430873,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.14903980444110101,
+              "case_se": null
+            }
+          },
+          "equal_group_opposite": {
+            "simulation": {
+              "value": 0.0810377312602432,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.07395310905469013,
+              "case_se": null
+            },
+            "simulation_shape_term": {
+              "value": 0.07952166298038331,
+              "case_se": null
+            },
+            "simulation_selection_term": {
+              "value": 0.001516068279862028,
+              "case_se": null
+            },
+            "shape_error": {
+              "value": 0.005568553925693179,
+              "case_se": null
+            },
+            "total_error": {
+              "value": 0.007084622205553073,
+              "case_se": null
+            },
+            "definition": "Equal average of separately normalized A/B opposite-group responses; not a globally normalized coherent contribution."
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6819592715413152,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6702613612162158,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.011697910325099398,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5955016247715006,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0747597364447152,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.0827797912862501,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07326349170567262,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.00951629958057748,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07326349170567262,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.08156196518753056,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0012178260987214886,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.008298473481857943,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.6467615913014754,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6684526157973416,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.02169102449586624,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5930299697366264,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07542264606071525,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.07929567123423631,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.07464272640370764,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.004652944830528666,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.07464272640370764,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.07748136077323606,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0018143104610025675,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.0028386343695284144,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "radius3": {
+          "own_group": {
+            "simulation": {
+              "value": 0.6970317474532806,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.6981960840337322,
+              "case_se": null
+            },
+            "error": {
+              "value": -0.0011643365804516748,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5956486887315555,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10254739530217673,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.1131697206900762,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.10139471900301132,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.011775001687064884,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": -1.1115736933686726e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.10139483016038066,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.8102014681433567,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.7995908030367435,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.010610665106613237,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.5956485775741861,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.20394222546255739,
+              "case_se": null
+            }
+          },
+          "equal_group_opposite": {
+            "simulation": {
+              "value": 0.11316570518915073,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.10139973177926756,
+              "case_se": null
+            },
+            "simulation_shape_term": {
+              "value": 0.10980682093040568,
+              "case_se": null
+            },
+            "simulation_selection_term": {
+              "value": 0.0033588842587438847,
+              "case_se": null
+            },
+            "shape_error": {
+              "value": 0.008407089151138115,
+              "case_se": null
+            },
+            "total_error": {
+              "value": 0.011765973409883161,
+              "case_se": null
+            },
+            "definition": "Equal average of separately normalized A/B opposite-group responses; not a globally normalized coherent contribution."
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.699868636391376,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6991232714651348,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.0007453649262412626,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5966599811079447,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10246329035719,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11428982839314028,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10042991991067597,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.013859908482464309,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10042991991067597,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.10934518549398915,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.004944642899148307,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.008915265583313181,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.694163882713517,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.6972592493588567,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.00309536664533977,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.5946268945741211,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.1026323547847357,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.11204158198516118,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.10236954364785916,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.009672038337302014,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.10236954364785916,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.11026845636682221,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.0017731256183394627,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.00789891271896305,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "own_group": {
+            "simulation": {
+              "value": 0.813609913458243,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8129522212136366,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.0006576922446063227,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7275755391376808,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.0853766820759558,
+              "case_se": null
+            }
+          },
+          "opposite_group": {
+            "simulation": {
+              "value": 0.09307282733535945,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08406757530843806,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.009005252026921387,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 6.715763030407107e-07,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.08406690373213502,
+              "case_se": null
+            }
+          },
+          "coherent_total": {
+            "simulation": {
+              "value": 0.9066827407936024,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.8970197965220748,
+              "case_se": null
+            },
+            "error": {
+              "value": 0.009662944271527696,
+              "case_se": null
+            },
+            "model_flow": {
+              "value": 0.7275762107139839,
+              "case_se": null
+            },
+            "model_emulator": {
+              "value": 0.16944358580809082,
+              "case_se": null
+            }
+          },
+          "equal_group_opposite": {
+            "simulation": {
+              "value": 0.09309461116450207,
+              "case_se": null
+            },
+            "model": {
+              "value": 0.08407209471979765,
+              "case_se": null
+            },
+            "simulation_shape_term": {
+              "value": 0.09020150794396085,
+              "case_se": null
+            },
+            "simulation_selection_term": {
+              "value": 0.0028931032205422053,
+              "case_se": null
+            },
+            "shape_error": {
+              "value": 0.006129413224163202,
+              "case_se": null
+            },
+            "total_error": {
+              "value": 0.00902251644470442,
+              "case_se": null
+            },
+            "definition": "Equal average of separately normalized A/B opposite-group responses; not a globally normalized coherent contribution."
+          },
+          "within_group": {
+            "0": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.8218720481874531,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.813329958374681,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.008542089812772047,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7284083823410508,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08492157603363026,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09067754057294566,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.0831427440363901,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.00753479653655556,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0831427440363901,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.08729387212975602,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.003383668443190095,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.004151128093365916,
+                  "case_se": null
+                }
+              }
+            },
+            "1": {
+              "own_group": {
+                "simulation": {
+                  "value": 0.8052321419113351,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.8125715973038435,
+                  "case_se": null
+                },
+                "error": {
+                  "value": -0.007339455392508465,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.7267346971265907,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.08583690017725287,
+                  "case_se": null
+                }
+              },
+              "opposite_group": {
+                "simulation": {
+                  "value": 0.09551168175605848,
+                  "case_se": null
+                },
+                "model": {
+                  "value": 0.0850014454032052,
+                  "case_se": null
+                },
+                "error": {
+                  "value": 0.01051023635285328,
+                  "case_se": null
+                },
+                "model_flow": {
+                  "value": 0.0,
+                  "case_se": null
+                },
+                "model_emulator": {
+                  "value": 0.0850014454032052,
+                  "case_se": null
+                },
+                "simulation_shape_term": {
+                  "value": 0.09310914375816569,
+                  "case_se": null
+                },
+                "simulation_selection_term": {
+                  "value": 0.002402537997894316,
+                  "case_se": null
+                },
+                "shape_error": {
+                  "value": 0.008107698354960488,
+                  "case_se": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paired_changes": {
+    "predicted_U": {
+      "uncut": {
+        "own_group": {
+          "value": 0.009260987429592527,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.00030803117290499615,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.009569018602497481,
+          "case_se": null
+        }
+      },
+      "mag25": {
+        "own_group": {
+          "value": 0.01015118302016993,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.00046103451484941216,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.010612217535019286,
+          "case_se": null
+        }
+      },
+      "radius3": {
+        "own_group": {
+          "value": 0.009879583240427037,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.0006039924106920336,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.010483575651119015,
+          "case_se": null
+        }
+      },
+      "mag25_radius_gt0.60": {
+        "own_group": {
+          "value": 0.009867904750282985,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.0005659118066411312,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.010433816556924103,
+          "case_se": null
+        }
+      }
+    },
+    "actual_U": {
+      "uncut": {
+        "own_group": {
+          "value": 0.00924537124997482,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.0002911451028852208,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.009536516352860125,
+          "case_se": null
+        }
+      },
+      "mag25": {
+        "own_group": {
+          "value": 0.010133980721231395,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.0004576833945361125,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.010591664115767618,
+          "case_se": null
+        }
+      },
+      "radius3": {
+        "own_group": {
+          "value": 0.009797052181150567,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.000568932242680037,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.010365984423830632,
+          "case_se": null
+        }
+      },
+      "mag25_radius_gt0.60": {
+        "own_group": {
+          "value": 0.009819000535592481,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.0005522486062376764,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.010371249141830297,
+          "case_se": null
+        }
+      }
+    },
+    "common_U": {
+      "uncut": {
+        "own_group": {
+          "value": 0.00936319429574628,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.00028874772574231933,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.009651942021488558,
+          "case_se": null
+        }
+      },
+      "mag25": {
+        "own_group": {
+          "value": 0.010206283618161116,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.00043405399041203385,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.01064033760857308,
+          "case_se": null
+        }
+      },
+      "radius3": {
+        "own_group": {
+          "value": 0.00990313576516888,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.0005666437593008777,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.010469779524469813,
+          "case_se": null
+        }
+      },
+      "mag25_radius_gt0.60": {
+        "own_group": {
+          "value": 0.00989978460899743,
+          "case_se": null
+        },
+        "opposite_group": {
+          "value": 0.000530476198720431,
+          "case_se": null
+        },
+        "coherent_total": {
+          "value": 0.010430260807717695,
+          "case_se": null
+        }
+      }
+    }
+  }
+}

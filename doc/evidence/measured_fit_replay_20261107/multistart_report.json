@@ -1,0 +1,80 @@
+{
+  "definition": "Two independent banks of16 tight galaxy fits on each of64 previously studied images, freezing the fitted PSF. Choose the successful minimum residual-square objective within each bank. Enriched sample; changes estimator, not production or calibration acceptance.",
+  "source_sha256": "aff3cf2440711e6b76c3c569582d94d1e747c28752cf14990243fca8985b41de",
+  "groups": {
+    "seed_sensitive": {
+      "1": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 6,
+        "median_shape_difference": 7.335667096422527e-05,
+        "max_shape_difference": 1.150390125849135,
+        "objective_differences_gt1": 5
+      },
+      "2": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 3,
+        "median_shape_difference": 2.225917830453797e-05,
+        "max_shape_difference": 0.5973830193992727,
+        "objective_differences_gt1": 2
+      },
+      "4": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 2,
+        "median_shape_difference": 2.3210654558125654e-05,
+        "max_shape_difference": 0.64914210437025,
+        "objective_differences_gt1": 2
+      },
+      "8": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 2,
+        "median_shape_difference": 1.201522430664681e-05,
+        "max_shape_difference": 0.3820725104547101,
+        "objective_differences_gt1": 2
+      },
+      "16": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 1,
+        "median_shape_difference": 4.801723962897034e-06,
+        "max_shape_difference": 0.3869528714533466,
+        "objective_differences_gt1": 1
+      }
+    },
+    "stable_control": {
+      "1": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 0,
+        "median_shape_difference": 1.630955073089052e-06,
+        "max_shape_difference": 0.0004996333230752326,
+        "objective_differences_gt1": 0
+      },
+      "2": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 0,
+        "median_shape_difference": 1.2324073086766862e-06,
+        "max_shape_difference": 0.0004996333230752326,
+        "objective_differences_gt1": 0
+      },
+      "4": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 0,
+        "median_shape_difference": 1.1783278025950805e-06,
+        "max_shape_difference": 0.0004996333230752326,
+        "objective_differences_gt1": 0
+      },
+      "8": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 0,
+        "median_shape_difference": 8.461252007929687e-07,
+        "max_shape_difference": 0.0001653050379985116,
+        "objective_differences_gt1": 0
+      },
+      "16": {
+        "valid_pairs": 32,
+        "shape_changes_gt0.1": 2,
+        "median_shape_difference": 1.4291091201268369e-06,
+        "max_shape_difference": 0.6761254803835698,
+        "objective_differences_gt1": 2
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "utc": "2026-11-05T19:16:38.112496+00:00",
+  "replay": "passed",
+  "candidate_startup": {
+    "cartesian": {
+      "job": "17768588_0",
+      "tail": [
+        "READY cartesian 1000 parents 883944 pairs 16024507 GPU NVIDIA A40-8Q",
+        "PROGRESS cartesian 1000 block 0 seconds 14.2",
+        "PROGRESS cartesian 1000 block 100 seconds 47.1"
+      ]
+    },
+    "frame": {
+      "job": "17768588_1",
+      "tail": [
+        "READY frame 1000 parents 883944 pairs 16024507 GPU NVIDIA A40-8Q",
+        "PROGRESS frame 1000 block 0 seconds 24.0"
+      ]
+    }
+  }
+}

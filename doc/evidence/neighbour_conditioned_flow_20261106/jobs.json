@@ -1,0 +1,24 @@
+{
+  "jobs": {
+    "failed_cpu_feature_pilot": "17807315",
+    "failed_array_comparison_test": "17807326",
+    "feature_pilot": "17807335",
+    "model_verification": "17807336",
+    "features": "17807349",
+    "assemble": "17807352",
+    "context_verification": "17807592",
+    "train": "17807379",
+    "constant_pilot": "17807385",
+    "constant_pilot_gate": "17807390",
+    "constant_remaining": "17807394",
+    "report": "17807399",
+    "bounded_check": "17807400",
+    "older_broad_held": "17788286"
+  },
+  "maximum_study_gpus": 6,
+  "feature_array_throttle": 6,
+  "training_array_throttle": 2,
+  "evaluation_array_throttle": 6,
+  "feature_to_train_to_evaluation_dependencies": true,
+  "check_behavior": "Writes scheduled_check.json locally; does not send a chat message."
+}

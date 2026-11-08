@@ -1,0 +1,8 @@
+{
+  "statistic_scalars_checked": 2160,
+  "maximum_absolute_difference": 0,
+  "prior_selected_counts_and_shape_sums_replayed": true,
+  "quadrupole_identity_passed": true,
+  "prior_data_sha256": "d9f35be8bc97983029eeaaad27912e71ac2b8e6b1b81ee34e02dc6b0fbfe36be",
+  "source_sha256": "48fcb26acd16d1788977c27837ebb267b54658ded8f2cef70bd8f50ab478439a"
+}

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "release": "v3.3-like",
+  "description": "Validated seed-501 500/500 Flow-E likelihood with the transition-aware detector evaluated independently at every shear view.",
+  "shear_transform": "intrinsic_ellipticity_only_v1",
+  "measurement_model": {
+    "path": null,
+    "sha256": "4e816ba5cd4be86771008fbbf5f7fec26d3d39cfb2fd90afe52acd0012373d73",
+    "target_names": [
+      "measured_ngmix_g1",
+      "measured_ngmix_g2",
+      "measured_mag_auto",
+      "measured_log_flux_radius"
+    ]
+  },
+  "emulator": {
+    "model": {
+      "path": "models/derisk/v22_reweighted_vector_optuna30_all40_v1/best_weighted_model.json",
+      "sha256": "01decd1335ce1c23aac1ef6ba055ae01c3950e47c4046345dcb6a1813033c21f"
+    },
+    "metadata": {
+      "path": "models/blendemu/emulator_metadata_lsst_r_extnbr_v22.json",
+      "sha256": "1b3d11c3cc79c90f31d0439d27b11e33052f8d5b5062ac6dbab0f88ab6fd269d"
+    },
+    "detection_model": {
+      "backend": "sbsi_selection_model",
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/detection_classifier_transition_lambda1_v1/models/transition_aware.pt",
+      "sha256": "9966cfbc191f11b049bf7419dbdb45d65d1262428889a91bb3c9caf928703455"
+    }
+  },
+  "geometry": {
+    "detection_radius_arcsec": 3.0,
+    "detection_neighbour_selection": "impact",
+    "detection_impact_exponent": 1.0,
+    "flow_neighbour_radius_arcsec": 7.0,
+    "crowding_radii_arcsec": [3.0, 7.0]
+  },
+  "observing_conditions": {
+    "pixel_size": 0.2,
+    "zero_point": 30.0,
+    "psf_fwhm": 0.73,
+    "moffat_beta": 2.224,
+    "pixel_rms": 0.312
+  },
+  "blend_response": "optional_fixed_atom_cache",
+  "measured_selection": "optional_output_cut_with_population_normalization"
+}

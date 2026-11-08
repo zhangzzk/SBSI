@@ -1,0 +1,218 @@
+[
+  {
+    "case": 1000,
+    "states": [
+      {
+        "cross_rows": 292879,
+        "shape_rows": 294441,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1562,
+        "parent_rows": 883944,
+        "parent_usable": 292842,
+        "parent_absent_crossmatch": 591065,
+        "usable_zero_shape_rows": 0
+      },
+      {
+        "cross_rows": 292800,
+        "shape_rows": 294366,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1566,
+        "parent_rows": 883944,
+        "parent_usable": 292753,
+        "parent_absent_crossmatch": 591144,
+        "usable_zero_shape_rows": 0,
+        "derived_intrinsic_ellipticity_roundoff": {
+          "e1_input_rot0": 1.1102230246251565e-16,
+          "e2_input_rot0": 1.1102230246251565e-16
+        }
+      },
+      {
+        "cross_rows": 292786,
+        "shape_rows": 294357,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1571,
+        "parent_rows": 883944,
+        "parent_usable": 292751,
+        "parent_absent_crossmatch": 591158,
+        "usable_zero_shape_rows": 0,
+        "derived_intrinsic_ellipticity_roundoff": {
+          "e1_input_rot0": 1.1102230246251565e-16,
+          "e2_input_rot0": 1.1102230246251565e-16
+        }
+      },
+      {
+        "cross_rows": 292734,
+        "shape_rows": 294330,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1596,
+        "parent_rows": 883944,
+        "parent_usable": 292699,
+        "parent_absent_crossmatch": 591210,
+        "usable_zero_shape_rows": 0
+      }
+    ],
+    "common_usable": 290456
+  },
+  {
+    "case": 1040,
+    "states": [
+      {
+        "cross_rows": 292757,
+        "shape_rows": 293923,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1166,
+        "parent_rows": 883991,
+        "parent_usable": 292716,
+        "parent_absent_crossmatch": 591234,
+        "usable_zero_shape_rows": 0
+      },
+      {
+        "cross_rows": 292753,
+        "shape_rows": 293982,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1229,
+        "parent_rows": 883991,
+        "parent_usable": 292715,
+        "parent_absent_crossmatch": 591238,
+        "usable_zero_shape_rows": 0,
+        "derived_intrinsic_ellipticity_roundoff": {
+          "e1_input_rot0": 0.0,
+          "e2_input_rot0": 0.0
+        }
+      },
+      {
+        "cross_rows": 292689,
+        "shape_rows": 293864,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1175,
+        "parent_rows": 883991,
+        "parent_usable": 292652,
+        "parent_absent_crossmatch": 591302,
+        "usable_zero_shape_rows": 0,
+        "derived_intrinsic_ellipticity_roundoff": {
+          "e1_input_rot0": 0.0,
+          "e2_input_rot0": 0.0
+        }
+      },
+      {
+        "cross_rows": 292660,
+        "shape_rows": 293883,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1223,
+        "parent_rows": 883991,
+        "parent_usable": 292618,
+        "parent_absent_crossmatch": 591331,
+        "usable_zero_shape_rows": 0
+      }
+    ],
+    "common_usable": 290409
+  },
+  {
+    "case": 1080,
+    "states": [
+      {
+        "cross_rows": 292826,
+        "shape_rows": 294017,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1191,
+        "parent_rows": 884738,
+        "parent_usable": 292784,
+        "parent_absent_crossmatch": 591912,
+        "usable_zero_shape_rows": 0
+      },
+      {
+        "cross_rows": 292823,
+        "shape_rows": 294013,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1190,
+        "parent_rows": 884738,
+        "parent_usable": 292774,
+        "parent_absent_crossmatch": 591915,
+        "usable_zero_shape_rows": 0,
+        "derived_intrinsic_ellipticity_roundoff": {
+          "e1_input_rot0": 0.0,
+          "e2_input_rot0": 0.0
+        }
+      },
+      {
+        "cross_rows": 292705,
+        "shape_rows": 293914,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1209,
+        "parent_rows": 884738,
+        "parent_usable": 292661,
+        "parent_absent_crossmatch": 592033,
+        "usable_zero_shape_rows": 0,
+        "derived_intrinsic_ellipticity_roundoff": {
+          "e1_input_rot0": 0.0,
+          "e2_input_rot0": 0.0
+        }
+      },
+      {
+        "cross_rows": 292812,
+        "shape_rows": 294022,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1210,
+        "parent_rows": 884738,
+        "parent_usable": 292774,
+        "parent_absent_crossmatch": 591926,
+        "usable_zero_shape_rows": 0
+      }
+    ],
+    "common_usable": 290517
+  },
+  {
+    "case": 1120,
+    "states": [
+      {
+        "cross_rows": 292888,
+        "shape_rows": 294450,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1562,
+        "parent_rows": 886209,
+        "parent_usable": 292847,
+        "parent_absent_crossmatch": 593321,
+        "usable_zero_shape_rows": 0
+      },
+      {
+        "cross_rows": 292896,
+        "shape_rows": 294478,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1582,
+        "parent_rows": 886209,
+        "parent_usable": 292863,
+        "parent_absent_crossmatch": 593313,
+        "usable_zero_shape_rows": 0,
+        "derived_intrinsic_ellipticity_roundoff": {
+          "e1_input_rot0": 0.0,
+          "e2_input_rot0": 0.0
+        }
+      },
+      {
+        "cross_rows": 292918,
+        "shape_rows": 294515,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1597,
+        "parent_rows": 886209,
+        "parent_usable": 292882,
+        "parent_absent_crossmatch": 593291,
+        "usable_zero_shape_rows": 0,
+        "derived_intrinsic_ellipticity_roundoff": {
+          "e1_input_rot0": 0.0,
+          "e2_input_rot0": 0.0
+        }
+      },
+      {
+        "cross_rows": 292864,
+        "shape_rows": 294488,
+        "cross_without_shape": 0,
+        "shape_without_cross": 1624,
+        "parent_rows": 886209,
+        "parent_usable": 292824,
+        "parent_absent_crossmatch": 593345,
+        "usable_zero_shape_rows": 0
+      }
+    ],
+    "common_usable": 290473
+  }
+]

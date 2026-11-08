@@ -1,0 +1,448 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084,
+    1124,
+    1005,
+    1045,
+    1085,
+    1125,
+    1006,
+    1046,
+    1086,
+    1126,
+    1007,
+    1047,
+    1087,
+    1127,
+    1008,
+    1048,
+    1088,
+    1128,
+    1009,
+    1049,
+    1089,
+    1129
+  ],
+  "pilot_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "arms": [
+    "seed612",
+    "seed613"
+  ],
+  "tasks": [
+    {
+      "arm": "seed612",
+      "case": 1000
+    },
+    {
+      "arm": "seed613",
+      "case": 1000
+    },
+    {
+      "arm": "seed612",
+      "case": 1040
+    },
+    {
+      "arm": "seed613",
+      "case": 1040
+    },
+    {
+      "arm": "seed612",
+      "case": 1080
+    },
+    {
+      "arm": "seed613",
+      "case": 1080
+    },
+    {
+      "arm": "seed612",
+      "case": 1120
+    },
+    {
+      "arm": "seed613",
+      "case": 1120
+    },
+    {
+      "arm": "seed612",
+      "case": 1001
+    },
+    {
+      "arm": "seed613",
+      "case": 1001
+    },
+    {
+      "arm": "seed612",
+      "case": 1041
+    },
+    {
+      "arm": "seed613",
+      "case": 1041
+    },
+    {
+      "arm": "seed612",
+      "case": 1081
+    },
+    {
+      "arm": "seed613",
+      "case": 1081
+    },
+    {
+      "arm": "seed612",
+      "case": 1121
+    },
+    {
+      "arm": "seed613",
+      "case": 1121
+    },
+    {
+      "arm": "seed612",
+      "case": 1002
+    },
+    {
+      "arm": "seed613",
+      "case": 1002
+    },
+    {
+      "arm": "seed612",
+      "case": 1042
+    },
+    {
+      "arm": "seed613",
+      "case": 1042
+    },
+    {
+      "arm": "seed612",
+      "case": 1082
+    },
+    {
+      "arm": "seed613",
+      "case": 1082
+    },
+    {
+      "arm": "seed612",
+      "case": 1122
+    },
+    {
+      "arm": "seed613",
+      "case": 1122
+    },
+    {
+      "arm": "seed612",
+      "case": 1003
+    },
+    {
+      "arm": "seed613",
+      "case": 1003
+    },
+    {
+      "arm": "seed612",
+      "case": 1043
+    },
+    {
+      "arm": "seed613",
+      "case": 1043
+    },
+    {
+      "arm": "seed612",
+      "case": 1083
+    },
+    {
+      "arm": "seed613",
+      "case": 1083
+    },
+    {
+      "arm": "seed612",
+      "case": 1123
+    },
+    {
+      "arm": "seed613",
+      "case": 1123
+    },
+    {
+      "arm": "seed612",
+      "case": 1004
+    },
+    {
+      "arm": "seed613",
+      "case": 1004
+    },
+    {
+      "arm": "seed612",
+      "case": 1044
+    },
+    {
+      "arm": "seed613",
+      "case": 1044
+    },
+    {
+      "arm": "seed612",
+      "case": 1084
+    },
+    {
+      "arm": "seed613",
+      "case": 1084
+    },
+    {
+      "arm": "seed612",
+      "case": 1124
+    },
+    {
+      "arm": "seed613",
+      "case": 1124
+    },
+    {
+      "arm": "seed612",
+      "case": 1005
+    },
+    {
+      "arm": "seed613",
+      "case": 1005
+    },
+    {
+      "arm": "seed612",
+      "case": 1045
+    },
+    {
+      "arm": "seed613",
+      "case": 1045
+    },
+    {
+      "arm": "seed612",
+      "case": 1085
+    },
+    {
+      "arm": "seed613",
+      "case": 1085
+    },
+    {
+      "arm": "seed612",
+      "case": 1125
+    },
+    {
+      "arm": "seed613",
+      "case": 1125
+    },
+    {
+      "arm": "seed612",
+      "case": 1006
+    },
+    {
+      "arm": "seed613",
+      "case": 1006
+    },
+    {
+      "arm": "seed612",
+      "case": 1046
+    },
+    {
+      "arm": "seed613",
+      "case": 1046
+    },
+    {
+      "arm": "seed612",
+      "case": 1086
+    },
+    {
+      "arm": "seed613",
+      "case": 1086
+    },
+    {
+      "arm": "seed612",
+      "case": 1126
+    },
+    {
+      "arm": "seed613",
+      "case": 1126
+    },
+    {
+      "arm": "seed612",
+      "case": 1007
+    },
+    {
+      "arm": "seed613",
+      "case": 1007
+    },
+    {
+      "arm": "seed612",
+      "case": 1047
+    },
+    {
+      "arm": "seed613",
+      "case": 1047
+    },
+    {
+      "arm": "seed612",
+      "case": 1087
+    },
+    {
+      "arm": "seed613",
+      "case": 1087
+    },
+    {
+      "arm": "seed612",
+      "case": 1127
+    },
+    {
+      "arm": "seed613",
+      "case": 1127
+    },
+    {
+      "arm": "seed612",
+      "case": 1008
+    },
+    {
+      "arm": "seed613",
+      "case": 1008
+    },
+    {
+      "arm": "seed612",
+      "case": 1048
+    },
+    {
+      "arm": "seed613",
+      "case": 1048
+    },
+    {
+      "arm": "seed612",
+      "case": 1088
+    },
+    {
+      "arm": "seed613",
+      "case": 1088
+    },
+    {
+      "arm": "seed612",
+      "case": 1128
+    },
+    {
+      "arm": "seed613",
+      "case": 1128
+    },
+    {
+      "arm": "seed612",
+      "case": 1009
+    },
+    {
+      "arm": "seed613",
+      "case": 1009
+    },
+    {
+      "arm": "seed612",
+      "case": 1049
+    },
+    {
+      "arm": "seed613",
+      "case": 1049
+    },
+    {
+      "arm": "seed612",
+      "case": 1089
+    },
+    {
+      "arm": "seed613",
+      "case": 1089
+    },
+    {
+      "arm": "seed612",
+      "case": 1129
+    },
+    {
+      "arm": "seed613",
+      "case": 1129
+    }
+  ],
+  "checkpoints": {
+    "seed612": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_cartesian_seeds_20261105/612/selected.pt",
+      "completion": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_cartesian_seeds_20261105/612/completed.json",
+      "seed": 612
+    },
+    "seed613": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_cartesian_seeds_20261105/613/selected.pt",
+      "completion": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_cartesian_seeds_20261105/613/completed.json",
+      "seed": 613
+    }
+  },
+  "baseline_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_grid_20261104",
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      null
+    ],
+    [
+      "radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      null
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ]
+  ],
+  "factorized_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_constant_20261105"
+}

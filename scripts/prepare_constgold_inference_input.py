@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Freeze a selected ConstGold sample as a provenance-checked image input."""
+"""Freeze actual, independently selected ConstGold plus-leg measurements."""
 
 from __future__ import annotations
 
@@ -12,108 +12,186 @@ import numpy as np
 import pandas as pd
 
 
-TARGET_NAMES = [
-    "measured_ngmix_g1",
-    "measured_ngmix_g2",
-    "measured_mag_auto",
-    "measured_log_flux_radius",
-]
-
-
-def _sha256(path: Path) -> str:
+def file_hash(path):
     digest = sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1 << 20), b""):
+    with Path(path).open("rb") as stream:
+        for block in iter(lambda: stream.read(8 << 20), b""):
             digest.update(block)
     return digest.hexdigest()
 
 
-def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source-sample", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--measurement-model", type=Path, required=True)
-    parser.add_argument("--likelihood-config", type=Path, required=True)
-    parser.add_argument("--injected-g1", type=float, default=0.02)
-    parser.add_argument("--injected-g2", type=float, default=0.0)
-    parser.add_argument("--pixel-size", type=float, default=0.2)
-    return parser.parse_args(argv)
+def selection_thresholds(config):
+    """Read this adapter's supported magnitude/radius cuts from the likelihood."""
+    selection = config["measured_selection"]
+    if selection["mode"] != "output_cut_with_population_normalization":
+        raise ValueError("input selection requires population-normalized output bounds")
+    bounds = {}
+    for spec in selection["bounds"]:
+        name, lower, upper = spec.split(":")
+        if name in bounds or upper or not lower:
+            raise ValueError("require unique lower-only radius and flux bounds")
+        bounds[name] = float(lower.removeprefix(">"))
+    if set(bounds) != {"measured_flux_radius", "measured_flux_from_mag_auto"}:
+        raise ValueError("input adapter supports only radius and magnitude selection")
+    if not all(np.isfinite(value) and value > 0 for value in bounds.values()):
+        raise ValueError("selection bounds must be finite and positive")
+    conditions = config["observing_conditions"]
+    return (
+        bounds["measured_flux_radius"] * conditions["pixel_size"],
+        conditions["zero_point"] - 2.5 * np.log10(bounds["measured_flux_from_mag_auto"]),
+    )
+
+
+def read_case(root, case, *, pixel_size, zero_point, primary_mag, primary_re,
+              measured_radius_min=0.75, measured_mag_max=25.8,
+              strict_radius=False, physical_disk_usability=False):
+    base = root / f"case{case}_0.02" / "real0" / "catalogues"
+    paths = {
+        "truth": base / "input/gals_info_tile180.0_-0.5.feather",
+        "crossmatch": base / "CrossMatch/tile180.0_-0.5_rot0_matched.feather",
+        "shapes": base / "Shapes/shape_catalogue_detect_position_all_tile180.0_-0.5.feather",
+    }
+    truth = pd.read_feather(paths["truth"], columns=[
+        "index_input", "r_input", "Re_input", "gamma1_input", "gamma2_input",
+    ])
+    cross = pd.read_feather(paths["crossmatch"], columns=["id_detec", "id_input"])
+    shape = pd.read_feather(paths["shapes"], columns=[
+        "NUMBER", "NGMIX_G1", "NGMIX_G2", "MAG_AUTO", "FLUX_RADIUS",
+    ])
+    for frame, keys in ((truth, ["index_input"]), (cross, ["id_detec", "id_input"]), (shape, ["NUMBER"])):
+        for key in keys:
+            if frame[key].isna().any() or frame[key].duplicated().any():
+                raise ValueError(f"case {case}: missing or duplicate {key}")
+    if not np.allclose(truth[["gamma1_input", "gamma2_input"]], [0.02, 0.0], rtol=0, atol=1e-14):
+        raise ValueError(f"case {case}: input is not the plus (0.02, 0) shear")
+    joined = cross.merge(shape, left_on="id_detec", right_on="NUMBER", validate="one_to_one")
+    matched = joined.merge(truth, left_on="id_input", right_on="index_input", validate="one_to_one")
+    domain = np.ones(len(matched), dtype=bool)
+    for column, bounds in (("r_input", primary_mag), ("Re_input", primary_re)):
+        if bounds is not None:
+            if not bounds[0] < bounds[1]:
+                raise ValueError("ordered truth bounds required")
+            domain &= (matched[column] > bounds[0]) & (matched[column] < bounds[1])
+    supported = matched.loc[domain].copy()
+    values = supported[["NGMIX_G1", "NGMIX_G2", "MAG_AUTO", "FLUX_RADIUS"]].to_numpy(float)
+    finite = np.isfinite(values).all(axis=1)
+    usable = finite & (values[:, 3] > 0) & (values[:, 0] != -1.0) & ~(
+        (values[:, 0] == 0.0) & (values[:, 1] == 0.0)
+    )
+    if physical_disk_usability:
+        usable = finite & (values[:, 3] > 0) & (np.square(values[:, :2]).sum(axis=1) < 1)
+        with np.errstate(over="ignore", under="ignore"):
+            flux = 10.0 ** (0.4 * (zero_point - values[:, 2]))
+        usable &= np.isfinite(flux) & (flux > 0)
+    # Compare in native pixels; multiplying 3 pixels by 0.2 introduces a
+    # rounding difference at the scientifically declared strict boundary.
+    radius_cut = measured_radius_min / pixel_size
+    if np.isclose(radius_cut, round(radius_cut), rtol=0, atol=1e-14):
+        radius_cut = float(round(radius_cut))
+    selected = usable & (values[:, 2] < measured_mag_max) & (
+        values[:, 3] > radius_cut if strict_radius else values[:, 3] >= radius_cut
+    )
+    chosen = supported.loc[selected]
+    output = pd.DataFrame({
+        "source_case": np.full(len(chosen), case, dtype=np.int64),
+        "source_input_index": chosen.id_input.to_numpy(np.int64),
+        "source_detection_id": chosen.NUMBER.to_numpy(np.int64),
+        "measured_ngmix_g1": chosen.NGMIX_G1.to_numpy(float),
+        "measured_ngmix_g2": chosen.NGMIX_G2.to_numpy(float),
+        "measured_flux_radius": chosen.FLUX_RADIUS.to_numpy(float),
+        "measured_flux_from_mag_auto": 10.0 ** (0.4 * (zero_point - chosen.MAG_AUTO.to_numpy(float))),
+        "measured_mag_auto": chosen.MAG_AUTO.to_numpy(float),
+    })
+    report = {
+        "case": case, "truth_rows": len(truth), "crossmatch_rows": len(cross), "shape_rows": len(shape),
+        "crossmatch_without_shape": len(cross) - len(joined), "shape_without_crossmatch": len(shape) - len(joined),
+        "matched_without_truth": len(joined) - len(matched), "outside_truth_domain": int((~domain).sum()),
+        "in_truth_domain": len(supported), "invalid_or_unusable": int((~usable).sum()),
+        "usable": int(usable.sum()), "selected": len(output),
+        "selected_outside_v36_true_r_lt26_training_parent": int((chosen.r_input >= 26).sum()),
+        "selected_zero_shapes": int(((chosen.NGMIX_G1 == 0) & (chosen.NGMIX_G2 == 0)).sum()),
+        "sources": {name: {"path": str(path), "sha256": file_hash(path)} for name, path in paths.items()},
+    }
+    return output, report
 
 
 def main(argv=None):
-    args = parse_args(argv)
-    if args.output.exists():
-        raise SystemExit(f"refusing to overwrite {args.output}")
-    source = pd.read_parquet(args.source_sample)
-    required = {"case", "input_index", *TARGET_NAMES}
-    missing = sorted(required - set(source))
-    if missing:
-        raise KeyError(f"ConstGold sample lacks columns: {missing}")
-    if source[["case", "input_index"]].duplicated().any():
-        raise ValueError("ConstGold sample contains duplicate source identities")
-    measurements = source[TARGET_NAMES].copy()
-    values = measurements.to_numpy(float)
-    radius = args.pixel_size * np.exp(values[:, 3])
-    selected = (
-        np.isfinite(values).all(axis=1)
-        & (np.hypot(values[:, 0], values[:, 1]) < 0.6)
-        & (values[:, 2] < 25.8)
-        & (radius >= 0.75)
-    )
-    if not selected.all():
-        raise ValueError(f"source sample has {int((~selected).sum())} rows outside cuts")
-
-    likelihood = json.loads(args.likelihood_config.read_text())
-    shear_transform = likelihood["shear_transform"]
-    expected_model_hash = likelihood["measurement_model"]["sha256"]
-    actual_model_hash = _sha256(args.measurement_model)
-    if actual_model_hash != expected_model_hash:
-        raise ValueError(
-            "measurement model does not match the likelihood configuration: "
-            f"expected {expected_model_hash}, found {actual_model_hash}"
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--constgold-root", type=Path, required=True)
+    parser.add_argument("--likelihood-config", type=Path, required=True)
+    parser.add_argument("--measurement-model", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--sample-size", type=int, required=True)
+    parser.add_argument("--seed", type=int, default=20260914)
+    parser.add_argument("--min-case", type=int, default=40)
+    parser.add_argument("--max-case", type=int, default=140, help="exclusive")
+    parser.add_argument("--primary-mag", type=float, nargs=2, default=(18.0, 25.8))
+    parser.add_argument("--primary-re", type=float, nargs=2, default=(0.5, 1.5))
+    parser.add_argument("--no-truth-cuts", action="store_true")
+    parser.add_argument("--no-truth-radius-cut", action="store_true")
+    args = parser.parse_args(argv)
+    if args.output.exists() or args.sample_size <= 0 or args.min_case >= args.max_case:
+        raise ValueError("require a new output, positive sample size, and nonempty case range")
+    config = json.loads(args.likelihood_config.read_text())
+    if args.no_truth_cuts:
+        args.primary_mag = args.primary_re = None
+    elif args.no_truth_radius_cut:
+        args.primary_re = None
+    strict_radius = any(spec.startswith("measured_flux_radius:>") for spec in config["measured_selection"]["bounds"])
+    physical_disk_usability = config.get("usability") == "finite_positive_physical_disk"
+    model_hash = file_hash(args.measurement_model)
+    if config["measurement_model"]["sha256"] != model_hash:
+        raise ValueError("checkpoint differs from the likelihood configuration")
+    targets = config["measurement_model"]["target_names"]
+    expected_targets = ["measured_ngmix_g1", "measured_ngmix_g2", "measured_flux_radius", "measured_flux_from_mag_auto"]
+    if targets != expected_targets:
+        raise ValueError("this input adapter requires the joint physical four-output likelihood")
+    radius_min, mag_max = selection_thresholds(config)
+    frames, reports = [], []
+    for case in range(args.min_case, args.max_case):
+        frame, report = read_case(
+            args.constgold_root, case, pixel_size=config["observing_conditions"]["pixel_size"],
+            zero_point=config["observing_conditions"]["zero_point"],
+            primary_mag=args.primary_mag, primary_re=args.primary_re,
+            measured_radius_min=radius_min, measured_mag_max=mag_max,
+            strict_radius=strict_radius, physical_disk_usability=physical_disk_usability,
         )
-    truth = pd.DataFrame(
-        {
-            "mock_kind": "image",
-            "shear_transform": shear_transform,
-            "injected_g1": float(args.injected_g1),
-            "injected_g2": float(args.injected_g2),
-            "source_case": source["case"].to_numpy(np.int64),
-            "source_input_index": source["input_index"].to_numpy(np.int64),
-        }
-    )
+        frames.append(frame)
+        reports.append(report)
+        print(f"case {case}: selected={len(frame)} unmatched_cross={report['crossmatch_without_shape']} "
+              f"unusable={report['invalid_or_unusable']}", flush=True)
+    eligible = pd.concat(frames, ignore_index=True)
+    if eligible[["source_case", "source_input_index"]].duplicated().any():
+        raise ValueError("duplicate catalogue identities")
+    if len(eligible) < args.sample_size:
+        raise ValueError(f"only {len(eligible)} eligible rows for {args.sample_size} requested")
+    rows = np.random.default_rng(args.seed).choice(len(eligible), args.sample_size, replace=False)
+    chosen = eligible.iloc[rows].reset_index(drop=True)
+    measurements = chosen[[*targets, "measured_mag_auto"]]
+    truth = chosen[["source_case", "source_input_index", "source_detection_id"]].copy()
+    truth["mock_kind"] = "image"
+    truth["shear_transform"] = config["shear_transform"]
+    truth["injected_g1"], truth["injected_g2"] = 0.02, 0.0
     args.output.mkdir(parents=True)
     measurements.to_parquet(args.output / "measurements.parquet", index=False)
     truth.to_parquet(args.output / "truth.parquet", index=False)
-    output_hashes = {
-        name: _sha256(args.output / name)
-        for name in ("measurements.parquet", "truth.parquet")
-    }
     manifest = {
-        "mock_kind": "image",
-        "catalogue": "constgold",
-        "leg": "plus",
-        "shear_transform": shear_transform,
-        "measurement_model": str(args.measurement_model),
-        "measurement_model_sha256": actual_model_hash,
-        "target_names": TARGET_NAMES,
-        "injected_g1": float(args.injected_g1),
-        "injected_g2": float(args.injected_g2),
-        "n_objects": int(len(measurements)),
-        "source_case_range": [int(source["case"].min()), int(source["case"].max()) + 1],
-        "source_cases_present": int(source["case"].nunique()),
-        "source_sample": str(args.source_sample),
-        "source_sample_sha256": _sha256(args.source_sample),
-        "selection_cut_key": (
-            "|xhat|<0.6;measured_mag_auto:None:25.8;"
-            "measured_log_flux_radius:1.3217558399823195:None"
-        ),
-        "output_sha256": output_hashes,
+        "mock_kind": "image", "catalogue": "constgold", "leg": "plus", "injected_g1": 0.02, "injected_g2": 0.0,
+        "shear_transform": config["shear_transform"], "measurement_model_sha256": model_hash,
+        "target_names": targets, "n_objects": len(chosen), "n_eligible": len(eligible), "sample_seed": args.seed,
+        "sampling": "uniform without replacement after independent plus-leg usability and selection",
+        "case_range": [args.min_case, args.max_case], "primary_mag": args.primary_mag, "primary_re": args.primary_re,
+        "truth_domain": "explicit primary_mag/primary_re bounds above; null means no truth-property cut; no neighbour cut",
+        "usability": ("finite four measurements, positive radius/flux, shape inside unit disk; zero shape retained"
+                      if physical_disk_usability else "finite four measurements, positive radius, NGMIX_G1 != -1, shape != (0,0)"),
+        "measured_selection": f"MAG_AUTO < {mag_max:g}; FLUX_RADIUS {'>' if strict_radius else '>='} {radius_min:g} arcsec",
+        "measured_selection_bounds": config["measured_selection"]["bounds"],
+        "minus_leg_read": False, "per_case": reports,
+        "output_sha256": {name: file_hash(args.output / name) for name in ["measurements.parquet", "truth.parquet"]},
+        "implementation_sha256": file_hash(__file__), "likelihood_config_sha256": file_hash(args.likelihood_config),
     }
-    (args.output / "image_mock_manifest.json").write_text(
-        json.dumps(manifest, indent=2) + "\n"
-    )
-    print(json.dumps(manifest, indent=2))
+    (args.output / "image_mock_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print(f"CONSTGOLD_INPUT_COMPLETE n={len(chosen)} eligible={len(eligible)} output={args.output}", flush=True)
 
 
 if __name__ == "__main__":

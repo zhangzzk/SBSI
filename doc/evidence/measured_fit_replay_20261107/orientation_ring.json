@@ -1,0 +1,182 @@
+{
+  "description": "Noiseless isolated Sersic orientation rings at fixed sky weight; not the detected blended population. Gaussian PSF control and production truncated Moffat PSF. Tight fits, no classifier or flow.",
+  "cases": [
+    {
+      "profile_n": 1.0,
+      "circularized_radius_arcsec": 0.35,
+      "psf": "moffat",
+      "flux": 251.18864315095797,
+      "intrinsic_g_abs": 0.5,
+      "angles": 16,
+      "pixel_phases": 4,
+      "matrix": [
+        [
+          1.0885891480794048,
+          7.245236999215516e-05
+        ],
+        [
+          5.213504326727521e-05,
+          1.0887229127877907
+        ]
+      ],
+      "diagonal_gap": -0.00013376470838588617,
+      "nonzero_flags": 0,
+      "seconds": 30.593032939359546
+    },
+    {
+      "profile_n": 1.0,
+      "circularized_radius_arcsec": 0.35,
+      "psf": "gaussian",
+      "flux": 251.18864315095797,
+      "intrinsic_g_abs": 0.5,
+      "angles": 16,
+      "pixel_phases": 4,
+      "matrix": [
+        [
+          0.9266427369259158,
+          -7.767227658413926e-06
+        ],
+        [
+          -4.318858516789677e-05,
+          0.9267346281043303
+        ]
+      ],
+      "diagonal_gap": -9.189117841446048e-05,
+      "nonzero_flags": 0,
+      "seconds": 26.92423512879759
+    },
+    {
+      "profile_n": 1.0,
+      "circularized_radius_arcsec": 0.7,
+      "psf": "moffat",
+      "flux": 251.18864315095797,
+      "intrinsic_g_abs": 0.5,
+      "angles": 16,
+      "pixel_phases": 4,
+      "matrix": [
+        [
+          1.0223312608956547,
+          9.354221117418042e-06
+        ],
+        [
+          -7.5534803053393246e-06,
+          1.022350576752724
+        ]
+      ],
+      "diagonal_gap": -1.9315857069157616e-05,
+      "nonzero_flags": 0,
+      "seconds": 14.750240337103605
+    },
+    {
+      "profile_n": 1.0,
+      "circularized_radius_arcsec": 0.7,
+      "psf": "gaussian",
+      "flux": 251.18864315095797,
+      "intrinsic_g_abs": 0.5,
+      "angles": 16,
+      "pixel_phases": 4,
+      "matrix": [
+        [
+          0.9454032001285562,
+          -3.895707197690236e-05
+        ],
+        [
+          -2.968789170549116e-05,
+          0.9453515969162046
+        ]
+      ],
+      "diagonal_gap": 5.160321235153642e-05,
+      "nonzero_flags": 0,
+      "seconds": 15.367917915806174
+    },
+    {
+      "profile_n": 4.0,
+      "circularized_radius_arcsec": 0.35,
+      "psf": "moffat",
+      "flux": 251.18864315095797,
+      "intrinsic_g_abs": 0.5,
+      "angles": 16,
+      "pixel_phases": 4,
+      "matrix": [
+        [
+          0.9536209167958737,
+          -0.0013386449689006623
+        ],
+        [
+          0.00018341780023747043,
+          0.9539132165601794
+        ]
+      ],
+      "diagonal_gap": -0.0002922997643056702,
+      "nonzero_flags": 0,
+      "seconds": 19.404495395720005
+    },
+    {
+      "profile_n": 4.0,
+      "circularized_radius_arcsec": 0.35,
+      "psf": "gaussian",
+      "flux": 251.18864315095797,
+      "intrinsic_g_abs": 0.5,
+      "angles": 16,
+      "pixel_phases": 4,
+      "matrix": [
+        [
+          0.7567612738593429,
+          -0.00016301494697193398
+        ],
+        [
+          -6.234728785000808e-05,
+          0.7567074668096603
+        ]
+      ],
+      "diagonal_gap": 5.380704968260819e-05,
+      "nonzero_flags": 0,
+      "seconds": 16.325838016346097
+    },
+    {
+      "profile_n": 4.0,
+      "circularized_radius_arcsec": 0.7,
+      "psf": "moffat",
+      "flux": 251.18864315095797,
+      "intrinsic_g_abs": 0.5,
+      "angles": 16,
+      "pixel_phases": 4,
+      "matrix": [
+        [
+          0.9209165341783558,
+          -4.5577637824382056e-05
+        ],
+        [
+          7.334576832796705e-05,
+          0.9209204383071514
+        ]
+      ],
+      "diagonal_gap": -3.904128795584327e-06,
+      "nonzero_flags": 0,
+      "seconds": 19.59764716681093
+    },
+    {
+      "profile_n": 4.0,
+      "circularized_radius_arcsec": 0.7,
+      "psf": "gaussian",
+      "flux": 251.18864315095797,
+      "intrinsic_g_abs": 0.5,
+      "angles": 16,
+      "pixel_phases": 4,
+      "matrix": [
+        [
+          0.7760477813699272,
+          -2.4033146029647703e-06
+        ],
+        [
+          3.084143824861403e-05,
+          0.7763020210015646
+        ]
+      ],
+      "diagonal_gap": -0.0002542396316373985,
+      "nonzero_flags": 0,
+      "seconds": 18.786302600055933
+    }
+  ],
+  "source_sha256": "3d5b33f89145d361b42be0c0920b02663f85bbd054a62ddf4a70b999726ca41d"
+}

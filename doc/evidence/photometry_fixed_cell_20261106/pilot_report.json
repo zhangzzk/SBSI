@@ -1,0 +1,999 @@
+{
+  "cases": [
+    1000
+  ],
+  "bootstrap_seed": 202611069301,
+  "results": {
+    "fine": {
+      "original": {
+        "generated": {
+          "value": 0.08387481502634381,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.08993095731282398,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006056142286480173,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -0.0002922743841655461,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.005566835546133521,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 0.0007815811245121975,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9999726874557693,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9971090221443079,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "fixed_photometry": {
+        "generated": {
+          "value": 0.08413052040340402,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.0902322506893464,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.0061017302859423805,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -0.00029424510012640933,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.005609203994545669,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 0.0007867713915231155,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9999726874557693,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9971090221443079,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "original_minus_fixed": {
+        "generated": {
+          "value": -0.00025570537706021135,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": -0.0003012933765224185,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": -4.558799946220715e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": 1.970715960863251e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": -4.2368448412147784e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": -5.1902670109180106e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "per_case": {
+        "1000": {
+          "original": {
+            "generated": 0.08387481502634381,
+            "measured": 0.08993095731282398,
+            "diagonal_change": 0.006056142286480173,
+            "distribution": -0.0002922743841655461,
+            "within_bin": 0.005566835546133521,
+            "exclusive": 0.0007815811245121975,
+            "shared_generated_mass": 0.9999726874557693,
+            "shared_measured_mass": 0.9971090221443079
+          },
+          "fixed_photometry": {
+            "generated": 0.08413052040340402,
+            "measured": 0.0902322506893464,
+            "diagonal_change": 0.0061017302859423805,
+            "distribution": -0.00029424510012640933,
+            "within_bin": 0.005609203994545669,
+            "exclusive": 0.0007867713915231155,
+            "shared_generated_mass": 0.9999726874557693,
+            "shared_measured_mass": 0.9971090221443079
+          }
+        }
+      }
+    },
+    "fine_with_intrinsic_size": {
+      "original": {
+        "generated": {
+          "value": 0.08387481502634381,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.08993095731282398,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006056142286480173,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -0.0002901920818142693,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.005636276727128266,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 0.0007100576411661753,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9994789353293787,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9971090221443079,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "fixed_photometry": {
+        "generated": {
+          "value": 0.08413052040340405,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.0902322506893464,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006101730285942353,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -0.00029687636164674213,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.0056822241533796645,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 0.0007163824942094558,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9994789353293787,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9971090221443079,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "original_minus_fixed": {
+        "generated": {
+          "value": -0.0002557053770602391,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": -0.0003012933765224185,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": -4.5587999462179396e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": 6.6842798324728055e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": -4.594742625139807e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": -6.324853043280479e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "per_case": {
+        "1000": {
+          "original": {
+            "generated": 0.08387481502634381,
+            "measured": 0.08993095731282398,
+            "diagonal_change": 0.006056142286480173,
+            "distribution": -0.0002901920818142693,
+            "within_bin": 0.005636276727128266,
+            "exclusive": 0.0007100576411661753,
+            "shared_generated_mass": 0.9994789353293787,
+            "shared_measured_mass": 0.9971090221443079
+          },
+          "fixed_photometry": {
+            "generated": 0.08413052040340405,
+            "measured": 0.0902322506893464,
+            "diagonal_change": 0.006101730285942353,
+            "distribution": -0.00029687636164674213,
+            "within_bin": 0.0056822241533796645,
+            "exclusive": 0.0007163824942094558,
+            "shared_generated_mass": 0.9994789353293787,
+            "shared_measured_mass": 0.9971090221443079
+          }
+        }
+      }
+    },
+    "medium": {
+      "original": {
+        "generated": {
+          "value": 0.08387481502634381,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.08993095731282398,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006056142286480173,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -0.0002610696743020981,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.005718140359100432,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 0.0005990716016818397,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9999954692048567,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9982321372413878,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "fixed_photometry": {
+        "generated": {
+          "value": 0.08413052040340403,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.0902322506893464,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006101730285942367,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -0.00025764758127289083,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.005752779092958276,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 0.000606598774256989,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9999954692048567,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9982321372413878,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "original_minus_fixed": {
+        "generated": {
+          "value": -0.0002557053770602252,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": -0.0003012933765224185,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": -4.5587999462193274e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -3.4220930292072713e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": -3.4638733857844314e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": -7.5271725751492775e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "per_case": {
+        "1000": {
+          "original": {
+            "generated": 0.08387481502634381,
+            "measured": 0.08993095731282398,
+            "diagonal_change": 0.006056142286480173,
+            "distribution": -0.0002610696743020981,
+            "within_bin": 0.005718140359100432,
+            "exclusive": 0.0005990716016818397,
+            "shared_generated_mass": 0.9999954692048567,
+            "shared_measured_mass": 0.9982321372413878
+          },
+          "fixed_photometry": {
+            "generated": 0.08413052040340403,
+            "measured": 0.0902322506893464,
+            "diagonal_change": 0.006101730285942367,
+            "distribution": -0.00025764758127289083,
+            "within_bin": 0.005752779092958276,
+            "exclusive": 0.000606598774256989,
+            "shared_generated_mass": 0.9999954692048567,
+            "shared_measured_mass": 0.9982321372413878
+          }
+        }
+      }
+    },
+    "medium_with_intrinsic_size": {
+      "original": {
+        "generated": {
+          "value": 0.08387481502634381,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.08993095731282398,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006056142286480173,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -0.0003217325322881592,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.005797333927569812,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 0.0005805408911985207,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9998506549268147,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9982321372413878,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "fixed_photometry": {
+        "generated": {
+          "value": 0.08413052040340403,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.0902322506893464,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006101730285942367,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -0.0003214947364607824,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.0058347498577951,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 0.0005884751646080593,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9998506549268147,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9982321372413878,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "original_minus_fixed": {
+        "generated": {
+          "value": -0.0002557053770602252,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": -0.0003012933765224185,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": -4.5587999462193274e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -2.377958273768084e-07,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": -3.7415930225288135e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": -7.934273409538522e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "per_case": {
+        "1000": {
+          "original": {
+            "generated": 0.08387481502634381,
+            "measured": 0.08993095731282398,
+            "diagonal_change": 0.006056142286480173,
+            "distribution": -0.0003217325322881592,
+            "within_bin": 0.005797333927569812,
+            "exclusive": 0.0005805408911985207,
+            "shared_generated_mass": 0.9998506549268147,
+            "shared_measured_mass": 0.9982321372413878
+          },
+          "fixed_photometry": {
+            "generated": 0.08413052040340403,
+            "measured": 0.0902322506893464,
+            "diagonal_change": 0.006101730285942367,
+            "distribution": -0.0003214947364607824,
+            "within_bin": 0.0058347498577951,
+            "exclusive": 0.0005884751646080593,
+            "shared_generated_mass": 0.9998506549268147,
+            "shared_measured_mass": 0.9982321372413878
+          }
+        }
+      }
+    },
+    "coarse": {
+      "original": {
+        "generated": {
+          "value": 0.08387481502634381,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.08993095731282397,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.0060561422864801595,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": 0.00013845363811082264,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.0058741360728441945,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 4.355257552515262e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.999999091109273,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9999077839614425,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "fixed_photometry": {
+        "generated": {
+          "value": 0.08413052040340403,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.0902322506893464,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006101730285942367,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": 0.00013991112616600494,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.0059189986048936195,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 4.282055488275219e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.999999091109273,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9999077839614425,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "original_minus_fixed": {
+        "generated": {
+          "value": -0.0002557053770602252,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": -0.0003012933765224324,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": -4.558799946220715e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -1.4574880551822972e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": -4.486253204942503e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 7.320206424004264e-07,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "per_case": {
+        "1000": {
+          "original": {
+            "generated": 0.08387481502634381,
+            "measured": 0.08993095731282397,
+            "diagonal_change": 0.0060561422864801595,
+            "distribution": 0.00013845363811082264,
+            "within_bin": 0.0058741360728441945,
+            "exclusive": 4.355257552515262e-05,
+            "shared_generated_mass": 0.999999091109273,
+            "shared_measured_mass": 0.9999077839614425
+          },
+          "fixed_photometry": {
+            "generated": 0.08413052040340403,
+            "measured": 0.0902322506893464,
+            "diagonal_change": 0.006101730285942367,
+            "distribution": 0.00013991112616600494,
+            "within_bin": 0.0059189986048936195,
+            "exclusive": 4.282055488275219e-05,
+            "shared_generated_mass": 0.999999091109273,
+            "shared_measured_mass": 0.9999077839614425
+          }
+        }
+      }
+    },
+    "coarse_with_intrinsic_size": {
+      "original": {
+        "generated": {
+          "value": 0.08387481502634381,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.08993095731282397,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.0060561422864801595,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": 5.9805864814177594e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.0059566570306283225,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 3.967939103767152e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9999409029472887,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9999077839614426,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "fixed_photometry": {
+        "generated": {
+          "value": 0.08413052040340403,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": 0.0902322506893464,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006101730285942367,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": 6.11340227978176e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": 0.006001084946321578,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 3.951131682298168e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.9999409029472887,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.9999077839614426,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "original_minus_fixed": {
+        "generated": {
+          "value": -0.0002557053770602252,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "measured": {
+          "value": -0.0003012933765224324,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": -4.558799946220715e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "distribution": {
+          "value": -1.3281579836400096e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "within_bin": {
+          "value": -4.442791569325526e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "exclusive": {
+          "value": 1.6807421468983632e-07,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_generated_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "shared_measured_mass": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "per_case": {
+        "1000": {
+          "original": {
+            "generated": 0.08387481502634381,
+            "measured": 0.08993095731282397,
+            "diagonal_change": 0.0060561422864801595,
+            "distribution": 5.9805864814177594e-05,
+            "within_bin": 0.0059566570306283225,
+            "exclusive": 3.967939103767152e-05,
+            "shared_generated_mass": 0.9999409029472887,
+            "shared_measured_mass": 0.9999077839614426
+          },
+          "fixed_photometry": {
+            "generated": 0.08413052040340403,
+            "measured": 0.0902322506893464,
+            "diagonal_change": 0.006101730285942367,
+            "distribution": 6.11340227978176e-05,
+            "within_bin": 0.006001084946321578,
+            "exclusive": 3.951131682298168e-05,
+            "shared_generated_mass": 0.9999409029472887,
+            "shared_measured_mass": 0.9999077839614426
+          }
+        }
+      }
+    }
+  },
+  "receipts": [
+    {
+      "case": 1000,
+      "checkpoint": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+        "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+      },
+      "emulator": {
+        "root": "BLENDEMU_RUNS_DIR",
+        "path": "disk_response_moment_galsbi_20261103/model/model.json",
+        "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+        "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+        "backend": "disk_response_moment",
+        "composition": "mobius",
+        "response_coordinate": "disk_velocity",
+        "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+        "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+      },
+      "source_sha256": "f9a74f72f0665a7a2576e3e47e0652e2cb629ef32bbf90cbce490cff9b02dff3",
+      "helper_sha256": "aa849e65b355ca57b7f0361c17057df7cc0eb2dbe53dc92bec985a4552148b10",
+      "measured": [
+        {
+          "cross_rows": 292879,
+          "shape_rows": 294441,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 883944,
+          "parent_usable": 292842,
+          "parent_absent_crossmatch": 591065,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292800,
+          "shape_rows": 294366,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1566,
+          "parent_rows": 883944,
+          "parent_usable": 292753,
+          "parent_absent_crossmatch": 591144,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292786,
+          "shape_rows": 294357,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1571,
+          "parent_rows": 883944,
+          "parent_usable": 292751,
+          "parent_absent_crossmatch": 591158,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292734,
+          "shape_rows": 294330,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1596,
+          "parent_rows": 883944,
+          "parent_usable": 292699,
+          "parent_absent_crossmatch": 591210,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "gpu": "Tesla V100-SXM2-32GB",
+      "draws": 64,
+      "original_histogram_replay_passed": true,
+      "representative_bins_preserved": true,
+      "target_moment_identity_passed": true,
+      "seconds": 519.3183657070622
+    }
+  ],
+  "report_sha256": "d3bf5faeedd43ba00418f516bd3fd83ec2a89cfcef189c03c547a9f7a8f9aee9",
+  "definition": "Measured minus generated selection-weighted scalar opposite-neighbour coefficient; original or fixed fine-cell photometry.",
+  "limitations": [
+    "Fixed-cell inputs are diagnostic substitutions, not corrected predictions.",
+    "Fine bins hold photometry exactly fixed; coarse aggregates contain multiple fixed fine-cell values.",
+    "Truth-context differences include target properties and neighbour properties.",
+    "Fixed-model development-scene uncertainties; no training uncertainty or independent acceptance."
+  ]
+}

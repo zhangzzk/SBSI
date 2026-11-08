@@ -1,0 +1,7 @@
+{
+  "unequal_leg_count_response": "passed",
+  "known_m_percent": 3,
+  "known_delta_R11": 0.024,
+  "additive_components": "passed",
+  "paired_identical_difference": "exact zero"
+}

@@ -1,0 +1,10 @@
+{
+  "matrix_and_config_audit": 17821487,
+  "audit_state": "COMPLETED 0:0",
+  "membership_check": 17821503,
+  "membership_state": "COMPLETED 0:0",
+  "gpus": 0,
+  "broad_array_still_held": 17788286,
+  "automated_follow_up": "disabled",
+  "membership_elapsed": "00:05:03"
+}

@@ -1,0 +1,542 @@
+{
+  "originally_included/all": {
+    "pairs": 29148629,
+    "primaries": 2699377,
+    "simulation_per_primary": [
+      0.07940370609478535,
+      0.0023095632265100795
+    ],
+    "model_measured_distance": [
+      0.0819600448758572,
+      0.00017417571989619384
+    ],
+    "model_true_distance": [
+      0.08012817805753779,
+      0.0001729473952604661
+    ],
+    "error_measured_distance": [
+      -0.002556338781071844,
+      0.002293462046524784
+    ],
+    "error_true_distance": [
+      -0.0007244719627524401,
+      0.002294673703487901
+    ],
+    "model_change_true_minus_measured": [
+      -0.0018318668183194041,
+      7.677437014944732e-06
+    ],
+    "relative_error_measured_percent": [
+      -3.1190060778320317,
+      2.7988777054229113
+    ],
+    "relative_error_true_percent": [
+      -0.9041413149718958,
+      2.8640873845029784
+    ]
+  },
+  "originally_included/<24": {
+    "pairs": 12774811,
+    "primaries": 1192312,
+    "simulation_per_primary": [
+      0.031072121492058305,
+      0.003384958369450989
+    ],
+    "model_measured_distance": [
+      0.030900983483033766,
+      0.0001206016872579213
+    ],
+    "model_true_distance": [
+      0.029600458988037776,
+      0.00012072077820396764
+    ],
+    "error_measured_distance": [
+      0.00017113800902454214,
+      0.003374480281377429
+    ],
+    "error_true_distance": [
+      0.0014716625040205298,
+      0.0033766713894324866
+    ],
+    "model_change_true_minus_measured": [
+      -0.0013005244949959877,
+      1.1841068255099447e-05
+    ],
+    "relative_error_measured_percent": [
+      0.5538270622309049,
+      10.921627197462978
+    ],
+    "relative_error_true_percent": [
+      4.971755690056234,
+      11.40804008120414
+    ]
+  },
+  "originally_included/24-25.5": {
+    "pairs": 15194453,
+    "primaries": 1402413,
+    "simulation_per_primary": [
+      0.10788178595419905,
+      0.002833985954044759
+    ],
+    "model_measured_distance": [
+      0.11218657262934599,
+      0.00026298117113734455
+    ],
+    "model_true_distance": [
+      0.11001280189017865,
+      0.0002627995431062481
+    ],
+    "error_measured_distance": [
+      -0.004304786675146939,
+      0.0028782630827822275
+    ],
+    "error_true_distance": [
+      -0.0021310159359796015,
+      0.0028766357097209554
+    ],
+    "model_change_true_minus_measured": [
+      -0.0021737707391673374,
+      1.3871705722263361e-05
+    ],
+    "relative_error_measured_percent": [
+      -3.837167474016301,
+      2.5638543201208073
+    ],
+    "relative_error_true_percent": [
+      -1.9370617776892085,
+      2.614004209365334
+    ]
+  },
+  "originally_included/25.5-27.5": {
+    "pairs": 1156000,
+    "primaries": 102612,
+    "simulation_per_primary": [
+      0.24928567091036238,
+      0.01519178258852395
+    ],
+    "model_measured_distance": [
+      0.2583633472827755,
+      0.001514826402342793
+    ],
+    "model_true_distance": [
+      0.2550546891154897,
+      0.001489412299065229
+    ],
+    "error_measured_distance": [
+      -0.00907767637241311,
+      0.015151860099062693
+    ],
+    "error_true_distance": [
+      -0.005769018205127288,
+      0.0151309709819146
+    ],
+    "model_change_true_minus_measured": [
+      -0.0033086581672858223,
+      9.142482325118288e-05
+    ],
+    "relative_error_measured_percent": [
+      -3.513531028252903,
+      5.864661431681197
+    ],
+    "relative_error_true_percent": [
+      -2.26187498262973,
+      5.9328508482856215
+    ]
+  },
+  "originally_included/>=27.5": {
+    "pairs": 23365,
+    "primaries": 2040,
+    "simulation_per_primary": [
+      0.20507562634513093,
+      0.06242165935354696
+    ],
+    "model_measured_distance": [
+      0.2717445911836551,
+      0.008491997681741715
+    ],
+    "model_true_distance": [
+      0.2686878170328958,
+      0.008762412120580152
+    ],
+    "error_measured_distance": [
+      -0.06666896483852415,
+      0.06011728538677201
+    ],
+    "error_true_distance": [
+      -0.06361219068776483,
+      0.06011442858533795
+    ],
+    "model_change_true_minus_measured": [
+      -0.003056774150759316,
+      0.0009691644039671858
+    ],
+    "relative_error_measured_percent": [
+      -24.5336860425188,
+      22.35643121658967
+    ],
+    "relative_error_true_percent": [
+      -23.675130264643418,
+      22.60589042452612
+    ]
+  },
+  "originally_excluded/all": {
+    "pairs": 743482,
+    "primaries": 66494,
+    "simulation_per_primary": [
+      0.40811682947489775,
+      0.017649106916832854
+    ],
+    "model_measured_distance": [
+      0.5268254174903695,
+      0.0022493825320740856
+    ],
+    "model_true_distance": [
+      0.5229803563793787,
+      0.002221683871258737
+    ],
+    "error_measured_distance": [
+      -0.1187085880154717,
+      0.017480275487178842
+    ],
+    "error_true_distance": [
+      -0.11486352690448089,
+      0.017484980495707472
+    ],
+    "model_change_true_minus_measured": [
+      -0.0038450611109908123,
+      0.00010160817576351664
+    ],
+    "relative_error_measured_percent": [
+      -22.5328133522794,
+      3.319777367051707
+    ],
+    "relative_error_true_percent": [
+      -21.963258371631266,
+      3.344893705096716
+    ]
+  },
+  "originally_excluded/<24": {
+    "pairs": 79698,
+    "primaries": 7176,
+    "simulation_per_primary": [
+      0.3910569565738946,
+      0.08134426581487167
+    ],
+    "model_measured_distance": [
+      0.4645526350337565,
+      0.008378998789042275
+    ],
+    "model_true_distance": [
+      0.4593909552326357,
+      0.008313768968669435
+    ],
+    "error_measured_distance": [
+      -0.07349567845986191,
+      0.07980236797967546
+    ],
+    "error_true_distance": [
+      -0.06833399865874105,
+      0.07983019833442023
+    ],
+    "model_change_true_minus_measured": [
+      -0.005161679801120857,
+      0.0003217723558362327
+    ],
+    "relative_error_measured_percent": [
+      -15.820742993852866,
+      17.20459281410664
+    ],
+    "relative_error_true_percent": [
+      -14.874911636894705,
+      17.399348757481366
+    ]
+  },
+  "originally_excluded/24-25.5": {
+    "pairs": 547165,
+    "primaries": 49168,
+    "simulation_per_primary": [
+      0.3942198996674285,
+      0.018748045662863602
+    ],
+    "model_measured_distance": [
+      0.5246449788157147,
+      0.002406119555074076
+    ],
+    "model_true_distance": [
+      0.5205899462307486,
+      0.002379839089461259
+    ],
+    "error_measured_distance": [
+      -0.1304250791482862,
+      0.018446352527200408
+    ],
+    "error_true_distance": [
+      -0.12637004656332013,
+      0.01847156026589416
+    ],
+    "model_change_true_minus_measured": [
+      -0.004055032584966073,
+      0.00012090172191751832
+    ],
+    "relative_error_measured_percent": [
+      -24.859683102789965,
+      3.5248423617001348
+    ],
+    "relative_error_true_percent": [
+      -24.27439244232106,
+      3.5558158532037187
+    ]
+  },
+  "originally_excluded/25.5-27.5": {
+    "pairs": 115834,
+    "primaries": 10082,
+    "simulation_per_primary": [
+      0.49290501291191413,
+      0.05047295141661325
+    ],
+    "model_measured_distance": [
+      0.58244745678782,
+      0.007337408298759088
+    ],
+    "model_true_distance": [
+      0.5804845345195361,
+      0.0072200939838606
+    ],
+    "error_measured_distance": [
+      -0.08954244387590578,
+      0.04928437792621026
+    ],
+    "error_true_distance": [
+      -0.08757952160762193,
+      0.049237327153664044
+    ],
+    "model_change_true_minus_measured": [
+      -0.001962922268283848,
+      0.0003571361889902901
+    ],
+    "relative_error_measured_percent": [
+      -15.373480102347713,
+      8.482048462655374
+    ],
+    "relative_error_true_percent": [
+      -15.087313511308453,
+      8.503885393669641
+    ]
+  },
+  "originally_excluded/>=27.5": {
+    "pairs": 785,
+    "primaries": 68,
+    "simulation_per_primary": [
+      -0.31436218083022577,
+      0.33267577095546913
+    ],
+    "model_measured_distance": [
+      0.4282356449492058,
+      0.0712093090191126
+    ],
+    "model_true_distance": [
+      0.436099544729427,
+      0.07144881429710542
+    ],
+    "error_measured_distance": [
+      -0.7425978257794316,
+      0.32035108186884015
+    ],
+    "error_true_distance": [
+      -0.7504617255596528,
+      0.32105768960102526
+    ],
+    "model_change_true_minus_measured": [
+      0.007863899780221239,
+      0.0065595603269639115
+    ],
+    "relative_error_measured_percent": [
+      -173.40869087801255,
+      86.01979986992566
+    ],
+    "relative_error_true_percent": [
+      -172.08495964499758,
+      83.93827291316028
+    ]
+  },
+  "all/all": {
+    "pairs": 29892111,
+    "primaries": 2765871,
+    "simulation_per_primary": [
+      0.08730626208023702,
+      0.0023130626760779287
+    ],
+    "model_measured_distance": [
+      0.09265500428887008,
+      0.00019293558750494645
+    ],
+    "model_true_distance": [
+      0.0907747384883505,
+      0.00019175349998538243
+    ],
+    "error_measured_distance": [
+      -0.005348742208633055,
+      0.0022951535368252534
+    ],
+    "error_true_distance": [
+      -0.0034684764081134895,
+      0.0022962724583579152
+    ],
+    "model_change_true_minus_measured": [
+      -0.0018802658005195657,
+      7.235870955914536e-06
+    ],
+    "relative_error_measured_percent": [
+      -5.772750484104783,
+      2.4778953604994434
+    ],
+    "relative_error_true_percent": [
+      -3.8209709726220953,
+      2.530176894137337
+    ]
+  },
+  "all/<24": {
+    "pairs": 12854509,
+    "primaries": 1199488,
+    "simulation_per_primary": [
+      0.033225749687210954,
+      0.003416299219971894
+    ],
+    "model_measured_distance": [
+      0.033495327279326845,
+      0.00012929858768013415
+    ],
+    "model_true_distance": [
+      0.03217170321978602,
+      0.00012842996869877517
+    ],
+    "error_measured_distance": [
+      -0.00026957759211589067,
+      0.003406088805336999
+    ],
+    "error_true_distance": [
+      0.001054046467424933,
+      0.003408249251326881
+    ],
+    "model_change_true_minus_measured": [
+      -0.0013236240595408237,
+      1.177794853316862e-05
+    ],
+    "relative_error_measured_percent": [
+      -0.804821490077734,
+      10.170275748483055
+    ],
+    "relative_error_true_percent": [
+      3.2763154012209084,
+      10.594597777070481
+    ]
+  },
+  "all/24-25.5": {
+    "pairs": 15741618,
+    "primaries": 1451581,
+    "simulation_per_primary": [
+      0.11758064008294011,
+      0.002818004478257305
+    ],
+    "model_measured_distance": [
+      0.12615737750718012,
+      0.0002817758819032462
+    ],
+    "model_true_distance": [
+      0.12391988460408655,
+      0.0002806477264888749
+    ],
+    "error_measured_distance": [
+      -0.008576737424240009,
+      0.002869126720388082
+    ],
+    "error_true_distance": [
+      -0.006339244521146435,
+      0.002867403076193633
+    ],
+    "model_change_true_minus_measured": [
+      -0.002237492903093574,
+      1.3042702278683698e-05
+    ],
+    "relative_error_measured_percent": [
+      -6.798443019118617,
+      2.2710205851114598
+    ],
+    "relative_error_true_percent": [
+      -5.115599115831793,
+      2.3115547393093516
+    ]
+  },
+  "all/25.5-27.5": {
+    "pairs": 1271834,
+    "primaries": 112694,
+    "simulation_per_primary": [
+      0.2710807106290665,
+      0.013371035745061315
+    ],
+    "model_measured_distance": [
+      0.28735704696536596,
+      0.0016053805084941327
+    ],
+    "model_true_distance": [
+      0.2841687830456332,
+      0.0015839340028533646
+    ],
+    "error_measured_distance": [
+      -0.016276336336299407,
+      0.013219913229715122
+    ],
+    "error_true_distance": [
+      -0.013088072416566666,
+      0.013208186084463282
+    ],
+    "model_change_true_minus_measured": [
+      -0.0031882639197327407,
+      8.813715033582366e-05
+    ],
+    "relative_error_measured_percent": [
+      -5.664150751890606,
+      4.601504463438528
+    ],
+    "relative_error_true_percent": [
+      -4.6057389824078365,
+      4.648990211099761
+    ]
+  },
+  "all/>=27.5": {
+    "pairs": 24150,
+    "primaries": 2108,
+    "simulation_per_primary": [
+      0.1883195680491517,
+      0.061961408392243254
+    ],
+    "model_measured_distance": [
+      0.2767926896922211,
+      0.008663783349570625
+    ],
+    "model_true_distance": [
+      0.2740881953456871,
+      0.009002583128477234
+    ],
+    "error_measured_distance": [
+      -0.0884731216430694,
+      0.05981027469193897
+    ],
+    "error_true_distance": [
+      -0.08576862729653544,
+      0.059787477548722705
+    ],
+    "model_change_true_minus_measured": [
+      -0.002704494346533975,
+      0.0009641365291159766
+    ],
+    "relative_error_measured_percent": [
+      -31.96367712653353,
+      21.86128012028384
+    ],
+    "relative_error_true_percent": [
+      -31.292346315156628,
+      22.067959919912663
+    ]
+  }
+}

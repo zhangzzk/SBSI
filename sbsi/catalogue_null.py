@@ -1745,6 +1745,7 @@ def run_adaptive_section5(
     object_ids: Optional[np.ndarray] = None,
     object_chunk: int = 16,
     atom_chunk: int = 4096,
+    progress=None,
 ) -> AdaptiveSection5Result:
     """Fast local Section 5 path with object-specific nested draw stopping.
 
@@ -1764,7 +1765,11 @@ def run_adaptive_section5(
     # while an external R_blend disables the zero-view shortcut and forces each
     # stencil view through the ordinary tensor path.  Both are already handled
     # below; neither changes the proposal or complement algebra.
-    likelihood.cache.validate_detection_shear_invariance()
+    # The zero-view tensor shortcut requires spin-0 detection inputs.  A
+    # shape-sensitive detector is valid on the general path: CatalogueModelCache
+    # builds and scores its detection table independently at every stencil view.
+    if likelihood.tensor_shape_only_available:
+        likelihood.cache.validate_detection_shear_invariance()
     center = np.asarray(center, dtype=np.float64)
     ladder = tuple(sorted({int(value) for value in draw_ladder}))
     if center.shape != (2,) or not np.isfinite(center).all():
@@ -1937,6 +1942,7 @@ def run_adaptive_section5(
     }
     stencil_atom_slots = 0
     stencil_valid_atom_slots = 0
+    last_progress = started
 
     # Every draw already accepts explicit ids and resolves a bare offset to
     # `offset + arange`, so passing the array unconditionally is identical to
@@ -2380,6 +2386,12 @@ def run_adaptive_section5(
             time.perf_counter() - phase_started
         )
         del candidates, candidate_target_tensor, candidate_target, draw, zero_weights
+        now = time.perf_counter()
+        if progress is not None and (
+            object_start == 0 or object_stop == n_objects or now - last_progress >= 60.0
+        ):
+            progress(object_stop, n_objects, now - started)
+            last_progress = now
 
     return AdaptiveSection5Result(
         center=(float(center[0]), float(center[1])),

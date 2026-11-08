@@ -1,0 +1,35 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "split": "train",
+      "case": 136,
+      "rows": 1024,
+      "use_score": false,
+      "exact": true
+    },
+    {
+      "split": "train",
+      "case": 136,
+      "rows": 1024,
+      "use_score": true,
+      "exact": true
+    },
+    {
+      "split": "validation",
+      "case": 4,
+      "rows": 1024,
+      "use_score": false,
+      "exact": true
+    },
+    {
+      "split": "validation",
+      "case": 4,
+      "rows": 1024,
+      "use_score": true,
+      "exact": true
+    }
+  ],
+  "source_sha256": "758300fa5c16dce7bd72d4f70ff8639eed3f7e9794b3b2ecb7a08a91ccefc74f",
+  "model_source_sha256": "7a6287d8ec1ccdda55829df09094470a5225415516697771343b82c9e89b8bde"
+}

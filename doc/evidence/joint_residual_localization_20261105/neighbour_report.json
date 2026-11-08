@@ -1,0 +1,208 @@
+{
+  "cuts": {
+    "uncut": {
+      "simulation_baseline_shape": {
+        "value": 0.07491725532747712,
+        "se": 0.0015747529665037256
+      },
+      "model_shape": {
+        "value": 0.07462846468989387,
+        "se": 0.00011491197390941789
+      },
+      "selection_response": {
+        "value": 0.0,
+        "se": 0.0
+      },
+      "simulation_selected_total": {
+        "value": 0.07491725532747712,
+        "se": 0.0015747529665037256
+      },
+      "baseline_error": {
+        "value": 0.0002887906375832472,
+        "se": 0.0015811071466253158
+      },
+      "selected_error": {
+        "value": 0.0002887906375832472,
+        "se": 0.0015811071466253158
+      },
+      "selection_contributions_by_true_size": [
+        {
+          "value": 0.0,
+          "se": 0.0
+        },
+        {
+          "value": 0.0,
+          "se": 0.0
+        },
+        {
+          "value": 0.0,
+          "se": 0.0
+        },
+        {
+          "value": 0.0,
+          "se": 0.0
+        },
+        {
+          "value": 0.0,
+          "se": 0.0
+        }
+      ],
+      "primaries": 5545405,
+      "pairs": 58884922
+    },
+    "mag25": {
+      "simulation_baseline_shape": {
+        "value": 0.06786633102786034,
+        "se": 0.0018403856082672466
+      },
+      "model_shape": {
+        "value": 0.07090145230370372,
+        "se": 0.00014812094127187634
+      },
+      "selection_response": {
+        "value": 0.0028347968478103043,
+        "se": 0.00039088727466209133
+      },
+      "simulation_selected_total": {
+        "value": 0.07070112787567065,
+        "se": 0.0018764129245435782
+      },
+      "baseline_error": {
+        "value": -0.0030351212758433777,
+        "se": 0.0018418784248679274
+      },
+      "selected_error": {
+        "value": -0.00020032442803306905,
+        "se": 0.0018815135650574273
+      },
+      "selection_contributions_by_true_size": [
+        {
+          "value": 0.0004397576058673561,
+          "se": 0.0001898886620986881
+        },
+        {
+          "value": 0.0017468955081040688,
+          "se": 0.0003229965371440427
+        },
+        {
+          "value": 0.0006035970747498976,
+          "se": 0.0001633030943046561
+        },
+        {
+          "value": 3.155757220374434e-05,
+          "se": 6.769462498962615e-05
+        },
+        {
+          "value": 1.2989086885237912e-05,
+          "se": 1.530336908966238e-05
+        }
+      ],
+      "primaries": 3233605,
+      "pairs": 34663814
+    },
+    "radius3": {
+      "simulation_baseline_shape": {
+        "value": 0.09082320136826935,
+        "se": 0.0019715956952243304
+      },
+      "model_shape": {
+        "value": 0.09251379904917904,
+        "se": 0.0001674988330996138
+      },
+      "selection_response": {
+        "value": 0.0037234767853101783,
+        "se": 0.00042765568771850935
+      },
+      "simulation_selected_total": {
+        "value": 0.09454667815357953,
+        "se": 0.0018932719629142982
+      },
+      "baseline_error": {
+        "value": -0.0016905976809096918,
+        "se": 0.0019423895478671426
+      },
+      "selected_error": {
+        "value": 0.0020328791044004896,
+        "se": 0.0018647756647775034
+      },
+      "selection_contributions_by_true_size": [
+        {
+          "value": 0.0011609874668862077,
+          "se": 0.00021838807655332498
+        },
+        {
+          "value": 0.0021290871340822093,
+          "se": 0.00036553217027640236
+        },
+        {
+          "value": 0.0004391602275978894,
+          "se": 0.00015091938146153918
+        },
+        {
+          "value": -2.3734173392823003e-06,
+          "se": 4.807035550177653e-05
+        },
+        {
+          "value": -3.3846259168460717e-06,
+          "se": 7.635251658840774e-06
+        }
+      ],
+      "primaries": 3493676,
+      "pairs": 37654708
+    },
+    "radius3_mag25": {
+      "simulation_baseline_shape": {
+        "value": 0.07940370609478534,
+        "se": 0.0023095632265100817
+      },
+      "model_shape": {
+        "value": 0.08196004487585719,
+        "se": 0.0001741757198961926
+      },
+      "selection_response": {
+        "value": 0.004518792783631247,
+        "se": 0.000566054084273179
+      },
+      "simulation_selected_total": {
+        "value": 0.08392249887841659,
+        "se": 0.0023262345531736774
+      },
+      "baseline_error": {
+        "value": -0.0025563387810718513,
+        "se": 0.0022934620465247853
+      },
+      "selected_error": {
+        "value": 0.0019624540025593995,
+        "se": 0.002317542830951979
+      },
+      "selection_contributions_by_true_size": [
+        {
+          "value": 0.0010010997498414507,
+          "se": 0.0002756065849736812
+        },
+        {
+          "value": 0.002779650456376918,
+          "se": 0.0004177095167178841
+        },
+        {
+          "value": 0.0006986648314554569,
+          "se": 0.0002390594294315202
+        },
+        {
+          "value": 2.715722469978856e-05,
+          "se": 7.474526951364991e-05
+        },
+        {
+          "value": 1.2220521257632505e-05,
+          "se": 1.7759723993003133e-05
+        }
+      ],
+      "primaries": 2699377,
+      "pairs": 29148629
+    }
+  },
+  "cases": 40,
+  "definition": "Half-trace projected forward neighbour-shear response per represented baseline-selected primary, h=0.2; common usable labels",
+  "bootstrap": "10000 paired whole-case resamples, seed20260925; baseline mass/mean recomputed",
+  "limitations": "Half of scene neighbours sheared in independent random directions. Common usability and bright-neighbour exclusions retained. Not an h=0.02 coherent-shear error budget."
+}

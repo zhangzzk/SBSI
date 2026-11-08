@@ -1,0 +1,32 @@
+{
+  "shape": [
+    48,
+    48
+  ],
+  "centroid_xy": [
+    24.0,
+    24.0
+  ],
+  "geometric_center_xy": [
+    23.5,
+    23.5
+  ],
+  "unweighted_psf_moments": [
+    7.356956309760032,
+    0.0,
+    7.356956610987933
+  ],
+  "max_90deg_rotation_difference": 0.016358526423573494,
+  "centering_source_check": {
+    "paths": [
+      "/project/ls-gruen/users/zekang.zhang/envs/py31/lib/python3.10/site-packages/ngmix/gmix/gmix_nb.py",
+      "/project/ls-gruen/users/zekang.zhang/envs/sims1/lib/python3.9/site-packages/ngmix/gmix/gmix_nb.py"
+    ],
+    "sha256": [
+      "2e0e617eb92b55f6cd12f454abfc22bce104cc5d3b4aa3e76f62988fdca400cc",
+      "fe33c2cf429531f80fe0830c3cf9bbb982c1b822ee458866aac1b91e96ac6f23"
+    ],
+    "function": "gmix_convolve_fill",
+    "finding": "Convolution subtracts the flux-weighted PSF centroid before adding PSF component positions to galaxy positions. The 0.5-pixel difference from the PSF Jacobian origin is therefore not itself an imposed galaxy centroid offset. This source check does not validate all fitting or pixelization effects."
+  }
+}

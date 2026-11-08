@@ -1,0 +1,9 @@
+{
+  "simulation_alignment_max_replay_error": {
+    "fs2_25.0": 1.6653345369377348e-16,
+    "fs2_25.8": 1.6653345369377348e-16,
+    "galsbi_25.0": 3.3306690738754696e-16,
+    "galsbi_25.8": 1.6653345369377348e-16
+  },
+  "partition_checks": "All intrinsic partitions and negative/positive alignment contributions close in every case/branch; exact composition identity passed."
+}

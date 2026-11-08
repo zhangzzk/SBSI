@@ -1,0 +1,19 @@
+{
+  "prepare": 17750383,
+  "mixed_images": 17750385,
+  "control_image": 17750387,
+  "model": 17750397,
+  "control_check": 17750442,
+  "reduce": 17750443,
+  "fit_audit": 17750449,
+  "fit_reduce": 17750462,
+  "two_hour_status": 17750478,
+  "environment_preflight": 17750489,
+  "final_status": 17750490,
+  "fit_flags": 17750506,
+  "fit_details": 17750514,
+  "fit_modes": 17750533,
+  "fit_parameters": 17750545,
+  "fit_parameters_reduce": 17750548,
+  "reduce_roundoff_repair": 17753575
+}

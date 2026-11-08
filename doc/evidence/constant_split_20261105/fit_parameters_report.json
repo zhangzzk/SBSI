@@ -1,0 +1,33 @@
+{
+  "sample": "Uniform512 IDs from case1000 union selection, both legs; results conditional on per-leg cuts and both fits usable/successful. Same ID may appear in both legs.",
+  "n_selected_case_leg_rows": 1001,
+  "negative_T_fraction_across_fits": 0.07942057942057942,
+  "sign_switch_fraction": 0.052947052947052944,
+  "large_change_fraction": 0.10589410589410589,
+  "fraction_large_changes_with_T_sign_switch": 0.4811320754716981,
+  "share_squared_g1_change_from_T_sign_switch": 0.7551606631017018,
+  "legs": {
+    "0": {
+      "n": 500,
+      "negative_T_fraction_each_repeat": [
+        0.08,
+        0.078
+      ]
+    },
+    "1": {
+      "n": 501,
+      "negative_T_fraction_each_repeat": [
+        0.07984031936127745,
+        0.07984031936127745
+      ]
+    }
+  },
+  "selected_stress_examples": {
+    "selection": "16 largest changes among the 1021-case/leg seeded-replay sample; deliberately selected stress examples, not a population estimate",
+    "n": 16,
+    "T_sign_switches": 16,
+    "opposite_ellipticity_directions": 16,
+    "maximum_PSF_parameter_change": 5.551115123125783e-17
+  },
+  "interpretation": "Negative T is explicitly permitted by original prior. This identifies large optimizer scatter, not a proof of mean calibration bias; no positivity cut or changed fitter was applied. The original success flag and disk-ellipticity usability do not exclude these solutions."
+}

@@ -1,0 +1,2289 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "sign": "simulation minus model",
+  "bootstrap": "10000 paired whole-case resamples, seed20260925",
+  "cut_reports": {
+    "uncut": {
+      "R_sim": {
+        "value": 0.5540431665057994,
+        "se": 0.001745837978497104
+      },
+      "R_flow": {
+        "value": 0.37317173624065764,
+        "se": 9.684691707149626e-05
+      },
+      "R_emulator": {
+        "value": 0.17580986750414374,
+        "se": 0.00031797105094397154
+      },
+      "error": {
+        "value": 0.005061562760998062,
+        "se": 0.001615068818354745
+      },
+      "axes": {
+        "true_size": [
+          {
+            "bin": "<0.15",
+            "simulation_mass_fraction": 0.17454903725105775,
+            "model_mass_fraction": 0.17454903725105775,
+            "error_contribution": {
+              "value": -0.001417989384943307,
+              "se": 0.002312878735465703
+            },
+            "within_contribution": {
+              "value": -0.0014179893849433052,
+              "se": 0.002312878735465702
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.031104636596723592,
+              "se": 0.0023387096969558372
+            },
+            "R_flow_contribution": {
+              "value": -0.0013146895409699626,
+              "se": 0.00010788985456772612
+            },
+            "R_emulator_contribution": {
+              "value": 0.033837315522636864,
+              "se": 0.00011889649034612093
+            }
+          },
+          {
+            "bin": "0.15-0.25",
+            "simulation_mass_fraction": 0.4676700938313636,
+            "model_mass_fraction": 0.4676700938313636,
+            "error_contribution": {
+              "value": 0.00359230320259008,
+              "se": 0.002935639541669435
+            },
+            "within_contribution": {
+              "value": 0.0035923032025900665,
+              "se": 0.002935639541669431
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.18806469820599167,
+              "se": 0.003010249724695976
+            },
+            "R_flow_contribution": {
+              "value": 0.09215720027673902,
+              "se": 0.00017977043161334846
+            },
+            "R_emulator_contribution": {
+              "value": 0.0923151947266626,
+              "se": 0.00021414867514408265
+            }
+          },
+          {
+            "bin": "0.25-0.4",
+            "simulation_mass_fraction": 0.26653342634705735,
+            "model_mass_fraction": 0.26653342634705735,
+            "error_contribution": {
+              "value": 0.002974276255912644,
+              "se": 0.0024807280808840466
+            },
+            "within_contribution": {
+              "value": 0.0029742762559126167,
+              "se": 0.002480728080884048
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.2409271802136072,
+              "se": 0.002700705194235942
+            },
+            "R_flow_contribution": {
+              "value": 0.19734220278733783,
+              "se": 0.00028194569906602075
+            },
+            "R_emulator_contribution": {
+              "value": 0.040610701170356756,
+              "se": 0.00010423803720944
+            }
+          },
+          {
+            "bin": "0.4-0.7",
+            "simulation_mass_fraction": 0.07666226566571263,
+            "model_mass_fraction": 0.07666226566571263,
+            "error_contribution": {
+              "value": 0.0001282857697306589,
+              "se": 0.0005423949402503681
+            },
+            "within_contribution": {
+              "value": 0.0001282857697306594,
+              "se": 0.0005423949402503687
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.08024236058612724,
+              "se": 0.0005727009277031096
+            },
+            "R_flow_contribution": {
+              "value": 0.07201057910007937,
+              "se": 6.105917959326018e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.008103495716317221,
+              "se": 5.731219427896334e-05
+            }
+          },
+          {
+            "bin": ">=0.7",
+            "simulation_mass_fraction": 0.01458517690480863,
+            "model_mass_fraction": 0.01458517690480863,
+            "error_contribution": {
+              "value": -0.0002153130822920535,
+              "se": 0.00019443480671673947
+            },
+            "within_contribution": {
+              "value": -0.00021531308229205334,
+              "se": 0.00019443480671673947
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.013704290903349618,
+              "se": 0.00015439720376476493
+            },
+            "R_flow_contribution": {
+              "value": 0.012976443617471396,
+              "se": 9.071695568523428e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.0009431603681702745,
+              "se": 2.5526392222272543e-05
+            }
+          }
+        ],
+        "true_magnitude": [
+          {
+            "bin": "<24",
+            "simulation_mass_fraction": 0.24203323532058452,
+            "model_mass_fraction": 0.24203323532058452,
+            "error_contribution": {
+              "value": -0.006527765169087323,
+              "se": 0.0012336897896371554
+            },
+            "within_contribution": {
+              "value": -0.006527765169087355,
+              "se": 0.0012336897896371558
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.24007917770752915,
+              "se": 0.00122986157315876
+            },
+            "R_flow_contribution": {
+              "value": 0.23308875323899977,
+              "se": 0.0003549418953036618
+            },
+            "R_emulator_contribution": {
+              "value": 0.01351818963761671,
+              "se": 0.0001106424310824852
+            }
+          },
+          {
+            "bin": "24-25.5",
+            "simulation_mass_fraction": 0.43972513875306124,
+            "model_mass_fraction": 0.43972513875306124,
+            "error_contribution": {
+              "value": 0.0003031566469276128,
+              "se": 0.0025170805661535937
+            },
+            "within_contribution": {
+              "value": 0.00030315664692761685,
+              "se": 0.0025170805661535916
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.20718127203941974,
+              "se": 0.0022451990090993166
+            },
+            "R_flow_contribution": {
+              "value": 0.12676688441829284,
+              "se": 0.0003180175120596176
+            },
+            "R_emulator_contribution": {
+              "value": 0.08011123097419928,
+              "se": 0.00017539020598027845
+            }
+          },
+          {
+            "bin": "25.5-27.5",
+            "simulation_mass_fraction": 0.31650942267128335,
+            "model_mass_fraction": 0.31650942267128335,
+            "error_contribution": {
+              "value": 0.011429399936637797,
+              "se": 0.0012358201713177275
+            },
+            "within_contribution": {
+              "value": 0.011429399936637798,
+              "se": 0.001235820171317727
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.10627815859129627,
+              "se": 0.001038730252946876
+            },
+            "R_flow_contribution": {
+              "value": 0.013306720407436554,
+              "se": 3.46490783163953e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.0815420382472219,
+              "se": 0.00020543802911194767
+            }
+          },
+          {
+            "bin": ">=27.5",
+            "simulation_mass_fraction": 0.0017322032550708662,
+            "model_mass_fraction": 0.0017322032550708662,
+            "error_contribution": {
+              "value": -0.00014322865348021896,
+              "se": 8.448810784516469e-05
+            },
+            "within_contribution": {
+              "value": -0.00014322865348021888,
+              "se": 8.44881078451647e-05
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.0005045581675541016,
+              "se": 9.278689821455327e-05
+            },
+            "R_flow_contribution": {
+              "value": 9.378175928507101e-06,
+              "se": 8.883471607037847e-06
+            },
+            "R_emulator_contribution": {
+              "value": 0.0006384086451058134,
+              "se": 1.1369289318775486e-05
+            }
+          }
+        ],
+        "crowding_log1p": [
+          {
+            "bin": "<0.1",
+            "simulation_mass_fraction": 0.6264474191406799,
+            "model_mass_fraction": 0.6264474191406799,
+            "error_contribution": {
+              "value": 0.002477058239922468,
+              "se": 0.0023774222550628204
+            },
+            "within_contribution": {
+              "value": 0.00247705823992247,
+              "se": 0.0023774222550628143
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.369976783129574,
+              "se": 0.0026564466524529834
+            },
+            "R_flow_contribution": {
+              "value": 0.3192930421108057,
+              "se": 0.00031070687146874
+            },
+            "R_emulator_contribution": {
+              "value": 0.048206682778845766,
+              "se": 6.969095721355415e-05
+            }
+          },
+          {
+            "bin": "0.1-0.3",
+            "simulation_mass_fraction": 0.20976138935699506,
+            "model_mass_fraction": 0.20976138935699506,
+            "error_contribution": {
+              "value": 0.005462175830512386,
+              "se": 0.0011652423415694623
+            },
+            "within_contribution": {
+              "value": 0.00546217583051238,
+              "se": 0.001165242341569463
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.1027581571499581,
+              "se": 0.001183612655004168
+            },
+            "R_flow_contribution": {
+              "value": 0.046413382368383424,
+              "se": 0.00017663913743650323
+            },
+            "R_emulator_contribution": {
+              "value": 0.05088259895106228,
+              "se": 0.00017234092651773048
+            }
+          },
+          {
+            "bin": "0.3-1",
+            "simulation_mass_fraction": 0.1488383949681318,
+            "model_mass_fraction": 0.1488383949681318,
+            "error_contribution": {
+              "value": -0.0005453548374031666,
+              "se": 0.001532567984614056
+            },
+            "within_contribution": {
+              "value": -0.0005453548374031706,
+              "se": 0.0015325679846140575
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.07447330456785149,
+              "se": 0.0012431506328085282
+            },
+            "R_flow_contribution": {
+              "value": 0.007692544032799977,
+              "se": 4.1080157125562994e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.06732611537245468,
+              "se": 0.00032279744410869903
+            }
+          },
+          {
+            "bin": "1-3",
+            "simulation_mass_fraction": 0.014549313414746072,
+            "model_mass_fraction": 0.014549313414746072,
+            "error_contribution": {
+              "value": -0.002265971150060556,
+              "se": 0.00033234931656997137
+            },
+            "within_contribution": {
+              "value": -0.002265971150060556,
+              "se": 0.0003323493165699713
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.006564710434399466,
+              "se": 0.00041993120297302284
+            },
+            "R_flow_contribution": {
+              "value": -0.00024155694347177437,
+              "se": 7.888220760575915e-06
+            },
+            "R_emulator_contribution": {
+              "value": 0.009072238527931795,
+              "se": 9.601815435315512e-05
+            }
+          },
+          {
+            "bin": ">=3",
+            "simulation_mass_fraction": 0.00040348311944708303,
+            "model_mass_fraction": 0.00040348311944708303,
+            "error_contribution": {
+              "value": -6.634532197319319e-05,
+              "se": 6.22578934868589e-05
+            },
+            "within_contribution": {
+              "value": -6.634532197319321e-05,
+              "se": 6.225789348685889e-05
+            },
+            "mixture_contribution": {
+              "value": 0.0,
+              "se": 0.0
+            },
+            "R_sim_contribution": {
+              "value": 0.0002702112240162865,
+              "se": 4.547866032329002e-05
+            },
+            "R_flow_contribution": {
+              "value": 1.432467214031386e-05,
+              "se": 4.025265096687485e-06
+            },
+            "R_emulator_contribution": {
+              "value": 0.0003222318738491658,
+              "se": 2.5028964807006936e-05
+            }
+          }
+        ]
+      },
+      "largest_cells": [
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": -0.007137533652088188,
+            "se": 0.0012446664904066367
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.0046737638671623,
+            "se": 0.001298204446491253
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.004348213594671255,
+            "se": 0.000868888597043848
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.004252250983927718,
+            "se": 0.00029460281562632736
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.00252139731236787,
+            "se": 0.001080629785704815
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.002265243705595017,
+            "se": 0.0010148612581674253
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": -0.0021440812044012584,
+            "se": 0.001107507256963853
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.0016174001453909106,
+            "se": 0.00042845528637802134
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": -0.0015963430241874512,
+            "se": 0.0005939746904771555
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.0015579215572187211,
+            "se": 0.0007480672198296659
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": -0.0014092003822749229,
+            "se": 0.00035411959205552685
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "<24",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": -0.0013238137336404345,
+            "se": 0.00029307222951847586
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.0010180567699921283,
+            "se": 0.00036471968956298397
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "1-3",
+          "error_contribution": {
+            "value": -0.0009539794909994245,
+            "se": 0.00017025172334022507
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "1-3",
+          "error_contribution": {
+            "value": -0.0007647164482834182,
+            "se": 0.00042852537350614585
+          }
+        }
+      ]
+    },
+    "mag25": {
+      "R_sim": {
+        "value": 0.7490815575201412,
+        "se": 0.004508250601767151
+      },
+      "R_flow": {
+        "value": 0.5984769359119686,
+        "se": 0.0002905577822738382
+      },
+      "R_emulator": {
+        "value": 0.15085712569345558,
+        "se": 0.0002800273195010981
+      },
+      "error": {
+        "value": -0.0002525040852830174,
+        "se": 0.0044584637062700236
+      },
+      "axes": {
+        "true_size": [
+          {
+            "bin": "<0.15",
+            "simulation_mass_fraction": 0.11723545882679597,
+            "model_mass_fraction": 0.11710727117341024,
+            "error_contribution": {
+              "value": -0.004128354480844887,
+              "se": 0.0028765924374359775
+            },
+            "within_contribution": {
+              "value": -0.00414934271081317,
+              "se": 0.002867134231447737
+            },
+            "mixture_contribution": {
+              "value": 2.0988229968281624e-05,
+              "se": 2.034274907704172e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.014533966506413925,
+              "se": 0.0028826641284813125
+            },
+            "R_flow_contribution": {
+              "value": -0.0015315629150865937,
+              "se": 0.00020715767650211208
+            },
+            "R_emulator_contribution": {
+              "value": 0.02019388390234541,
+              "se": 0.00011051831546868266
+            }
+          },
+          {
+            "bin": "0.15-0.25",
+            "simulation_mass_fraction": 0.38135735994691,
+            "model_mass_fraction": 0.3814894938452554,
+            "error_contribution": {
+              "value": -0.005778667813114812,
+              "se": 0.005312179895733939
+            },
+            "within_contribution": {
+              "value": -0.005710106426349052,
+              "se": 0.005473885070005228
+            },
+            "mixture_contribution": {
+              "value": -6.856138676576439e-05,
+              "se": 0.00018284956051156437
+            },
+            "R_sim_contribution": {
+              "value": 0.20062619995503028,
+              "se": 0.005205301228162513
+            },
+            "R_flow_contribution": {
+              "value": 0.1353446409653414,
+              "se": 0.0002189230078548795
+            },
+            "R_emulator_contribution": {
+              "value": 0.07106022680280372,
+              "se": 0.00012847689831886676
+            }
+          },
+          {
+            "bin": "0.25-0.4",
+            "simulation_mass_fraction": 0.35506423437280965,
+            "model_mass_fraction": 0.35503546373136097,
+            "error_contribution": {
+              "value": 0.009794144766115861,
+              "se": 0.003616954313087859
+            },
+            "within_contribution": {
+              "value": 0.009764745574966862,
+              "se": 0.003611444089867127
+            },
+            "mixture_contribution": {
+              "value": 2.9399191148998716e-05,
+              "se": 0.00029236226974468617
+            },
+            "R_sim_contribution": {
+              "value": 0.37724455625275316,
+              "se": 0.0036682571637106157
+            },
+            "R_flow_contribution": {
+              "value": 0.3202534284733696,
+              "se": 0.000586138702103642
+            },
+            "R_emulator_contribution": {
+              "value": 0.047196983013267725,
+              "se": 0.0001764886848916644
+            }
+          },
+          {
+            "bin": "0.4-0.7",
+            "simulation_mass_fraction": 0.12126068865325526,
+            "model_mass_fraction": 0.12131059788865414,
+            "error_contribution": {
+              "value": -2.823537507933016e-05,
+              "se": 0.0009917629569759824
+            },
+            "within_contribution": {
+              "value": 2.645273257461078e-05,
+              "se": 0.0009071641897898516
+            },
+            "mixture_contribution": {
+              "value": -5.468810765394612e-05,
+              "se": 0.00016634597400190545
+            },
+            "R_sim_contribution": {
+              "value": 0.1327239561112471,
+              "se": 0.0010498700658927113
+            },
+            "R_flow_contribution": {
+              "value": 0.12180043659143726,
+              "se": 0.00018400368184503063
+            },
+            "R_emulator_contribution": {
+              "value": 0.010951754894889176,
+              "se": 8.022442838628116e-05
+            }
+          },
+          {
+            "bin": ">=0.7",
+            "simulation_mass_fraction": 0.02508225820022914,
+            "model_mass_fraction": 0.02505717336131923,
+            "error_contribution": {
+              "value": -0.0001113911823599008,
+              "se": 0.00024805117977638437
+            },
+            "within_contribution": {
+              "value": -0.00013563974535371994,
+              "se": 0.00026032104409758034
+            },
+            "mixture_contribution": {
+              "value": 2.424856299382033e-05,
+              "se": 2.1067082628060474e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.023952878694696735,
+              "se": 0.00021413122758286586
+            },
+            "R_flow_contribution": {
+              "value": 0.022609992796907074,
+              "se": 0.00015315382433296975
+            },
+            "R_emulator_contribution": {
+              "value": 0.0014542770801495564,
+              "se": 3.867240214101731e-05
+            }
+          }
+        ],
+        "true_magnitude": [
+          {
+            "bin": "<24",
+            "simulation_mass_fraction": 0.42553432886815806,
+            "model_mass_fraction": 0.425484127188932,
+            "error_contribution": {
+              "value": -0.011391294307912204,
+              "se": 0.0021296623427292686
+            },
+            "within_contribution": {
+              "value": -0.011441796762580113,
+              "se": 0.0021929170741981038
+            },
+            "mixture_contribution": {
+              "value": 5.0502454667883616e-05,
+              "se": 0.0004782899557694574
+            },
+            "R_sim_contribution": {
+              "value": 0.42213619764206445,
+              "se": 0.0018590428968825454
+            },
+            "R_flow_contribution": {
+              "value": 0.40976928297086446,
+              "se": 0.0007511820668169279
+            },
+            "R_emulator_contribution": {
+              "value": 0.0237582089791122,
+              "se": 0.00018396626309401284
+            }
+          },
+          {
+            "bin": "24-25.5",
+            "simulation_mass_fraction": 0.5374646162996377,
+            "model_mass_fraction": 0.5376897773262278,
+            "error_contribution": {
+              "value": 0.0033688829525803984,
+              "se": 0.004337018726726767
+            },
+            "within_contribution": {
+              "value": 0.0034923181447659244,
+              "se": 0.004297430232252814
+            },
+            "mixture_contribution": {
+              "value": -0.00012343519218554474,
+              "se": 5.219887626374559e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.3001555017276037,
+              "se": 0.003821798135888089
+            },
+            "R_flow_contribution": {
+              "value": 0.18810018607844092,
+              "se": 0.0005789813016138582
+            },
+            "R_emulator_contribution": {
+              "value": 0.10868643269658236,
+              "se": 0.00030194875143556635
+            }
+          },
+          {
+            "bin": "25.5-27.5",
+            "simulation_mass_fraction": 0.036243602146121684,
+            "model_mass_fraction": 0.036049619953607684,
+            "error_contribution": {
+              "value": 0.008036684335522168,
+              "se": 0.0010433928923448358
+            },
+            "within_contribution": {
+              "value": 0.007920684075477542,
+              "se": 0.0012575737670242238
+            },
+            "mixture_contribution": {
+              "value": 0.00011600026004462363,
+              "se": 0.0003092480803682413
+            },
+            "R_sim_contribution": {
+              "value": 0.02656690900506585,
+              "se": 0.0010187033889775012
+            },
+            "R_flow_contribution": {
+              "value": 0.0005807421659762044,
+              "se": 5.523812798964428e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.01794948250356748,
+              "se": 2.4899179679415545e-05
+            }
+          },
+          {
+            "bin": ">=27.5",
+            "simulation_mass_fraction": 0.000757452686082489,
+            "model_mass_fraction": 0.0007764755312324912,
+            "error_contribution": {
+              "value": -0.0002667770654734008,
+              "se": 0.0001807434079668726
+            },
+            "within_contribution": {
+              "value": -0.00025693436894279066,
+              "se": 0.00018404921214676344
+            },
+            "mixture_contribution": {
+              "value": -9.842696530610167e-06,
+              "se": 7.626007986565868e-06
+            },
+            "R_sim_contribution": {
+              "value": 0.00022294914540719042,
+              "se": 0.00019348315958538865
+            },
+            "R_flow_contribution": {
+              "value": 2.6724696687051345e-05,
+              "se": 7.564089615254187e-06
+            },
+            "R_emulator_contribution": {
+              "value": 0.0004630015141935399,
+              "se": 2.669184788193652e-05
+            }
+          }
+        ],
+        "crowding_log1p": [
+          {
+            "bin": "<0.1",
+            "simulation_mass_fraction": 0.6930771573692149,
+            "model_mass_fraction": 0.694865560907103,
+            "error_contribution": {
+              "value": -0.004372918686551715,
+              "se": 0.0026664704452854407
+            },
+            "within_contribution": {
+              "value": -0.002913603226600094,
+              "se": 0.002732445928256923
+            },
+            "mixture_contribution": {
+              "value": -0.0014593154599516233,
+              "se": 0.0002912030220773589
+            },
+            "R_sim_contribution": {
+              "value": 0.5635849790681865,
+              "se": 0.00286702577345193
+            },
+            "R_flow_contribution": {
+              "value": 0.5260273944554574,
+              "se": 0.0004988374735652611
+            },
+            "R_emulator_contribution": {
+              "value": 0.041930503299280726,
+              "se": 5.6863228639876266e-05
+            }
+          },
+          {
+            "bin": "0.1-0.3",
+            "simulation_mass_fraction": 0.1816661977058276,
+            "model_mass_fraction": 0.17984625247567296,
+            "error_contribution": {
+              "value": 0.003822169095576305,
+              "se": 0.0018939411280759109
+            },
+            "within_contribution": {
+              "value": 0.002720577658449333,
+              "se": 0.001935422724419159
+            },
+            "mixture_contribution": {
+              "value": 0.001101591437126976,
+              "se": 0.00012851490927982955
+            },
+            "R_sim_contribution": {
+              "value": 0.1113335952799801,
+              "se": 0.0019273953431396492
+            },
+            "R_flow_contribution": {
+              "value": 0.06181954098069535,
+              "se": 0.00030742097822516925
+            },
+            "R_emulator_contribution": {
+              "value": 0.04569188520370846,
+              "se": 0.00015992871349810553
+            }
+          },
+          {
+            "bin": "0.3-1",
+            "simulation_mass_fraction": 0.11619499223135163,
+            "model_mass_fraction": 0.115966843200104,
+            "error_contribution": {
+              "value": 0.0010492132727078914,
+              "se": 0.0012660225506599305
+            },
+            "within_contribution": {
+              "value": 0.0009153720116201661,
+              "se": 0.0012977847633979015
+            },
+            "mixture_contribution": {
+              "value": 0.0001338412610877353,
+              "se": 0.00012133583353813504
+            },
+            "R_sim_contribution": {
+              "value": 0.06860303902928584,
+              "se": 0.0010993654300907132
+            },
+            "R_flow_contribution": {
+              "value": 0.010597589101230657,
+              "se": 0.00010284143401704366
+            },
+            "R_emulator_contribution": {
+              "value": 0.056956236655347305,
+              "se": 0.00027779913993945007
+            }
+          },
+          {
+            "bin": "1-3",
+            "simulation_mass_fraction": 0.00837026183790679,
+            "model_mass_fraction": 0.008623588632189942,
+            "error_contribution": {
+              "value": -0.0006395320195330788,
+              "se": 0.0005293562102075736
+            },
+            "within_contribution": {
+              "value": -0.00048268540240819027,
+              "se": 0.0005558367274172641
+            },
+            "mixture_contribution": {
+              "value": -0.000156846617124889,
+              "se": 3.271984150864501e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.005091354426416575,
+              "se": 0.0005376290170047604
+            },
+            "R_flow_contribution": {
+              "value": 8.776308371850528e-06,
+              "se": 2.6241005107200783e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.005722110137577803,
+              "se": 9.499874100477408e-05
+            }
+          },
+          {
+            "bin": ">=3",
+            "simulation_mass_fraction": 0.000691390855699034,
+            "model_mass_fraction": 0.0006977547849299939,
+            "error_contribution": {
+              "value": -0.00011143574748240863,
+              "se": 0.00010768125431629356
+            },
+            "within_contribution": {
+              "value": -0.00010663409360954242,
+              "se": 0.00010724576829865233
+            },
+            "mixture_contribution": {
+              "value": -4.801653872866235e-06,
+              "se": 1.2437966306547513e-06
+            },
+            "R_sim_contribution": {
+              "value": 0.0004685897162721683,
+              "se": 8.609149251693362e-05
+            },
+            "R_flow_contribution": {
+              "value": 2.3635066213307288e-05,
+              "se": 5.551948145519439e-06
+            },
+            "R_emulator_contribution": {
+              "value": 0.0005563903975412697,
+              "se": 4.320281518703531e-05
+            }
+          }
+        ]
+      },
+      "largest_cells": [
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": -0.012543134594870293,
+            "se": 0.0022229285550697878
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.008241923586754839,
+            "se": 0.002101433282301788
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.004374337333420026,
+            "se": 0.0023283986603615013
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.0038979841068795223,
+            "se": 0.00048583509571007984
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": -0.003769378743273416,
+            "se": 0.0019504409229374221
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "<24",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": -0.0023262541093244803,
+            "se": 0.0005129413739622192
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": -0.0020543871464302394,
+            "se": 0.0009147843752025506
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": -0.001953946208087327,
+            "se": 0.0004471231663735256
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.0019153381316891,
+            "se": 0.0007761739499952103
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.0019089703453317704,
+            "se": 0.00029341869175824817
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.0016463287304923867,
+            "se": 0.0003855774973046587
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": -0.0011983988218312639,
+            "se": 0.0015156252420601428
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.0009860746324450798,
+            "se": 0.0003531527386186695
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.0008718930995667785,
+            "se": 0.0015227711675994647
+          }
+        },
+        {
+          "true_size": "0.4-0.7",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.0008355655170609114,
+            "se": 0.0004998650649307675
+          }
+        }
+      ]
+    },
+    "radius3": {
+      "R_sim": {
+        "value": 0.811171609299733,
+        "se": 0.005626726168884924
+      },
+      "R_flow": {
+        "value": 0.5804794818918636,
+        "se": 0.0003150745447197395
+      },
+      "R_emulator": {
+        "value": 0.20768062309304566,
+        "se": 0.00035225929538712514
+      },
+      "error": {
+        "value": 0.02301150431482371,
+        "se": 0.005160000851093399
+      },
+      "axes": {
+        "true_size": [
+          {
+            "bin": "<0.15",
+            "simulation_mass_fraction": 0.09356013770296072,
+            "model_mass_fraction": 0.09372938328333805,
+            "error_contribution": {
+              "value": -0.00271863933315573,
+              "se": 0.00169152141322387
+            },
+            "within_contribution": {
+              "value": -0.0026422290890134132,
+              "se": 0.0016897435498099535
+            },
+            "mixture_contribution": {
+              "value": -7.641024414231914e-05,
+              "se": 0.00016772406479185632
+            },
+            "R_sim_contribution": {
+              "value": 0.039295604195060486,
+              "se": 0.00164141948610685
+            },
+            "R_flow_contribution": {
+              "value": 0.009715414002948905,
+              "se": 0.00011932044703648128
+            },
+            "R_emulator_contribution": {
+              "value": 0.03229882952526732,
+              "se": 0.0001220768704916657
+            }
+          },
+          {
+            "bin": "0.15-0.25",
+            "simulation_mass_fraction": 0.4041395947886147,
+            "model_mass_fraction": 0.4064578758558074,
+            "error_contribution": {
+              "value": 0.013571799240305625,
+              "se": 0.0041954377954811495
+            },
+            "within_contribution": {
+              "value": 0.015004188296547954,
+              "se": 0.0043892407139198685
+            },
+            "mixture_contribution": {
+              "value": -0.0014323890562423327,
+              "se": 0.0002536894118186537
+            },
+            "R_sim_contribution": {
+              "value": 0.2570529335366729,
+              "se": 0.004198821921886623
+            },
+            "R_flow_contribution": {
+              "value": 0.13763515951494687,
+              "se": 0.0001652162640671668
+            },
+            "R_emulator_contribution": {
+              "value": 0.10584597478142037,
+              "se": 0.0002035863247388414
+            }
+          },
+          {
+            "bin": "0.25-0.4",
+            "simulation_mass_fraction": 0.36073300162372424,
+            "model_mass_fraction": 0.35909556422116595,
+            "error_contribution": {
+              "value": 0.011361165896934264,
+              "se": 0.0026742314110609158
+            },
+            "within_contribution": {
+              "value": 0.009721338815966755,
+              "se": 0.002434464625632893
+            },
+            "mixture_contribution": {
+              "value": 0.0016398270809675189,
+              "se": 0.0004932223543811424
+            },
+            "R_sim_contribution": {
+              "value": 0.3668089553686999,
+              "se": 0.003160428339168565
+            },
+            "R_flow_contribution": {
+              "value": 0.29945016285982323,
+              "se": 0.00045416445807407423
+            },
+            "R_emulator_contribution": {
+              "value": 0.055997626611942415,
+              "se": 0.0001816543855905558
+            }
+          },
+          {
+            "bin": "0.4-0.7",
+            "simulation_mass_fraction": 0.11840425628038156,
+            "model_mass_fraction": 0.11774018535348793,
+            "error_contribution": {
+              "value": 0.0009135923757246762,
+              "se": 0.0008552110636142625
+            },
+            "within_contribution": {
+              "value": 0.00020541578407697422,
+              "se": 0.0008292900465081966
+            },
+            "mixture_contribution": {
+              "value": 0.0007081765916476976,
+              "se": 0.0001280886000588839
+            },
+            "R_sim_contribution": {
+              "value": 0.12615698426223232,
+              "se": 0.0009252110452982172
+            },
+            "R_flow_contribution": {
+              "value": 0.11315965189918867,
+              "se": 7.321380585501021e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.01208373998731896,
+              "se": 9.913295325843336e-05
+            }
+          },
+          {
+            "bin": ">=0.7",
+            "simulation_mass_fraction": 0.023163009604318795,
+            "model_mass_fraction": 0.022976991286200718,
+            "error_contribution": {
+              "value": -0.00011641386498490797,
+              "se": 0.0002541186196785909
+            },
+            "within_contribution": {
+              "value": -0.00029306947162694856,
+              "se": 0.0002775047665709234
+            },
+            "mixture_contribution": {
+              "value": 0.00017665560664204246,
+              "se": 2.841150846111317e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.021857131937067533,
+              "se": 0.00018990383913475002
+            },
+            "R_flow_contribution": {
+              "value": 0.020519093614955897,
+              "se": 0.00014659792723355046
+            },
+            "R_emulator_contribution": {
+              "value": 0.0014544521870965452,
+              "se": 3.791084624171483e-05
+            }
+          }
+        ],
+        "true_magnitude": [
+          {
+            "bin": "<24",
+            "simulation_mass_fraction": 0.32818812046792584,
+            "model_mass_fraction": 0.3245494501387568,
+            "error_contribution": {
+              "value": 0.00293408330778852,
+              "se": 0.001405186173773997
+            },
+            "within_contribution": {
+              "value": -0.0014267137511309261,
+              "se": 0.0015105774615186284
+            },
+            "mixture_contribution": {
+              "value": 0.004360797058919451,
+              "se": 0.00048775814494863884
+            },
+            "R_sim_contribution": {
+              "value": 0.39268217427911667,
+              "se": 0.0012293058722999959
+            },
+            "R_flow_contribution": {
+              "value": 0.37051641607329083,
+              "se": 0.0006490997251620748
+            },
+            "R_emulator_contribution": {
+              "value": 0.01923167489803736,
+              "se": 0.00015487653906381168
+            }
+          },
+          {
+            "bin": "24-25.5",
+            "simulation_mass_fraction": 0.4947741655138922,
+            "model_mass_fraction": 0.49517916874314694,
+            "error_contribution": {
+              "value": 0.012728593589441771,
+              "se": 0.00618767125008217
+            },
+            "within_contribution": {
+              "value": 0.012987703512049443,
+              "se": 0.006059318636184086
+            },
+            "mixture_contribution": {
+              "value": -0.0002591099226076798,
+              "se": 0.00015561110643909568
+            },
+            "R_sim_contribution": {
+              "value": 0.3213509803749377,
+              "se": 0.005788372872453242
+            },
+            "R_flow_contribution": {
+              "value": 0.1945198846810061,
+              "se": 0.0005504909718313191
+            },
+            "R_emulator_contribution": {
+              "value": 0.11410250210448984,
+              "se": 0.0002321699245403061
+            }
+          },
+          {
+            "bin": "25.5-27.5",
+            "simulation_mass_fraction": 0.17575095588025083,
+            "model_mass_fraction": 0.1789049908850398,
+            "error_contribution": {
+              "value": 0.0077576362186933265,
+              "se": 0.002036579603164423
+            },
+            "within_contribution": {
+              "value": 0.009404482364157592,
+              "se": 0.0020483534930621663
+            },
+            "mixture_contribution": {
+              "value": -0.0016468461454642556,
+              "se": 0.0003026014502390304
+            },
+            "R_sim_contribution": {
+              "value": 0.0967791718395497,
+              "se": 0.002045313383211879
+            },
+            "R_flow_contribution": {
+              "value": 0.015395688109737508,
+              "se": 4.2418699294026405e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.07362584751111888,
+              "se": 0.00016312364484867483
+            }
+          },
+          {
+            "bin": ">=27.5",
+            "simulation_mass_fraction": 0.0012867581379311598,
+            "model_mass_fraction": 0.0013663902330564382,
+            "error_contribution": {
+              "value": -0.0004088088010997665,
+              "se": 0.0002825413679624605
+            },
+            "within_contribution": {
+              "value": -0.00038117289477219524,
+              "se": 0.0002809029410541379
+            },
+            "mixture_contribution": {
+              "value": -2.763590632757139e-05,
+              "se": 6.246805889928313e-06
+            },
+            "R_sim_contribution": {
+              "value": 0.00035928280612895725,
+              "se": 0.00030403751886282326
+            },
+            "R_flow_contribution": {
+              "value": 4.749302782920748e-05,
+              "se": 7.694387457184607e-06
+            },
+            "R_emulator_contribution": {
+              "value": 0.0007205985793995162,
+              "se": 2.5704692036225393e-05
+            }
+          }
+        ],
+        "crowding_log1p": [
+          {
+            "bin": "<0.1",
+            "simulation_mass_fraction": 0.5901880265157794,
+            "model_mass_fraction": 0.5917471794982845,
+            "error_contribution": {
+              "value": 0.02432810495842392,
+              "se": 0.002050412146532303
+            },
+            "within_contribution": {
+              "value": 0.025817454859435145,
+              "se": 0.0020586454268722207
+            },
+            "mixture_contribution": {
+              "value": -0.001489349901011275,
+              "se": 8.057343649028516e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.5766869786232443,
+              "se": 0.002399127766491221
+            },
+            "R_flow_contribution": {
+              "value": 0.5003533589881579,
+              "se": 0.000450380636795598
+            },
+            "R_emulator_contribution": {
+              "value": 0.05200551467666244,
+              "se": 0.00010487657645522569
+            }
+          },
+          {
+            "bin": "0.1-0.3",
+            "simulation_mass_fraction": 0.22658881511657317,
+            "model_mass_fraction": 0.22497714020594073,
+            "error_contribution": {
+              "value": 0.005311905707874496,
+              "se": 0.0035978623764315073
+            },
+            "within_contribution": {
+              "value": 0.004361285171850925,
+              "se": 0.00356149252143098
+            },
+            "mixture_contribution": {
+              "value": 0.0009506205360235632,
+              "se": 7.525937356006853e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.13582979257678798,
+              "se": 0.0035926968331468625
+            },
+            "R_flow_contribution": {
+              "value": 0.0685585715437935,
+              "se": 0.0002694152657474669
+            },
+            "R_emulator_contribution": {
+              "value": 0.061959315325120015,
+              "se": 0.00023487342097682442
+            }
+          },
+          {
+            "bin": "0.3-1",
+            "simulation_mass_fraction": 0.16775067731452087,
+            "model_mass_fraction": 0.16773102952655033,
+            "error_contribution": {
+              "value": -0.003368827959720252,
+              "se": 0.0015702095095545068
+            },
+            "within_contribution": {
+              "value": -0.0033803697532417774,
+              "se": 0.0015030821548773026
+            },
+            "mixture_contribution": {
+              "value": 1.1541793521516423e-05,
+              "se": 0.00010926036319357407
+            },
+            "R_sim_contribution": {
+              "value": 0.0911781561764688,
+              "se": 0.0013834220069486524
+            },
+            "R_flow_contribution": {
+              "value": 0.011636587785902201,
+              "se": 8.549657580734226e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.08291039635028685,
+              "se": 0.0004052108404527782
+            }
+          },
+          {
+            "bin": "1-3",
+            "simulation_mass_fraction": 0.014856392772974176,
+            "model_mass_fraction": 0.014924673483411165,
+            "error_contribution": {
+              "value": -0.003204290191004017,
+              "se": 0.00020737616855539772
+            },
+            "within_contribution": {
+              "value": -0.0031651459134793294,
+              "se": 0.00024269465514986985
+            },
+            "mixture_contribution": {
+              "value": -3.9144277524687804e-05,
+              "se": 5.607196370878585e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.007008787822631538,
+              "se": 0.0003390793057571616
+            },
+            "R_flow_contribution": {
+              "value": -9.097808130812626e-05,
+              "se": 1.52384568510954e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.010304056094943682,
+              "se": 0.00014033373710887323
+            }
+          },
+          {
+            "bin": ">=3",
+            "simulation_mass_fraction": 0.0006160882801524168,
+            "model_mass_fraction": 0.0006199772858133752,
+            "error_contribution": {
+              "value": -5.5388200750212954e-05,
+              "se": 9.370278053116418e-05
+            },
+            "within_contribution": {
+              "value": -5.249548263415405e-05,
+              "se": 9.192907968257564e-05
+            },
+            "mixture_contribution": {
+              "value": -2.892718116058864e-06,
+              "se": 2.5993742123174947e-06
+            },
+            "R_sim_contribution": {
+              "value": 0.00046789410060044784,
+              "se": 6.49421679927184e-05
+            },
+            "R_flow_contribution": {
+              "value": 2.1941655318075882e-05,
+              "se": 5.704279396629694e-06
+            },
+            "R_emulator_contribution": {
+              "value": 0.0005013406460325848,
+              "se": 3.864422147858625e-05
+            }
+          }
+        ]
+      },
+      "largest_cells": [
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.008993865136561294,
+            "se": 0.0016401692709585819
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.007969570869546349,
+            "se": 0.001615816505341494
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.00600499139838927,
+            "se": 0.001919864677162288
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.00446679054648757,
+            "se": 0.0007456189273178925
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": -0.004449211222254021,
+            "se": 0.0009721573642949099
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.003664622119625413,
+            "se": 0.0008767412423438894
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.003545129151517185,
+            "se": 0.00038971473328691886
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "<24",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": -0.0018843999843688483,
+            "se": 0.00041073917006878693
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": -0.00177664982367212,
+            "se": 0.0004701654406660177
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": -0.00153041455119328,
+            "se": 0.0018525162295812197
+          }
+        },
+        {
+          "true_size": "0.4-0.7",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.0013261720152096328,
+            "se": 0.0003390655903306002
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "1-3",
+          "error_contribution": {
+            "value": -0.0010349561827486396,
+            "se": 0.00020737315098803269
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": -0.0008716307004303628,
+            "se": 0.0010031217239814055
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.0008023158395858902,
+            "se": 0.000972682845083511
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "1-3",
+          "error_contribution": {
+            "value": -0.0007736037887870116,
+            "se": 0.0004669150727963345
+          }
+        }
+      ]
+    },
+    "radius3_mag25": {
+      "R_sim": {
+        "value": 0.9058109119250292,
+        "se": 0.006151589221616198
+      },
+      "R_flow": {
+        "value": 0.7127205615798814,
+        "se": 0.0002868453663049671
+      },
+      "R_emulator": {
+        "value": 0.17124003059101797,
+        "se": 0.00030778618959302455
+      },
+      "error": {
+        "value": 0.021850319754129793,
+        "se": 0.005688871845742424
+      },
+      "axes": {
+        "true_size": [
+          {
+            "bin": "<0.15",
+            "simulation_mass_fraction": 0.06753007198917235,
+            "model_mass_fraction": 0.06661719360544825,
+            "error_contribution": {
+              "value": 0.0004197067890767363,
+              "se": 0.0026987836582939057
+            },
+            "within_contribution": {
+              "value": 5.314691688190096e-06,
+              "se": 0.002493738805183062
+            },
+            "mixture_contribution": {
+              "value": 0.00041439209738854664,
+              "se": 0.00022215578342362383
+            },
+            "R_sim_contribution": {
+              "value": 0.03095049652897914,
+              "se": 0.002786561393934739
+            },
+            "R_flow_contribution": {
+              "value": 0.00929291164734272,
+              "se": 0.00016103606329249614
+            },
+            "R_emulator_contribution": {
+              "value": 0.021237878092559684,
+              "se": 9.22931302724014e-05
+            }
+          },
+          {
+            "bin": "0.15-0.25",
+            "simulation_mass_fraction": 0.3527560560622189,
+            "model_mass_fraction": 0.3538181106660272,
+            "error_contribution": {
+              "value": 0.008968212220217134,
+              "se": 0.004621723504083384
+            },
+            "within_contribution": {
+              "value": 0.009687693697095014,
+              "se": 0.004888430957257471
+            },
+            "mixture_contribution": {
+              "value": -0.000719481476877867,
+              "se": 0.00028255142443707584
+            },
+            "R_sim_contribution": {
+              "value": 0.24497559524050408,
+              "se": 0.004426549123587261
+            },
+            "R_flow_contribution": {
+              "value": 0.15549542120865473,
+              "se": 0.00024171848275356768
+            },
+            "R_emulator_contribution": {
+              "value": 0.08051196181163221,
+              "se": 0.00014912776132434497
+            }
+          },
+          {
+            "bin": "0.25-0.4",
+            "simulation_mass_fraction": 0.40494965806821004,
+            "model_mass_fraction": 0.40495507017318305,
+            "error_contribution": {
+              "value": 0.012557998578433286,
+              "se": 0.0039007568275024277
+            },
+            "within_contribution": {
+              "value": 0.01256312902759796,
+              "se": 0.0036299746778115575
+            },
+            "mixture_contribution": {
+              "value": -5.130449164698519e-06,
+              "se": 0.0005846848206128401
+            },
+            "R_sim_contribution": {
+              "value": 0.4427714079661752,
+              "se": 0.004257632613199605
+            },
+            "R_flow_contribution": {
+              "value": 0.37538116006804506,
+              "se": 0.0005754240700869267
+            },
+            "R_emulator_contribution": {
+              "value": 0.0548322493196969,
+              "se": 0.0002247980255628915
+            }
+          },
+          {
+            "bin": "0.4-0.7",
+            "simulation_mass_fraction": 0.14478077710765402,
+            "model_mass_fraction": 0.14468605199259546,
+            "error_contribution": {
+              "value": 4.270815595498051e-05,
+              "se": 0.0012284243799599445
+            },
+            "within_contribution": {
+              "value": -6.26779224842817e-05,
+              "se": 0.0010331791430627526
+            },
+            "mixture_contribution": {
+              "value": 0.0001053860784392598,
+              "se": 0.0002665908142396145
+            },
+            "R_sim_contribution": {
+              "value": 0.1585090844360457,
+              "se": 0.0012635931885700874
+            },
+            "R_flow_contribution": {
+              "value": 0.14553966299192556,
+              "se": 0.0001837545200212442
+            },
+            "R_emulator_contribution": {
+              "value": 0.012926713288165172,
+              "se": 0.0001021349815340518
+            }
+          },
+          {
+            "bin": ">=0.7",
+            "simulation_mass_fraction": 0.02998343677274474,
+            "model_mass_fraction": 0.02992357356274606,
+            "error_contribution": {
+              "value": -0.00013830598955224442,
+              "se": 0.00027679022672527013
+            },
+            "within_contribution": {
+              "value": -0.00019596347493158184,
+              "se": 0.00030202180958993765
+            },
+            "mixture_contribution": {
+              "value": 5.76574853793387e-05,
+              "se": 4.1512371328743814e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.028604327753325113,
+              "se": 0.00023987223691699898
+            },
+            "R_flow_contribution": {
+              "value": 0.02701140566391338,
+              "se": 0.00019234525691983685
+            },
+            "R_emulator_contribution": {
+              "value": 0.0017312280789639788,
+              "se": 4.6218950426516084e-05
+            }
+          }
+        ],
+        "true_magnitude": [
+          {
+            "bin": "<24",
+            "simulation_mass_fraction": 0.4318679534504647,
+            "model_mass_fraction": 0.4303882233749886,
+            "error_contribution": {
+              "value": -0.00010995507752336459,
+              "se": 0.0016279880782800783
+            },
+            "within_contribution": {
+              "value": -0.001883914399270295,
+              "se": 0.0019968575278848954
+            },
+            "mixture_contribution": {
+              "value": 0.0017739593217469085,
+              "se": 0.0007887376012784299
+            },
+            "R_sim_contribution": {
+              "value": 0.5167404889032828,
+              "se": 0.0011029806005459415
+            },
+            "R_flow_contribution": {
+              "value": 0.4913491134794362,
+              "se": 0.000894711696795548
+            },
+            "R_emulator_contribution": {
+              "value": 0.025501330501370083,
+              "se": 0.00019933895769556182
+            }
+          },
+          {
+            "bin": "24-25.5",
+            "simulation_mass_fraction": 0.524302515439,
+            "model_mass_fraction": 0.5259529469677899,
+            "error_contribution": {
+              "value": 0.012392927913318991,
+              "se": 0.006335795415136739
+            },
+            "within_contribution": {
+              "value": 0.013493402779758945,
+              "se": 0.006343219045983298
+            },
+            "mixture_contribution": {
+              "value": -0.0011004748664399976,
+              "se": 6.648189310092849e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.35687420659175584,
+              "se": 0.005814819637033002
+            },
+            "R_flow_contribution": {
+              "value": 0.22065925850749254,
+              "se": 0.0007105625872508589
+            },
+            "R_emulator_contribution": {
+              "value": 0.12382202017094433,
+              "se": 0.00030694686715773163
+            }
+          },
+          {
+            "bin": "25.5-27.5",
+            "simulation_mass_fraction": 0.04296224127260294,
+            "model_mass_fraction": 0.04275550533723598,
+            "error_contribution": {
+              "value": 0.009869749444337312,
+              "se": 0.0013193038007930178
+            },
+            "within_contribution": {
+              "value": 0.00974619509749831,
+              "se": 0.0015675320343121143
+            },
+            "mixture_contribution": {
+              "value": 0.0001235543468390009,
+              "se": 0.0003551062914054897
+            },
+            "R_sim_contribution": {
+              "value": 0.03192219507276911,
+              "se": 0.0012927964539243067
+            },
+            "R_flow_contribution": {
+              "value": 0.000681121283201998,
+              "se": 5.930360787200155e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.021371324345229797,
+              "se": 2.897133523397649e-05
+            }
+          },
+          {
+            "bin": ">=27.5",
+            "simulation_mass_fraction": 0.0008672898379323824,
+            "model_mass_fraction": 0.0009033243199855154,
+            "error_contribution": {
+              "value": -0.0003024025260031099,
+              "se": 0.00023312222853962816
+            },
+            "within_contribution": {
+              "value": -0.0002849732942564526,
+              "se": 0.00023976961986292068
+            },
+            "mixture_contribution": {
+              "value": -1.7429231746657257e-05,
+              "se": 1.0576143615592566e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.00027402135722133877,
+              "se": 0.00024585855970235727
+            },
+            "R_flow_contribution": {
+              "value": 3.106830975071689e-05,
+              "se": 1.0371162016261636e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.0005453555734737317,
+              "se": 3.159741622222965e-05
+            }
+          }
+        ],
+        "crowding_log1p": [
+          {
+            "bin": "<0.1",
+            "simulation_mass_fraction": 0.655401489426708,
+            "model_mass_fraction": 0.6592032111397561,
+            "error_contribution": {
+              "value": 0.017527156197934397,
+              "se": 0.002015152096390405
+            },
+            "within_contribution": {
+              "value": 0.021476734206759517,
+              "se": 0.0018765612149353596
+            },
+            "mixture_contribution": {
+              "value": -0.0039495780088251616,
+              "se": 0.0003555907996037025
+            },
+            "R_sim_contribution": {
+              "value": 0.6917473577076422,
+              "se": 0.0025432156914787407
+            },
+            "R_flow_contribution": {
+              "value": 0.626573396105393,
+              "se": 0.0005204757753965566
+            },
+            "R_emulator_contribution": {
+              "value": 0.04764680540431482,
+              "se": 7.41622445991114e-05
+            }
+          },
+          {
+            "bin": "0.1-0.3",
+            "simulation_mass_fraction": 0.2043148965703819,
+            "model_mass_fraction": 0.2005825410663769,
+            "error_contribution": {
+              "value": 0.004804446586535238,
+              "se": 0.0020723030665187937
+            },
+            "within_contribution": {
+              "value": 0.0024308261562467227,
+              "se": 0.002076708388964325
+            },
+            "mixture_contribution": {
+              "value": 0.0023736204302885117,
+              "se": 0.0001829647086280693
+            },
+            "R_sim_contribution": {
+              "value": 0.13117476811632325,
+              "se": 0.0019743439982066397
+            },
+            "R_flow_contribution": {
+              "value": 0.07347269545703343,
+              "se": 0.00034588735441172546
+            },
+            "R_emulator_contribution": {
+              "value": 0.05289762607275459,
+              "se": 0.00019910494571315047
+            }
+          },
+          {
+            "bin": "0.3-1",
+            "simulation_mass_fraction": 0.1301374062943189,
+            "model_mass_fraction": 0.1296727242608533,
+            "error_contribution": {
+              "value": 0.0007445542695629233,
+              "se": 0.0019368064349967599
+            },
+            "within_contribution": {
+              "value": 0.00047104277051295695,
+              "se": 0.0019364301990296246
+            },
+            "mixture_contribution": {
+              "value": 0.00027351149904995917,
+              "se": 9.474680867088316e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.07691956566436671,
+              "se": 0.001811191848675245
+            },
+            "R_flow_contribution": {
+              "value": 0.012618865939661685,
+              "se": 8.241276782513046e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.06355614545514211,
+              "se": 0.00032019232263457836
+            }
+          },
+          {
+            "bin": "1-3",
+            "simulation_mass_fraction": 0.009347152955813069,
+            "model_mass_fraction": 0.009728230288350622,
+            "error_contribution": {
+              "value": -0.001139844894547087,
+              "se": 0.0006763095886110699
+            },
+            "within_contribution": {
+              "value": -0.0009041112346882394,
+              "se": 0.0007172989151833698
+            },
+            "mixture_contribution": {
+              "value": -0.00023573365985884718,
+              "se": 4.257976395284404e-05
+            },
+            "R_sim_contribution": {
+              "value": 0.005372805030603878,
+              "se": 0.0006353954500184503
+            },
+            "R_flow_contribution": {
+              "value": 2.8870881132590414e-05,
+              "se": 3.468098912664462e-05
+            },
+            "R_emulator_contribution": {
+              "value": 0.006483779044018375,
+              "se": 0.00010819168968293883
+            }
+          },
+          {
+            "bin": ">=3",
+            "simulation_mass_fraction": 0.0007990547527781006,
+            "model_mass_fraction": 0.0008132932446630466,
+            "error_contribution": {
+              "value": -8.599240535568965e-05,
+              "se": 0.00012100986685577547
+            },
+            "within_contribution": {
+              "value": -7.542273958232698e-05,
+              "se": 0.00011784762145754218
+            },
+            "mixture_contribution": {
+              "value": -1.0569665773362749e-05,
+              "se": 3.406238675495217e-06
+            },
+            "R_sim_contribution": {
+              "value": 0.0005964154060931526,
+              "se": 9.700465686972319e-05
+            },
+            "R_flow_contribution": {
+              "value": 2.6733196660784957e-05,
+              "se": 5.794891089654114e-06
+            },
+            "R_emulator_contribution": {
+              "value": 0.0006556746147880572,
+              "se": 5.0734702552464236e-05
+            }
+          }
+        ]
+      },
+      "largest_cells": [
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.009888445014600535,
+            "se": 0.0019220443689527194
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.007533164214752535,
+            "se": 0.0010908033413448708
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "<24",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": -0.006371989240867376,
+            "se": 0.0013043757497915318
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.00566427857739603,
+            "se": 0.0028202186789964482
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.004481146348458409,
+            "se": 0.00037644237089753024
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "<24",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": -0.0026209699839674673,
+            "se": 0.0005286250009936572
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.002307031076530449,
+            "se": 0.0009549324570374694
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.0022847303852651557,
+            "se": 0.0003485146154254526
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": -0.0020834942890064025,
+            "se": 0.0015781367301400913
+          }
+        },
+        {
+          "true_size": "<0.15",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.002059329383099453,
+            "se": 0.0004561483241740861
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": -0.0020561716958812926,
+            "se": 0.0006575205241567865
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "0.1-0.3",
+          "error_contribution": {
+            "value": 0.0013883544876058594,
+            "se": 0.0018757246781891854
+          }
+        },
+        {
+          "true_size": "0.25-0.4",
+          "true_magnitude": "25.5-27.5",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.001179992831461926,
+            "se": 0.0004214865451383021
+          }
+        },
+        {
+          "true_size": "0.4-0.7",
+          "true_magnitude": "24-25.5",
+          "crowding_log1p": "<0.1",
+          "error_contribution": {
+            "value": 0.0009905367956511146,
+            "se": 0.0005865315309708315
+          }
+        },
+        {
+          "true_size": "0.15-0.25",
+          "true_magnitude": "<24",
+          "crowding_log1p": "0.3-1",
+          "error_contribution": {
+            "value": 0.0009741860974184691,
+            "se": 0.0003309405300255881
+          }
+        }
+      ]
+    }
+  },
+  "limitations": "Four cases; fixed checkpoints/draws. Truth-cell contributions add to total error; they are not independent flow/emulator errors. Symmetric within/mix split depends on binning."
+}

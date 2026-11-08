@@ -1,0 +1,35 @@
+{
+  "manifest_sha256": "b1c3082d81fdc917ebc0116193dd63db13f4d32470b47f3fe8e4f81ef7a09193",
+  "records": {
+    "no_score": {
+      "shear_numpy_replay": true,
+      "inverse_max_abs": 1.996755599975586e-05,
+      "physical_support": true,
+      "uneven_chunk_gradient_relative_error": 2.1658932011927208e-05,
+      "parameters": 1377320,
+      "reload_exact": true,
+      "context_dim": 16,
+      "teacher_parameters": 1379880
+    },
+    "shallow": {
+      "shear_numpy_replay": true,
+      "inverse_max_abs": 9.5367431640625e-06,
+      "physical_support": true,
+      "uneven_chunk_gradient_relative_error": 1.7304259762980838e-06,
+      "parameters": 827928,
+      "reload_exact": true,
+      "context_dim": 17,
+      "teacher_parameters": 1379880
+    },
+    "shallow_no_score": {
+      "shear_numpy_replay": true,
+      "inverse_max_abs": 4.76837158203125e-06,
+      "physical_support": true,
+      "uneven_chunk_gradient_relative_error": 1.6180319117037046e-06,
+      "parameters": 826392,
+      "reload_exact": true,
+      "context_dim": 16,
+      "teacher_parameters": 1379880
+    }
+  }
+}

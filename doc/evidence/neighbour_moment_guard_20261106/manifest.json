@@ -1,0 +1,273 @@
+{
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "mag24.9_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.1
+    ],
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ]
+  ],
+  "target_cuts": [
+    "mag24.9_radius_gt0.56",
+    "mag25_radius_gt0.56",
+    "mag25.1_radius_gt0.56",
+    "mag24.9_radius_gt0.60",
+    "mag25_radius_gt0.60",
+    "mag25.1_radius_gt0.60",
+    "mag24.9_radius_gt0.64",
+    "mag25_radius_gt0.64",
+    "mag25.1_radius_gt0.64"
+  ],
+  "sim_roots": {
+    "1": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+    "2": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims"
+  },
+  "intrinsic_size_edges_arcsec": [
+    0.15,
+    0.25,
+    0.4,
+    0.7
+  ],
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "initial_checkpoint": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/neighbour/nll.pt",
+    "sha256": "12ca78567660b72ae594dd18527c75d2ff66aa551c91e98f7530804e2c19c507",
+    "loader": "neighbour",
+    "mean_score": false
+  },
+  "training": {
+    "steps": 64,
+    "learning_rate": 1e-05,
+    "nll_batch": 8192,
+    "pairs_per_group": 32768,
+    "draws": 4,
+    "chunk": 1024,
+    "clip": 5.0,
+    "relative_response_scale": 0.003,
+    "radius_softness": 0.05,
+    "magnitude_softness": 0.05,
+    "independent_pairs": true,
+    "checkpoint_rule": "fixed step64; no outcome-based selection",
+    "probe_pairs": 262144,
+    "probe_draws": 16,
+    "probe_groups": 2
+  },
+  "regularization_cuts": [
+    {
+      "name": "mag24.9_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 25.1
+    },
+    {
+      "name": "mag24.9_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 25.1
+    },
+    {
+      "name": "mag24.9_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 25.1
+    }
+  ],
+  "arms": [
+    "control",
+    "weighted"
+  ],
+  "response_weight": 0.001,
+  "moment_weight": {
+    "control": 0.0,
+    "weighted": 0.001
+  },
+  "moment_scales": {
+    "relative_pass_mass": 0.003,
+    "selected_coefficient": 0.001
+  },
+  "moment_seed": 202611061010,
+  "bootstrap_seed": 202611061020,
+  "constant_tasks": [
+    {
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "case": 1120,
+      "axis": 2
+    }
+  ],
+  "worker_tasks": [
+    [
+      1,
+      4,
+      7
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      3,
+      6
+    ]
+  ],
+  "pilot_task": 0,
+  "prepared_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/prepared",
+  "original_prepared_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/prepared",
+  "selection_diagnostic_manifest": "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_flow_selection_20261106/manifest.json"
+}

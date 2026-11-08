@@ -1,0 +1,126 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "cut": "per-leg measured FLUX_RADIUS>3 pixels and MAG_AUTO<25",
+  "sign": "simulation minus model",
+  "bootstrap": "10000 whole-case paired resamples, seed20260925; fixed model and latent draws",
+  "R_sim": {
+    "value": 0.9058109119250288,
+    "se": 0.006151589221616283
+  },
+  "rows": {
+    "predicted_U_generated_cut": {
+      "R_flow": {
+        "value": 0.7132301340336591,
+        "se": 0.00018347465268569294
+      },
+      "R_emulator": {
+        "value": 0.17285933237962117,
+        "se": 0.00041165353914790015
+      },
+      "R_joint": {
+        "value": 0.8860894664132802,
+        "se": 0.0004392570801670226
+      },
+      "error": {
+        "value": 0.019721445511748592,
+        "se": 0.005763188005970812
+      },
+      "m_percent": {
+        "value": 2.2256720409483233,
+        "se": 0.649299135386926
+      }
+    },
+    "true_U_generated_cut": {
+      "R_flow": {
+        "value": 0.7127205615798813,
+        "se": 0.0002868453663049883
+      },
+      "R_emulator": {
+        "value": 0.17124003059101797,
+        "se": 0.0003077861895930231
+      },
+      "R_joint": {
+        "value": 0.8839605921708993,
+        "se": 0.00047654699010128584
+      },
+      "error": {
+        "value": 0.021850319754129544,
+        "se": 0.0056888718457425306
+      },
+      "m_percent": {
+        "value": 2.471865821582364,
+        "se": 0.6421018815871988
+      }
+    },
+    "true_U_true_cut": {
+      "R_flow": {
+        "value": 0.692227524284629,
+        "se": 0.0012612091941173876
+      },
+      "R_emulator": {
+        "value": 0.17137181089657305,
+        "se": 0.00025795456125570567
+      },
+      "R_joint": {
+        "value": 0.863599335181202,
+        "se": 0.0013391377260503984
+      },
+      "error": {
+        "value": 0.042211576743826806,
+        "se": 0.0055038666813366595
+      },
+      "m_percent": {
+        "value": 4.887865822056225,
+        "se": 0.6339056950083162
+      }
+    },
+    "true_U_true_cut_measured_emulator_aux": {
+      "R_flow": {
+        "value": 0.692227524284629,
+        "se": 0.0012612091941173876
+      },
+      "R_emulator": {
+        "value": 0.18521329781917367,
+        "se": 0.00036433763428499096
+      },
+      "R_joint": {
+        "value": 0.8774408221038026,
+        "se": 0.0014062661708723688
+      },
+      "error": {
+        "value": 0.02837008982122624,
+        "se": 0.005417514705249433
+      },
+      "m_percent": {
+        "value": 3.2332767186742606,
+        "se": 0.6147253989553537
+      }
+    }
+  },
+  "change_in_error_true_cut_minus_generated_cut": {
+    "value": 0.020361256989697263,
+    "se": 0.0011336983544428497
+  },
+  "historical_140_case_joint_rows": {
+    "joint_C8": {
+      "simulation": 0.907368191360551,
+      "model": 0.8855129634363024,
+      "sim_minus_model": 0.021855227924248655,
+      "paired_case_se": 0.0012741678387401753,
+      "unit": "R11 per selected galaxy; independent own-leg hard cuts"
+    },
+    "joint_true flags": {
+      "simulation": 0.907368191360551,
+      "model": 0.8836492434932556,
+      "sim_minus_model": 0.023718947867295448,
+      "paired_case_se": 0.0012802189082187878,
+      "unit": "R11 per selected galaxy; independent own-leg hard cuts"
+    }
+  },
+  "limitations": "Four-case diagnostic only; sampling error is conditional. Actual object selection does not truncate generated outputs to their selected conditional distribution. R_flow and R_emulator are contributions, not independently measured component errors."
+}

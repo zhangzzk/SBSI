@@ -1,0 +1,16 @@
+[
+  {
+    "checkpoint": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/measured_seed_response_20261107/chunks/case1000_chunk0.npz",
+    "ids_and_data_hash_verified": true,
+    "valid_fits": 8190,
+    "total_fits": 8192,
+    "exact_within_job_repeat": true
+  },
+  {
+    "checkpoint": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/measured_seed_response_20261107/chunks/case1120_chunk0.npz",
+    "ids_and_data_hash_verified": true,
+    "valid_fits": 8192,
+    "total_fits": 8192,
+    "exact_within_job_repeat": true
+  }
+]

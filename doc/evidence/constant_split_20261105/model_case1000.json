@@ -1,0 +1,6 @@
+{
+  "case": 1000,
+  "seconds": 309.0952899399563,
+  "replay": "all original predicted-U and true-U masses/numerators replay for four cuts; split neighbour sums replay on first block",
+  "rows": 883944
+}

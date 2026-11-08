@@ -1,0 +1,16 @@
+{
+  "jobs": {
+    "initial": 17754665,
+    "magnitude_refinement": 17755490
+  },
+  "psf_metadata_refinement": "Recomputed small analytic summary from exact noise.csv after catalogue reduction; no response data changed.",
+  "sha256": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/small_large_mechanism_20261105/analyse.py": "5bca989ad6d83579761373c6b14c504a078caf1bc27fb8a4711bed3ee293eb0c",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/small_large_mechanism_20261105/plot.py": "4428bceed123a9ce4a049f0b5ea4f24b7ed9d98f6fffe51f8498d23e6e94f013",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/small_large_mechanism_20261105/rule.md": "05593f721ea3e4e03b12d730c846ccb8b4c95eb9fb5322cd79ea7d0e941eee0f",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/small_large_mechanism_20261105/report.json": "dbd54c1f592f726fdfc80cc13ec4f94cf1d01d37cc0a77487b071f178a1709ff",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/small_large_mechanism_20261105/case_sums.npz": "789c61ae5fc4ef18f253b2c5c04dbcc809456796d9699b5cfe63e038aae8c788",
+    "/home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim/modules/ImSimPSF.py": "104c73f29226d74f3a10de9707adbe711430c40a72eb4c974e5824f7fe800770",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/noise.csv": "72ef5f40b9fd968946015407907ecb5da495ca34de3148820af010561320c417"
+  }
+}

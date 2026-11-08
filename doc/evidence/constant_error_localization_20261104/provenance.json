@@ -1,0 +1,18 @@
+{
+  "model": "original GalSBI-dev, older16-cut base guard; unchanged refinement weights",
+  "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+  "jobs": {
+    "reduce": 17734831,
+    "geometry": 17734824,
+    "measured_inputs": 17734961,
+    "matched_replay": 17735430,
+    "matched_report": 17735553
+  },
+  "source_hashes": {
+    "/home/z/Zekang.Zhang/SBSI/.claude/worktrees/sampler-recipe/scripts/evaluate_galsbi_constant.py": "b282444880ea3aa376d8d31fdf2e5a69f159c303ea4134ccdee67552fac1ac7b",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/blendemu/response.py": "59872244b59d7db2e0093e6cf73e6575559f1541d39194b8f5a39aeb25a5649e",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/prepare_output_conditioned_response.py": "a402ddae843fe84c39697bfb1abadb18a2b401c3db805cf33f231bd1aa3d618e",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/sbsi/output_conditioned_response.py": "d6cac44689099ebf34232710dfc672427c13eb22a629530c66d2cf7df55f4fbc",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/sbsi/disk_response_transport.py": "76b831b2fc43a204b6480982fcafebef97bf403f5ab6ceabbabecf4a93e1d6ef"
+  }
+}

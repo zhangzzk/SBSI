@@ -1,0 +1,32 @@
+{
+  "jobs": {
+    "assembly_probe_pilot": 17810892,
+    "persistent_workers": 17810893,
+    "report": 17810894,
+    "older_broad_held": 17788286
+  },
+  "study_gpu_ceiling": 6,
+  "trial_peak_gpus": 3,
+  "manifest_sha256": "3c0c897b6585e0c7f06f49c40454582c7d1147adcfdf73e977b9bca3675864db",
+  "followup": "Existing same-thread two-hour loop; no duplicate schedule.",
+  "failed_attempts": [
+    {
+      "jobs": {
+        "assembly_probe_pilot": 17810794,
+        "persistent_workers": 17810795,
+        "report": 17810796,
+        "older_broad_held": 17788286
+      },
+      "reason": "Verification used joint-minus-photo density; float32 logdet addition prevented exact conditional-factor comparison. Replaced with direct-factor check and explicit roundoff reconstruction."
+    },
+    {
+      "jobs": {
+        "assembly_probe_pilot": 17810852,
+        "persistent_workers": 17810853,
+        "report": 17810854,
+        "older_broad_held": 17788286
+      },
+      "reason": "Compute node reused stale timestamp bytecode for prepare.py: old line51 instruction appeared with new line51 source text. Launcher now compiles checksum-verified source bytes directly."
+    }
+  ]
+}

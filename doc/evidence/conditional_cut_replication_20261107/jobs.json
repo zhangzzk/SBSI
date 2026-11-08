@@ -1,0 +1,25 @@
+{
+  "pilot_replay_and_first_new_field": 17817800,
+  "persistent_workers": 17817802,
+  "report": 17817803,
+  "maximum_concurrent_gpus": 6,
+  "cpus_per_worker": 4,
+  "original_cases": 4,
+  "additional_cases": 36,
+  "additional_case_axis_tasks": 72,
+  "state": "completed: pilot, six workers and report all exit0:0; independent saved-sum audit passed",
+  "output": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107",
+  "broad_array_still_held": 17788286,
+  "automated_follow_up": "disabled",
+  "completed_job_ids": [
+    "17817800",
+    "17817802_0",
+    "17817802_1",
+    "17817802_2",
+    "17817802_3",
+    "17817802_4",
+    "17817802_5",
+    "17817803"
+  ],
+  "audit": "completed_audit.json"
+}

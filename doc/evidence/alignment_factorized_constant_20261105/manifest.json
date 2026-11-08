@@ -1,0 +1,445 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084,
+    1124,
+    1005,
+    1045,
+    1085,
+    1125,
+    1006,
+    1046,
+    1086,
+    1126,
+    1007,
+    1047,
+    1087,
+    1127,
+    1008,
+    1048,
+    1088,
+    1128,
+    1009,
+    1049,
+    1089,
+    1129
+  ],
+  "pilot_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "arms": [
+    "cartesian",
+    "frame"
+  ],
+  "tasks": [
+    {
+      "arm": "cartesian",
+      "case": 1000
+    },
+    {
+      "arm": "frame",
+      "case": 1000
+    },
+    {
+      "arm": "cartesian",
+      "case": 1040
+    },
+    {
+      "arm": "frame",
+      "case": 1040
+    },
+    {
+      "arm": "cartesian",
+      "case": 1080
+    },
+    {
+      "arm": "frame",
+      "case": 1080
+    },
+    {
+      "arm": "cartesian",
+      "case": 1120
+    },
+    {
+      "arm": "frame",
+      "case": 1120
+    },
+    {
+      "arm": "cartesian",
+      "case": 1001
+    },
+    {
+      "arm": "frame",
+      "case": 1001
+    },
+    {
+      "arm": "cartesian",
+      "case": 1041
+    },
+    {
+      "arm": "frame",
+      "case": 1041
+    },
+    {
+      "arm": "cartesian",
+      "case": 1081
+    },
+    {
+      "arm": "frame",
+      "case": 1081
+    },
+    {
+      "arm": "cartesian",
+      "case": 1121
+    },
+    {
+      "arm": "frame",
+      "case": 1121
+    },
+    {
+      "arm": "cartesian",
+      "case": 1002
+    },
+    {
+      "arm": "frame",
+      "case": 1002
+    },
+    {
+      "arm": "cartesian",
+      "case": 1042
+    },
+    {
+      "arm": "frame",
+      "case": 1042
+    },
+    {
+      "arm": "cartesian",
+      "case": 1082
+    },
+    {
+      "arm": "frame",
+      "case": 1082
+    },
+    {
+      "arm": "cartesian",
+      "case": 1122
+    },
+    {
+      "arm": "frame",
+      "case": 1122
+    },
+    {
+      "arm": "cartesian",
+      "case": 1003
+    },
+    {
+      "arm": "frame",
+      "case": 1003
+    },
+    {
+      "arm": "cartesian",
+      "case": 1043
+    },
+    {
+      "arm": "frame",
+      "case": 1043
+    },
+    {
+      "arm": "cartesian",
+      "case": 1083
+    },
+    {
+      "arm": "frame",
+      "case": 1083
+    },
+    {
+      "arm": "cartesian",
+      "case": 1123
+    },
+    {
+      "arm": "frame",
+      "case": 1123
+    },
+    {
+      "arm": "cartesian",
+      "case": 1004
+    },
+    {
+      "arm": "frame",
+      "case": 1004
+    },
+    {
+      "arm": "cartesian",
+      "case": 1044
+    },
+    {
+      "arm": "frame",
+      "case": 1044
+    },
+    {
+      "arm": "cartesian",
+      "case": 1084
+    },
+    {
+      "arm": "frame",
+      "case": 1084
+    },
+    {
+      "arm": "cartesian",
+      "case": 1124
+    },
+    {
+      "arm": "frame",
+      "case": 1124
+    },
+    {
+      "arm": "cartesian",
+      "case": 1005
+    },
+    {
+      "arm": "frame",
+      "case": 1005
+    },
+    {
+      "arm": "cartesian",
+      "case": 1045
+    },
+    {
+      "arm": "frame",
+      "case": 1045
+    },
+    {
+      "arm": "cartesian",
+      "case": 1085
+    },
+    {
+      "arm": "frame",
+      "case": 1085
+    },
+    {
+      "arm": "cartesian",
+      "case": 1125
+    },
+    {
+      "arm": "frame",
+      "case": 1125
+    },
+    {
+      "arm": "cartesian",
+      "case": 1006
+    },
+    {
+      "arm": "frame",
+      "case": 1006
+    },
+    {
+      "arm": "cartesian",
+      "case": 1046
+    },
+    {
+      "arm": "frame",
+      "case": 1046
+    },
+    {
+      "arm": "cartesian",
+      "case": 1086
+    },
+    {
+      "arm": "frame",
+      "case": 1086
+    },
+    {
+      "arm": "cartesian",
+      "case": 1126
+    },
+    {
+      "arm": "frame",
+      "case": 1126
+    },
+    {
+      "arm": "cartesian",
+      "case": 1007
+    },
+    {
+      "arm": "frame",
+      "case": 1007
+    },
+    {
+      "arm": "cartesian",
+      "case": 1047
+    },
+    {
+      "arm": "frame",
+      "case": 1047
+    },
+    {
+      "arm": "cartesian",
+      "case": 1087
+    },
+    {
+      "arm": "frame",
+      "case": 1087
+    },
+    {
+      "arm": "cartesian",
+      "case": 1127
+    },
+    {
+      "arm": "frame",
+      "case": 1127
+    },
+    {
+      "arm": "cartesian",
+      "case": 1008
+    },
+    {
+      "arm": "frame",
+      "case": 1008
+    },
+    {
+      "arm": "cartesian",
+      "case": 1048
+    },
+    {
+      "arm": "frame",
+      "case": 1048
+    },
+    {
+      "arm": "cartesian",
+      "case": 1088
+    },
+    {
+      "arm": "frame",
+      "case": 1088
+    },
+    {
+      "arm": "cartesian",
+      "case": 1128
+    },
+    {
+      "arm": "frame",
+      "case": 1128
+    },
+    {
+      "arm": "cartesian",
+      "case": 1009
+    },
+    {
+      "arm": "frame",
+      "case": 1009
+    },
+    {
+      "arm": "cartesian",
+      "case": 1049
+    },
+    {
+      "arm": "frame",
+      "case": 1049
+    },
+    {
+      "arm": "cartesian",
+      "case": 1089
+    },
+    {
+      "arm": "frame",
+      "case": 1089
+    },
+    {
+      "arm": "cartesian",
+      "case": 1129
+    },
+    {
+      "arm": "frame",
+      "case": 1129
+    }
+  ],
+  "checkpoints": {
+    "cartesian": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb"
+    },
+    "frame": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/frame/selected.pt",
+      "sha256": "7215268fc7c3543e0dd9a597ee82fb702ef1a44e5f6971c0aaa71de7bfcdfa31"
+    }
+  },
+  "baseline_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_grid_20261104",
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      null
+    ],
+    [
+      "radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      null
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ]
+  ]
+}

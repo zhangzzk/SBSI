@@ -1,0 +1,39 @@
+{
+  "family": "galsbi",
+  "case": 1000,
+  "sample": 4580,
+  "pool_counts": [
+    180,
+    544,
+    1400,
+    2599,
+    4120,
+    5180,
+    5697,
+    5476,
+    4814,
+    4183,
+    3616,
+    3123
+  ],
+  "columns": [
+    "g1",
+    "g2",
+    "T",
+    "flags",
+    "lnprob",
+    "noise_weight"
+  ],
+  "stamp_labels": [
+    "historical48_subpixel",
+    "centred65"
+  ],
+  "errors": {
+    "KeyError": 1
+  },
+  "science": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1000_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+  "source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+  "script_sha256": "73f3f9e4def0d89688bc414f76926fd3171e40397cee27e9b5c5cce80419deef",
+  "seconds": 415.7275131950155,
+  "seed_design": "paired across stamps, independent replicates; no T cut"
+}

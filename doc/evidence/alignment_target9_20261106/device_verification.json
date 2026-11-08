@@ -1,0 +1,45 @@
+{
+  "devices": [
+    {
+      "gpu": "NVIDIA A40-16Q",
+      "tf32": false,
+      "precision": "highest",
+      "banks": {
+        "1024": {
+          "portable_sha256": "e330b3c34f340b4559f1fb7904c4ece3ad58ad9c5fe92aa37c971f3ce6ee0243",
+          "legacy_sha256": "245fe6a7eaf78cbcd9292d63788d2a7d9cfb285c65e8016b792c2a2ba10d25e6"
+        },
+        "528": {
+          "portable_sha256": "0a42d17f5065a1ab12700d8553872123feb3401db5706d458cc0e8bdfd11945c",
+          "legacy_sha256": "e1f08c30f88c29648007613941fcbbd8b5d6c49565e600fb72aca81bb7d6c97d"
+        }
+      }
+    },
+    {
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "tf32": false,
+      "precision": "highest",
+      "banks": {
+        "1024": {
+          "portable_sha256": "e330b3c34f340b4559f1fb7904c4ece3ad58ad9c5fe92aa37c971f3ce6ee0243",
+          "legacy_sha256": "5803619ab81225dbac13efa8a220189a2424adfff0cd792961cdb7d46cea6637"
+        },
+        "528": {
+          "portable_sha256": "0a42d17f5065a1ab12700d8553872123feb3401db5706d458cc0e8bdfd11945c",
+          "legacy_sha256": "e1f08c30f88c29648007613941fcbbd8b5d6c49565e600fb72aca81bb7d6c97d"
+        }
+      }
+    }
+  ],
+  "portable_source_sha256": "7a7b916b4da5113f406c73ef56d7537927133109587df1c3767023d1103ad086",
+  "new_max_abs_difference": {
+    "1024_0": 0.0,
+    "1024_1": 0.0,
+    "528_0": 0.0,
+    "528_1": 0.0
+  },
+  "legacy_hashes_equal": {
+    "1024": false,
+    "528": true
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "prepare": "17807215",
+  "pilot": "17807226",
+  "pilot_report": "17807232",
+  "remaining": "17807247",
+  "report": "17807248",
+  "bounded_check": "17806329",
+  "bounded_check_status": "cancelled after all focused jobs completed",
+  "status": "all four folds and report completed exit0",
+  "broad_array_held": "17788286",
+  "maximum_cpus": 24,
+  "gpus": 0
+}

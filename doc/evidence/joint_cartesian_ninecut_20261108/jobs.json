@@ -1,0 +1,51 @@
+{
+  "pilot": 17825569,
+  "pilot_state": "COMPLETED 0:0;both axes passed;13m16s",
+  "workers_cip": 17825577,
+  "workers_cip_groups": [
+    0,
+    1,
+    2
+  ],
+  "workers_inter": 17825578,
+  "workers_inter_groups": [
+    3,
+    4,
+    5
+  ],
+  "worker_tasks_per_allocation": 13,
+  "report": 17825579,
+  "report_dependency": "afterok:17825569:17825577:17825578",
+  "max_gpus": 6,
+  "cpus_per_worker": 4,
+  "max_worker_cpus": 24,
+  "authorized_cpu_ceiling": 500,
+  "broad_array_still_held": 17788286,
+  "automated_followup": "disabled",
+  "initial_submission_note": "32GiB pilot request exceeded A40-8Q node memory and was rejected before a job was created; resubmitted with24GiB, matching historical replay allocation.",
+  "legacy_replay": {
+    "legacy_response_max_abs": 4.440892098500626e-16,
+    "legacy_count_max_abs": 1.7462298274040222e-10,
+    "portable_minus_legacy_response_terms": [
+      [
+        -0.00045521929487724044,
+        -0.00021826001883749793,
+        0.00011393588431213297,
+        0.00017449782834620046
+      ]
+    ]
+  },
+  "worker_state": "All six COMPLETED 0:0; 78 worker tasks plus two pilot tasks complete",
+  "current_allocated_gpus": 0,
+  "current_allocated_cpus": 0,
+  "report_state": "COMPLETED 0:0; 168 independent scalar checks passed; results.md written",
+  "estimated_remaining_at_startup": "roughly1\u20132hours at observed worker rates; queue/hardware dependent",
+  "completed_worker_elapsed": {
+    "17825577_0": "00:53:26",
+    "17825577_1": "00:53:50",
+    "17825577_2": "00:57:35",
+    "17825578_3": "01:51:08",
+    "17825578_4": "01:50:34",
+    "17825578_5": "01:36:16"
+  }
+}

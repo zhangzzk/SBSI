@@ -1,0 +1,6397 @@
+{
+  "definition": "Measured-only exact decomposition: full response = common-all-four selected-ID response + remainder from changing membership and normalization. Common-cohort response changes the population; this is not a causal error allocation.",
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084,
+    1124,
+    1005,
+    1045,
+    1085,
+    1125,
+    1006,
+    1046,
+    1086,
+    1126,
+    1007,
+    1047,
+    1087,
+    1127,
+    1008,
+    1048,
+    1088,
+    1128,
+    1009,
+    1049,
+    1089,
+    1129
+  ],
+  "source_sha256": "f144d45e0fa613aa46531b54255744bb52bd0b3fbe49947030a2c824e8e2945c",
+  "data_sha256": "7afadf89893b4f67fdf5d5bb8c9640650de71c41e0f92036cdbb38c4984b42ae",
+  "receipts": [
+    {
+      "case": 1000,
+      "matching": [
+        {
+          "cross_rows": 292879,
+          "shape_rows": 294441,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 883944,
+          "parent_usable": 292842,
+          "parent_absent_crossmatch": 591065,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292734,
+          "shape_rows": 294330,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1596,
+          "parent_rows": 883944,
+          "parent_usable": 292699,
+          "parent_absent_crossmatch": 591210,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292824,
+          "shape_rows": 294390,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1566,
+          "parent_rows": 883944,
+          "parent_usable": 292790,
+          "parent_absent_crossmatch": 591120,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292820,
+          "shape_rows": 294371,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1551,
+          "parent_rows": 883944,
+          "parent_usable": 292782,
+          "parent_absent_crossmatch": 591124,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "b6ee7fbdcba1539968ec81a51fcfc88b0a9414abaa18c4afbe5792bf14189400",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1040,
+      "matching": [
+        {
+          "cross_rows": 292757,
+          "shape_rows": 293923,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1166,
+          "parent_rows": 883991,
+          "parent_usable": 292716,
+          "parent_absent_crossmatch": 591234,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292660,
+          "shape_rows": 293883,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1223,
+          "parent_rows": 883991,
+          "parent_usable": 292618,
+          "parent_absent_crossmatch": 591331,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292728,
+          "shape_rows": 293927,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1199,
+          "parent_rows": 883991,
+          "parent_usable": 292691,
+          "parent_absent_crossmatch": 591263,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292685,
+          "shape_rows": 293854,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1169,
+          "parent_rows": 883991,
+          "parent_usable": 292647,
+          "parent_absent_crossmatch": 591306,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "22052874a0df8513cca559fe6010b2ab69fff72e2afa33115bf803e33a094d85",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1080,
+      "matching": [
+        {
+          "cross_rows": 292826,
+          "shape_rows": 294017,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1191,
+          "parent_rows": 884738,
+          "parent_usable": 292784,
+          "parent_absent_crossmatch": 591912,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292812,
+          "shape_rows": 294022,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1210,
+          "parent_rows": 884738,
+          "parent_usable": 292774,
+          "parent_absent_crossmatch": 591926,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292909,
+          "shape_rows": 294080,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1171,
+          "parent_rows": 884738,
+          "parent_usable": 292858,
+          "parent_absent_crossmatch": 591829,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292820,
+          "shape_rows": 294043,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1223,
+          "parent_rows": 884738,
+          "parent_usable": 292784,
+          "parent_absent_crossmatch": 591918,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "d80b8e2f8a1c2f37d8f08b86858ac53cd03149571140eae906b4be934360dcf9",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1120,
+      "matching": [
+        {
+          "cross_rows": 292888,
+          "shape_rows": 294450,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 886209,
+          "parent_usable": 292847,
+          "parent_absent_crossmatch": 593321,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292864,
+          "shape_rows": 294488,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1624,
+          "parent_rows": 886209,
+          "parent_usable": 292824,
+          "parent_absent_crossmatch": 593345,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292920,
+          "shape_rows": 294525,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1605,
+          "parent_rows": 886209,
+          "parent_usable": 292893,
+          "parent_absent_crossmatch": 593289,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292853,
+          "shape_rows": 294415,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 886209,
+          "parent_usable": 292822,
+          "parent_absent_crossmatch": 593356,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "71a59b82fa6b8a5c59cb2304e927541bc980eae9a15cf3634f3bf72053db1bdb",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1001,
+      "matching": [
+        {
+          "cross_rows": 293257,
+          "shape_rows": 294765,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1508,
+          "parent_rows": 886466,
+          "parent_usable": 293222,
+          "parent_absent_crossmatch": 593209,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293320,
+          "shape_rows": 294806,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1486,
+          "parent_rows": 886466,
+          "parent_usable": 293288,
+          "parent_absent_crossmatch": 593146,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293269,
+          "shape_rows": 294756,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1487,
+          "parent_rows": 886466,
+          "parent_usable": 293238,
+          "parent_absent_crossmatch": 593197,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293291,
+          "shape_rows": 294782,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1491,
+          "parent_rows": 886466,
+          "parent_usable": 293249,
+          "parent_absent_crossmatch": 593175,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "7dba3ffced3db2438e5d0174ccdeaa19c0f5341e508444e2e3a99cb0253ac729",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1041,
+      "matching": [
+        {
+          "cross_rows": 291961,
+          "shape_rows": 293308,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1347,
+          "parent_rows": 884198,
+          "parent_usable": 291921,
+          "parent_absent_crossmatch": 592237,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 291965,
+          "shape_rows": 293344,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1379,
+          "parent_rows": 884198,
+          "parent_usable": 291936,
+          "parent_absent_crossmatch": 592233,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 291974,
+          "shape_rows": 293343,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1369,
+          "parent_rows": 884198,
+          "parent_usable": 291945,
+          "parent_absent_crossmatch": 592224,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 291948,
+          "shape_rows": 293309,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1361,
+          "parent_rows": 884198,
+          "parent_usable": 291915,
+          "parent_absent_crossmatch": 592250,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "de2f21b9e5734b5421528446c85a173910d65e551f886649f2aa158c63d1cf84",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1081,
+      "matching": [
+        {
+          "cross_rows": 293497,
+          "shape_rows": 294933,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1436,
+          "parent_rows": 885266,
+          "parent_usable": 293442,
+          "parent_absent_crossmatch": 591769,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293485,
+          "shape_rows": 294958,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1473,
+          "parent_rows": 885266,
+          "parent_usable": 293433,
+          "parent_absent_crossmatch": 591781,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293554,
+          "shape_rows": 295019,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1465,
+          "parent_rows": 885266,
+          "parent_usable": 293517,
+          "parent_absent_crossmatch": 591712,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293579,
+          "shape_rows": 295036,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1457,
+          "parent_rows": 885266,
+          "parent_usable": 293541,
+          "parent_absent_crossmatch": 591687,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "fda117e18b499be0345d5d4b1cbc8341fb7be82a47bff9e2fb247d802b186e48",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1121,
+      "matching": [
+        {
+          "cross_rows": 292561,
+          "shape_rows": 293947,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1386,
+          "parent_rows": 885534,
+          "parent_usable": 292514,
+          "parent_absent_crossmatch": 592973,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292613,
+          "shape_rows": 293996,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1383,
+          "parent_rows": 885534,
+          "parent_usable": 292573,
+          "parent_absent_crossmatch": 592921,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292607,
+          "shape_rows": 293985,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1378,
+          "parent_rows": 885534,
+          "parent_usable": 292562,
+          "parent_absent_crossmatch": 592927,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292578,
+          "shape_rows": 293948,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1370,
+          "parent_rows": 885534,
+          "parent_usable": 292529,
+          "parent_absent_crossmatch": 592956,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "473e698e989082ba696969c232d4ce7f0c9db73ed07c06fd0608be48227be7cc",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1002,
+      "matching": [
+        {
+          "cross_rows": 293280,
+          "shape_rows": 294650,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1370,
+          "parent_rows": 885209,
+          "parent_usable": 293240,
+          "parent_absent_crossmatch": 591929,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293186,
+          "shape_rows": 294596,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1410,
+          "parent_rows": 885209,
+          "parent_usable": 293159,
+          "parent_absent_crossmatch": 592023,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293286,
+          "shape_rows": 294674,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1388,
+          "parent_rows": 885209,
+          "parent_usable": 293254,
+          "parent_absent_crossmatch": 591923,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293186,
+          "shape_rows": 294566,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1380,
+          "parent_rows": 885209,
+          "parent_usable": 293160,
+          "parent_absent_crossmatch": 592023,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "8fcfb62b9d21f6c4e6c1f03c5998dfad4ab1b99bde153bde6f5978ec433ac458",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1042,
+      "matching": [
+        {
+          "cross_rows": 293066,
+          "shape_rows": 294778,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1712,
+          "parent_rows": 885441,
+          "parent_usable": 293022,
+          "parent_absent_crossmatch": 592375,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293000,
+          "shape_rows": 294745,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1745,
+          "parent_rows": 885441,
+          "parent_usable": 292968,
+          "parent_absent_crossmatch": 592441,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293098,
+          "shape_rows": 294844,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1746,
+          "parent_rows": 885441,
+          "parent_usable": 293065,
+          "parent_absent_crossmatch": 592343,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293067,
+          "shape_rows": 294809,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1742,
+          "parent_rows": 885441,
+          "parent_usable": 293022,
+          "parent_absent_crossmatch": 592374,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "c8c1b29646f31d80252253a2e351169cc569e312c4c55f4adc2b2f3375383555",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1082,
+      "matching": [
+        {
+          "cross_rows": 292871,
+          "shape_rows": 294172,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1301,
+          "parent_rows": 883309,
+          "parent_usable": 292838,
+          "parent_absent_crossmatch": 590438,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292886,
+          "shape_rows": 294237,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1351,
+          "parent_rows": 883309,
+          "parent_usable": 292848,
+          "parent_absent_crossmatch": 590423,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292846,
+          "shape_rows": 294172,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1326,
+          "parent_rows": 883309,
+          "parent_usable": 292800,
+          "parent_absent_crossmatch": 590463,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292867,
+          "shape_rows": 294245,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1378,
+          "parent_rows": 883309,
+          "parent_usable": 292833,
+          "parent_absent_crossmatch": 590442,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "9f933e9ded872ea5ae3de6d15f2af89ed978fd6d126b842be20dfba7918579a8",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1122,
+      "matching": [
+        {
+          "cross_rows": 292540,
+          "shape_rows": 294067,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1527,
+          "parent_rows": 886009,
+          "parent_usable": 292511,
+          "parent_absent_crossmatch": 593469,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292461,
+          "shape_rows": 294032,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1571,
+          "parent_rows": 886009,
+          "parent_usable": 292429,
+          "parent_absent_crossmatch": 593548,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292592,
+          "shape_rows": 294145,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1553,
+          "parent_rows": 886009,
+          "parent_usable": 292561,
+          "parent_absent_crossmatch": 593417,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292480,
+          "shape_rows": 294037,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1557,
+          "parent_rows": 886009,
+          "parent_usable": 292444,
+          "parent_absent_crossmatch": 593529,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "83aec6a77d4382cc0a8fa4ff9f1058a0be3960630bafbdd2a43b15f6eb8f0557",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1003,
+      "matching": [
+        {
+          "cross_rows": 294004,
+          "shape_rows": 295222,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1218,
+          "parent_rows": 884869,
+          "parent_usable": 293970,
+          "parent_absent_crossmatch": 590865,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293927,
+          "shape_rows": 295180,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1253,
+          "parent_rows": 884869,
+          "parent_usable": 293888,
+          "parent_absent_crossmatch": 590942,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293969,
+          "shape_rows": 295234,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1265,
+          "parent_rows": 884869,
+          "parent_usable": 293930,
+          "parent_absent_crossmatch": 590900,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293914,
+          "shape_rows": 295151,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1237,
+          "parent_rows": 884869,
+          "parent_usable": 293874,
+          "parent_absent_crossmatch": 590955,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "29a970cd90c63a0288d1f1983905b95cc72cddeb8c3385ce6ed368e0e88b95a9",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1043,
+      "matching": [
+        {
+          "cross_rows": 292560,
+          "shape_rows": 294211,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1651,
+          "parent_rows": 885185,
+          "parent_usable": 292525,
+          "parent_absent_crossmatch": 592625,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292592,
+          "shape_rows": 294278,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1686,
+          "parent_rows": 885185,
+          "parent_usable": 292561,
+          "parent_absent_crossmatch": 592593,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292537,
+          "shape_rows": 294191,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1654,
+          "parent_rows": 885185,
+          "parent_usable": 292504,
+          "parent_absent_crossmatch": 592648,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292619,
+          "shape_rows": 294307,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1688,
+          "parent_rows": 885185,
+          "parent_usable": 292577,
+          "parent_absent_crossmatch": 592566,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "d7e4c75f4f8aa7986c5646cdb97b01ceaacdfeede4a321bb472264f2ed892e10",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1083,
+      "matching": [
+        {
+          "cross_rows": 293559,
+          "shape_rows": 295180,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1621,
+          "parent_rows": 885264,
+          "parent_usable": 293517,
+          "parent_absent_crossmatch": 591705,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293491,
+          "shape_rows": 295127,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1636,
+          "parent_rows": 885264,
+          "parent_usable": 293450,
+          "parent_absent_crossmatch": 591773,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293467,
+          "shape_rows": 295119,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1652,
+          "parent_rows": 885264,
+          "parent_usable": 293427,
+          "parent_absent_crossmatch": 591797,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293537,
+          "shape_rows": 295157,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1620,
+          "parent_rows": 885264,
+          "parent_usable": 293495,
+          "parent_absent_crossmatch": 591727,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "80df1290c2c3aeeded8043150c3d11c21cbc5d392f10ce53a980fa576d631614",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1123,
+      "matching": [
+        {
+          "cross_rows": 292992,
+          "shape_rows": 294438,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1446,
+          "parent_rows": 883737,
+          "parent_usable": 292958,
+          "parent_absent_crossmatch": 590745,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293051,
+          "shape_rows": 294511,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1460,
+          "parent_rows": 883737,
+          "parent_usable": 293018,
+          "parent_absent_crossmatch": 590686,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293061,
+          "shape_rows": 294530,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1469,
+          "parent_rows": 883737,
+          "parent_usable": 293030,
+          "parent_absent_crossmatch": 590676,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293031,
+          "shape_rows": 294519,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1488,
+          "parent_rows": 883737,
+          "parent_usable": 292995,
+          "parent_absent_crossmatch": 590706,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "12a3619252c822916f313ae382e34efc8972829cdbb730108436298f150163da",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1004,
+      "matching": [
+        {
+          "cross_rows": 292679,
+          "shape_rows": 294072,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1393,
+          "parent_rows": 883795,
+          "parent_usable": 292643,
+          "parent_absent_crossmatch": 591116,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292638,
+          "shape_rows": 294009,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1371,
+          "parent_rows": 883795,
+          "parent_usable": 292610,
+          "parent_absent_crossmatch": 591157,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292682,
+          "shape_rows": 294086,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1404,
+          "parent_rows": 883795,
+          "parent_usable": 292646,
+          "parent_absent_crossmatch": 591113,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292619,
+          "shape_rows": 293997,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1378,
+          "parent_rows": 883795,
+          "parent_usable": 292581,
+          "parent_absent_crossmatch": 591176,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "7001af85c7da0bd8fe61866fb3405118da53edd1e2f4f51393cd1f0b1535e36a",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1044,
+      "matching": [
+        {
+          "cross_rows": 292345,
+          "shape_rows": 293613,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1268,
+          "parent_rows": 884796,
+          "parent_usable": 292309,
+          "parent_absent_crossmatch": 592451,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292405,
+          "shape_rows": 293676,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1271,
+          "parent_rows": 884796,
+          "parent_usable": 292372,
+          "parent_absent_crossmatch": 592391,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292337,
+          "shape_rows": 293595,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1258,
+          "parent_rows": 884796,
+          "parent_usable": 292299,
+          "parent_absent_crossmatch": 592459,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292336,
+          "shape_rows": 293583,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1247,
+          "parent_rows": 884796,
+          "parent_usable": 292294,
+          "parent_absent_crossmatch": 592460,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "1e37b4b1253286454e17cb5701a6f94946f8281f8a25e13c34d001704619bd27",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1084,
+      "matching": [
+        {
+          "cross_rows": 292469,
+          "shape_rows": 293600,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1131,
+          "parent_rows": 883496,
+          "parent_usable": 292429,
+          "parent_absent_crossmatch": 591027,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292478,
+          "shape_rows": 293669,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1191,
+          "parent_rows": 883496,
+          "parent_usable": 292450,
+          "parent_absent_crossmatch": 591018,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292545,
+          "shape_rows": 293686,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1141,
+          "parent_rows": 883496,
+          "parent_usable": 292515,
+          "parent_absent_crossmatch": 590951,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292528,
+          "shape_rows": 293696,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1168,
+          "parent_rows": 883496,
+          "parent_usable": 292498,
+          "parent_absent_crossmatch": 590968,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "5509827da46b8d825b84f42cbc8712c73956093466e9c0069375abbf81a6e110",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1124,
+      "matching": [
+        {
+          "cross_rows": 292474,
+          "shape_rows": 294499,
+          "cross_without_shape": 0,
+          "shape_without_cross": 2025,
+          "parent_rows": 884340,
+          "parent_usable": 292439,
+          "parent_absent_crossmatch": 591866,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292566,
+          "shape_rows": 294637,
+          "cross_without_shape": 0,
+          "shape_without_cross": 2071,
+          "parent_rows": 884340,
+          "parent_usable": 292530,
+          "parent_absent_crossmatch": 591774,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292492,
+          "shape_rows": 294502,
+          "cross_without_shape": 0,
+          "shape_without_cross": 2010,
+          "parent_rows": 884340,
+          "parent_usable": 292455,
+          "parent_absent_crossmatch": 591848,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292574,
+          "shape_rows": 294608,
+          "cross_without_shape": 0,
+          "shape_without_cross": 2034,
+          "parent_rows": 884340,
+          "parent_usable": 292533,
+          "parent_absent_crossmatch": 591766,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "4c0fba66a7ffa73d8a7f765ac3d130e628c6fd9e4228b16865dc456e0fb57768",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1005,
+      "matching": [
+        {
+          "cross_rows": 292631,
+          "shape_rows": 294058,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1427,
+          "parent_rows": 883627,
+          "parent_usable": 292592,
+          "parent_absent_crossmatch": 590996,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292719,
+          "shape_rows": 294126,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1407,
+          "parent_rows": 883627,
+          "parent_usable": 292668,
+          "parent_absent_crossmatch": 590908,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292657,
+          "shape_rows": 294061,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1404,
+          "parent_rows": 883627,
+          "parent_usable": 292623,
+          "parent_absent_crossmatch": 590970,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292640,
+          "shape_rows": 294068,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1428,
+          "parent_rows": 883627,
+          "parent_usable": 292595,
+          "parent_absent_crossmatch": 590987,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "4c67f17220e901f857a601972d8cba55b8c69e04bb26e16d4cb0cee73ac30dde",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1045,
+      "matching": [
+        {
+          "cross_rows": 292024,
+          "shape_rows": 293612,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1588,
+          "parent_rows": 884909,
+          "parent_usable": 291996,
+          "parent_absent_crossmatch": 592885,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292083,
+          "shape_rows": 293723,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1640,
+          "parent_rows": 884909,
+          "parent_usable": 292051,
+          "parent_absent_crossmatch": 592826,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292001,
+          "shape_rows": 293637,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1636,
+          "parent_rows": 884909,
+          "parent_usable": 291963,
+          "parent_absent_crossmatch": 592908,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292101,
+          "shape_rows": 293687,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1586,
+          "parent_rows": 884909,
+          "parent_usable": 292067,
+          "parent_absent_crossmatch": 592808,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "d3eeb6218e78bb3124488bb36ef8ef8700beebce02ac691ca1a71c777403fe03",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1085,
+      "matching": [
+        {
+          "cross_rows": 293832,
+          "shape_rows": 295126,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1294,
+          "parent_rows": 885570,
+          "parent_usable": 293798,
+          "parent_absent_crossmatch": 591738,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293728,
+          "shape_rows": 295074,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1346,
+          "parent_rows": 885570,
+          "parent_usable": 293684,
+          "parent_absent_crossmatch": 591842,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293852,
+          "shape_rows": 295180,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1328,
+          "parent_rows": 885570,
+          "parent_usable": 293808,
+          "parent_absent_crossmatch": 591718,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293752,
+          "shape_rows": 295067,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1315,
+          "parent_rows": 885570,
+          "parent_usable": 293716,
+          "parent_absent_crossmatch": 591818,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "d31d464da27d5c32e202a92a3b76caa0c989f444ab14787a356da2961c2f6ef6",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1125,
+      "matching": [
+        {
+          "cross_rows": 293024,
+          "shape_rows": 294366,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1342,
+          "parent_rows": 886662,
+          "parent_usable": 292980,
+          "parent_absent_crossmatch": 593638,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293074,
+          "shape_rows": 294411,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1337,
+          "parent_rows": 886662,
+          "parent_usable": 293025,
+          "parent_absent_crossmatch": 593588,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293140,
+          "shape_rows": 294488,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1348,
+          "parent_rows": 886662,
+          "parent_usable": 293083,
+          "parent_absent_crossmatch": 593522,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293084,
+          "shape_rows": 294457,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1373,
+          "parent_rows": 886662,
+          "parent_usable": 293044,
+          "parent_absent_crossmatch": 593578,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "0296eb0f2f8dc2310c586448cac3ab6f56ce669a9088cbd67b0f486f8b778602",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1006,
+      "matching": [
+        {
+          "cross_rows": 292172,
+          "shape_rows": 293695,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1523,
+          "parent_rows": 884922,
+          "parent_usable": 292129,
+          "parent_absent_crossmatch": 592750,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292233,
+          "shape_rows": 293767,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1534,
+          "parent_rows": 884922,
+          "parent_usable": 292197,
+          "parent_absent_crossmatch": 592689,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292153,
+          "shape_rows": 293672,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1519,
+          "parent_rows": 884922,
+          "parent_usable": 292111,
+          "parent_absent_crossmatch": 592769,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292146,
+          "shape_rows": 293667,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1521,
+          "parent_rows": 884922,
+          "parent_usable": 292119,
+          "parent_absent_crossmatch": 592776,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "42d61608217f67b36c07e733a5eeec8b8d2b1afa4cec5da1a428b9c12d790517",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1046,
+      "matching": [
+        {
+          "cross_rows": 293189,
+          "shape_rows": 294582,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1393,
+          "parent_rows": 885069,
+          "parent_usable": 293156,
+          "parent_absent_crossmatch": 591880,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293172,
+          "shape_rows": 294582,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1410,
+          "parent_rows": 885069,
+          "parent_usable": 293129,
+          "parent_absent_crossmatch": 591897,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293184,
+          "shape_rows": 294610,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1426,
+          "parent_rows": 885069,
+          "parent_usable": 293146,
+          "parent_absent_crossmatch": 591885,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293099,
+          "shape_rows": 294506,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1407,
+          "parent_rows": 885069,
+          "parent_usable": 293049,
+          "parent_absent_crossmatch": 591970,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "af0c4ccafb3928abe627ea34d81080c61f71a1b5c332182e63b0b88baa89823c",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1086,
+      "matching": [
+        {
+          "cross_rows": 291680,
+          "shape_rows": 292966,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1286,
+          "parent_rows": 882700,
+          "parent_usable": 291638,
+          "parent_absent_crossmatch": 591020,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 291660,
+          "shape_rows": 292970,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1310,
+          "parent_rows": 882700,
+          "parent_usable": 291627,
+          "parent_absent_crossmatch": 591040,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 291729,
+          "shape_rows": 293030,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1301,
+          "parent_rows": 882700,
+          "parent_usable": 291694,
+          "parent_absent_crossmatch": 590971,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 291647,
+          "shape_rows": 292952,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1305,
+          "parent_rows": 882700,
+          "parent_usable": 291608,
+          "parent_absent_crossmatch": 591053,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "5ac999304cc1063b51f8611eda48f03f29c5852d311d961b1c1a6169dd67c2bb",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1126,
+      "matching": [
+        {
+          "cross_rows": 292937,
+          "shape_rows": 294288,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1351,
+          "parent_rows": 882780,
+          "parent_usable": 292906,
+          "parent_absent_crossmatch": 589843,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292928,
+          "shape_rows": 294311,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1383,
+          "parent_rows": 882780,
+          "parent_usable": 292891,
+          "parent_absent_crossmatch": 589852,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292810,
+          "shape_rows": 294173,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1363,
+          "parent_rows": 882780,
+          "parent_usable": 292778,
+          "parent_absent_crossmatch": 589970,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292863,
+          "shape_rows": 294228,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1365,
+          "parent_rows": 882780,
+          "parent_usable": 292828,
+          "parent_absent_crossmatch": 589917,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "c2ad8afcae88be9a03c4141e3a3193bf6d626936403fcc2e3df8901689c28712",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1007,
+      "matching": [
+        {
+          "cross_rows": 293096,
+          "shape_rows": 294282,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1186,
+          "parent_rows": 884762,
+          "parent_usable": 293053,
+          "parent_absent_crossmatch": 591666,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293165,
+          "shape_rows": 294362,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1197,
+          "parent_rows": 884762,
+          "parent_usable": 293125,
+          "parent_absent_crossmatch": 591597,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293181,
+          "shape_rows": 294351,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1170,
+          "parent_rows": 884762,
+          "parent_usable": 293154,
+          "parent_absent_crossmatch": 591581,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293153,
+          "shape_rows": 294360,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1207,
+          "parent_rows": 884762,
+          "parent_usable": 293119,
+          "parent_absent_crossmatch": 591609,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "54f9e3e498159df2873320b0b688376fa5fa87a4a867424e7da8faf97ff4fd3a",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1047,
+      "matching": [
+        {
+          "cross_rows": 292831,
+          "shape_rows": 294247,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1416,
+          "parent_rows": 886686,
+          "parent_usable": 292786,
+          "parent_absent_crossmatch": 593855,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292910,
+          "shape_rows": 294315,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1405,
+          "parent_rows": 886686,
+          "parent_usable": 292860,
+          "parent_absent_crossmatch": 593776,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292869,
+          "shape_rows": 294263,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1394,
+          "parent_rows": 886686,
+          "parent_usable": 292822,
+          "parent_absent_crossmatch": 593817,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292883,
+          "shape_rows": 294309,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1426,
+          "parent_rows": 886686,
+          "parent_usable": 292833,
+          "parent_absent_crossmatch": 593803,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "2aa8b87f55c68eb0659c8eac57c3443de460ce70ebc1f7c9ab2e58eb55b486e7",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1087,
+      "matching": [
+        {
+          "cross_rows": 292740,
+          "shape_rows": 294272,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1532,
+          "parent_rows": 885221,
+          "parent_usable": 292697,
+          "parent_absent_crossmatch": 592481,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292788,
+          "shape_rows": 294372,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1584,
+          "parent_rows": 885221,
+          "parent_usable": 292750,
+          "parent_absent_crossmatch": 592433,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292769,
+          "shape_rows": 294351,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1582,
+          "parent_rows": 885221,
+          "parent_usable": 292727,
+          "parent_absent_crossmatch": 592452,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292704,
+          "shape_rows": 294255,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1551,
+          "parent_rows": 885221,
+          "parent_usable": 292656,
+          "parent_absent_crossmatch": 592517,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "cbde4ef8e9f486cd2c47fbf463793eaee7eb7bd88bce469c9610a2f60b530f0c",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1127,
+      "matching": [
+        {
+          "cross_rows": 293513,
+          "shape_rows": 294750,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1237,
+          "parent_rows": 885519,
+          "parent_usable": 293470,
+          "parent_absent_crossmatch": 592006,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293406,
+          "shape_rows": 294677,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1271,
+          "parent_rows": 885519,
+          "parent_usable": 293370,
+          "parent_absent_crossmatch": 592113,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293457,
+          "shape_rows": 294738,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1281,
+          "parent_rows": 885519,
+          "parent_usable": 293413,
+          "parent_absent_crossmatch": 592062,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293482,
+          "shape_rows": 294705,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1223,
+          "parent_rows": 885519,
+          "parent_usable": 293453,
+          "parent_absent_crossmatch": 592037,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "ce83c411e54c8089d66e7444ff97c399dd01f188985d6436a697e3f5a2abc7cb",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1008,
+      "matching": [
+        {
+          "cross_rows": 293149,
+          "shape_rows": 294483,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1334,
+          "parent_rows": 885110,
+          "parent_usable": 293120,
+          "parent_absent_crossmatch": 591961,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293218,
+          "shape_rows": 294574,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1356,
+          "parent_rows": 885110,
+          "parent_usable": 293174,
+          "parent_absent_crossmatch": 591892,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293221,
+          "shape_rows": 294565,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1344,
+          "parent_rows": 885110,
+          "parent_usable": 293191,
+          "parent_absent_crossmatch": 591889,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293153,
+          "shape_rows": 294504,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1351,
+          "parent_rows": 885110,
+          "parent_usable": 293122,
+          "parent_absent_crossmatch": 591957,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "81e6970f4d0f95d574ba63a14e53d611066b9b24514b9dd907c14bbdefd9c45b",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1048,
+      "matching": [
+        {
+          "cross_rows": 293361,
+          "shape_rows": 294807,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1446,
+          "parent_rows": 885261,
+          "parent_usable": 293333,
+          "parent_absent_crossmatch": 591900,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293371,
+          "shape_rows": 294873,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1502,
+          "parent_rows": 885261,
+          "parent_usable": 293336,
+          "parent_absent_crossmatch": 591890,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293333,
+          "shape_rows": 294793,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1460,
+          "parent_rows": 885261,
+          "parent_usable": 293295,
+          "parent_absent_crossmatch": 591928,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293394,
+          "shape_rows": 294851,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1457,
+          "parent_rows": 885261,
+          "parent_usable": 293360,
+          "parent_absent_crossmatch": 591867,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "6220301026f08e8b38f7cab96a3ecc02649c0937f6838c048627d9347ef0b82f",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1088,
+      "matching": [
+        {
+          "cross_rows": 292558,
+          "shape_rows": 293760,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1202,
+          "parent_rows": 884135,
+          "parent_usable": 292527,
+          "parent_absent_crossmatch": 591577,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292578,
+          "shape_rows": 293785,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1207,
+          "parent_rows": 884135,
+          "parent_usable": 292549,
+          "parent_absent_crossmatch": 591557,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292535,
+          "shape_rows": 293743,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1208,
+          "parent_rows": 884135,
+          "parent_usable": 292481,
+          "parent_absent_crossmatch": 591600,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292577,
+          "shape_rows": 293785,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1208,
+          "parent_rows": 884135,
+          "parent_usable": 292547,
+          "parent_absent_crossmatch": 591558,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "b3bf3bfa21b9db314c59fcdd977bba5acc5b60ca839a221ce395d483af58b850",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1128,
+      "matching": [
+        {
+          "cross_rows": 292438,
+          "shape_rows": 293865,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1427,
+          "parent_rows": 883583,
+          "parent_usable": 292393,
+          "parent_absent_crossmatch": 591145,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292394,
+          "shape_rows": 293795,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1401,
+          "parent_rows": 883583,
+          "parent_usable": 292357,
+          "parent_absent_crossmatch": 591189,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292423,
+          "shape_rows": 293872,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1449,
+          "parent_rows": 883583,
+          "parent_usable": 292377,
+          "parent_absent_crossmatch": 591160,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292408,
+          "shape_rows": 293803,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1395,
+          "parent_rows": 883583,
+          "parent_usable": 292364,
+          "parent_absent_crossmatch": 591175,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "dbbfc5b3a0ebce118eb05b5649a27f46ec9e1b7f1c94dc465b7bdaa051cb2c18",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1009,
+      "matching": [
+        {
+          "cross_rows": 292673,
+          "shape_rows": 294231,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1558,
+          "parent_rows": 885779,
+          "parent_usable": 292625,
+          "parent_absent_crossmatch": 593106,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292708,
+          "shape_rows": 294289,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1581,
+          "parent_rows": 885779,
+          "parent_usable": 292669,
+          "parent_absent_crossmatch": 593071,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292632,
+          "shape_rows": 294209,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1577,
+          "parent_rows": 885779,
+          "parent_usable": 292595,
+          "parent_absent_crossmatch": 593147,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292720,
+          "shape_rows": 294273,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1553,
+          "parent_rows": 885779,
+          "parent_usable": 292688,
+          "parent_absent_crossmatch": 593059,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "4e64b1d2739559a4d61ca7025cf30eab380cf5d107193e85b84c7353c5548590",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1049,
+      "matching": [
+        {
+          "cross_rows": 292817,
+          "shape_rows": 294254,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1437,
+          "parent_rows": 883884,
+          "parent_usable": 292763,
+          "parent_absent_crossmatch": 591067,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292786,
+          "shape_rows": 294252,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1466,
+          "parent_rows": 883884,
+          "parent_usable": 292754,
+          "parent_absent_crossmatch": 591098,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292792,
+          "shape_rows": 294265,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1473,
+          "parent_rows": 883884,
+          "parent_usable": 292752,
+          "parent_absent_crossmatch": 591092,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292772,
+          "shape_rows": 294238,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1466,
+          "parent_rows": 883884,
+          "parent_usable": 292733,
+          "parent_absent_crossmatch": 591112,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "7cc59d3e80f3ca9b62d09461c08cd03eb5be22497c96e095882a6a5588fb61de",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1089,
+      "matching": [
+        {
+          "cross_rows": 292149,
+          "shape_rows": 293682,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1533,
+          "parent_rows": 885640,
+          "parent_usable": 292115,
+          "parent_absent_crossmatch": 593491,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292243,
+          "shape_rows": 293884,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1641,
+          "parent_rows": 885640,
+          "parent_usable": 292194,
+          "parent_absent_crossmatch": 593397,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292136,
+          "shape_rows": 293746,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1610,
+          "parent_rows": 885640,
+          "parent_usable": 292089,
+          "parent_absent_crossmatch": 593504,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292160,
+          "shape_rows": 293778,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1618,
+          "parent_rows": 885640,
+          "parent_usable": 292122,
+          "parent_absent_crossmatch": 593480,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "461993a8fc82b01d6c79ab5d0cd641fa29e8d2683c572107e700f8fab484142f",
+      "original_sums_replayed": true
+    },
+    {
+      "case": 1129,
+      "matching": [
+        {
+          "cross_rows": 293118,
+          "shape_rows": 294391,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1273,
+          "parent_rows": 884076,
+          "parent_usable": 293085,
+          "parent_absent_crossmatch": 590958,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293222,
+          "shape_rows": 294507,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1285,
+          "parent_rows": 884076,
+          "parent_usable": 293189,
+          "parent_absent_crossmatch": 590854,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293119,
+          "shape_rows": 294412,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1293,
+          "parent_rows": 884076,
+          "parent_usable": 293078,
+          "parent_absent_crossmatch": 590957,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 293234,
+          "shape_rows": 294530,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1296,
+          "parent_rows": 884076,
+          "parent_usable": 293194,
+          "parent_absent_crossmatch": 590842,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "common_ids_sha256": "69775a39b7931550418e4a6a0950d3eaee2d4773affb6b93b93df1657273b6b6",
+      "original_sums_replayed": true
+    }
+  ],
+  "cuts": {
+    "mag24.9_radius_gt0.56": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.8452226649835848,
+              -0.006193115853337145
+            ],
+            [
+              -0.0019089574290474883,
+              0.838016563562567
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002573788957993449,
+              0.00232034118143926
+            ],
+            [
+              0.002043605410004711,
+              0.002507772618611953
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.00255986617805508,
+              0.0023057526983177416
+            ],
+            [
+              0.002035628889853162,
+              0.002470925996023701
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8400325927691624,
+                -0.010772719119205161
+              ],
+              [
+                -0.005935709413046467,
+                0.83322602090902
+              ]
+            ],
+            [
+              [
+                0.850192547546069,
+                -0.001746826031319617
+              ],
+              [
+                0.0020950280215800057,
+                0.8427650790783803
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.007206101421017741,
+          "jackknife_se": 0.0034774059945710733,
+          "bootstrap_se": 0.0034445576627983787,
+          "bootstrap_ci95": [
+            0.00036049255369984825,
+            0.013848884330488987
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004284158424289657,
+          "jackknife_se": 0.0030186294047201087,
+          "bootstrap_se": 0.0030248455974417154,
+          "bootstrap_ci95": [
+            -0.01045684225941974,
+            0.001570659930211805
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.8591365945822259,
+              -0.006161212750893492
+            ],
+            [
+              -0.001901540811102625,
+              0.8507802040226011
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002724266045574723,
+              0.002407417329718458
+            ],
+            [
+              0.002018574032920011,
+              0.0023999825665729202
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0027253905983594074,
+              0.0023956411766553444
+            ],
+            [
+              0.0019997386766197013,
+              0.0023743338387171844
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8535924039665184,
+                -0.01091231952224167
+              ],
+              [
+                -0.005837765977873753,
+                0.8461094945496688
+              ]
+            ],
+            [
+              [
+                0.8643550315459745,
+                -0.001487494183841971
+              ],
+              [
+                0.002063650459397848,
+                0.8553127721303444
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008356390559624782,
+          "jackknife_se": 0.0033847094676518683,
+          "bootstrap_se": 0.003361828383648381,
+          "bootstrap_ci95": [
+            0.0016140381617049287,
+            0.01485823398106889
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004259671939790866,
+          "jackknife_se": 0.0030419772709729116,
+          "bootstrap_se": 0.0030401684548023397,
+          "bootstrap_ci95": [
+            -0.010364229353776613,
+            0.0016034665759710486
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.856196870855631,
+              -0.006250058673725091
+            ],
+            [
+              -0.001678643526933453,
+              0.8478287917112505
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0026640156668078993,
+              0.00237742633145529
+            ],
+            [
+              0.001980574456075386,
+              0.002377100932724214
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002662836193877714,
+              0.002367093716717535
+            ],
+            [
+              0.001964044623648049,
+              0.0023514250832189203
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8508196776910877,
+                -0.010970735799173514
+              ],
+              [
+                -0.00555899177357623,
+                0.8431780569087576
+              ]
+            ],
+            [
+              [
+                0.8613054650797932,
+                -0.0016378148279882635
+              ],
+              [
+                0.0022012365839629866,
+                0.8523500910276671
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008368079144380536,
+          "jackknife_se": 0.0033104398028600303,
+          "bootstrap_se": 0.00328683741000586,
+          "bootstrap_ci95": [
+            0.0017809079916882215,
+            0.014701654782542295
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0045714151467916376,
+          "jackknife_se": 0.002996281018219097,
+          "bootstrap_se": 0.0029982074906752957,
+          "bootstrap_ci95": [
+            -0.010578130156564334,
+            0.00121193538859818
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              -0.013913929598641128,
+              -3.190310244365318e-05
+            ],
+            [
+              -7.4166179448633546e-06,
+              -0.012763640460034087
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0007414765054129472,
+              0.0006390559590641176
+            ],
+            [
+              0.0006623490850883472,
+              0.0006711537635730091
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0007418556365245352,
+              0.0006360239707032842
+            ],
+            [
+              0.0006500274400646406,
+              0.0006584580648162977
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                -0.015387670180015939,
+                -0.0012941838576654868
+              ],
+              [
+                -0.0012787004166229298,
+                -0.014028859069125262
+              ]
+            ],
+            [
+              [
+                -0.012485182301165656,
+                0.0011938624157196232
+              ],
+              [
+                0.001244583105099912,
+                -0.011430410039444693
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": -0.0011502891386070413,
+          "jackknife_se": 0.0008083630398639684,
+          "bootstrap_se": 0.0008002407972001161,
+          "bootstrap_ci95": [
+            -0.002741987037581392,
+            0.00038867491596034364
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -2.4486484498790692e-05,
+          "jackknife_se": 0.0007489068390978688,
+          "bootstrap_se": 0.0007363946304037569,
+          "bootstrap_ci95": [
+            -0.0014547365822528322,
+            0.0014436208189531961
+          ]
+        }
+      },
+      "common_four_count": 5694277,
+      "full_counts_by_axis_leg": [
+        [
+          5825775.0,
+          5826125.0
+        ],
+        [
+          5826471.0,
+          5826377.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9774282391613133,
+          0.9773695209079791
+        ],
+        [
+          0.9773114806544133,
+          0.9773272481337888
+        ]
+      ]
+    },
+    "mag25_radius_gt0.56": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.8260883644050394,
+              -0.0048462673201639574
+            ],
+            [
+              -0.0016781188127476096,
+              0.818115139641733
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0026781004070533156,
+              0.0024875688991139325
+            ],
+            [
+              0.001999469482016602,
+              0.0022218007509815113
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002665933966671133,
+              0.002462549783093943
+            ],
+            [
+              0.0019847056246660795,
+              0.0021867088511812803
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8206866631026665,
+                -0.009715724384333572
+              ],
+              [
+                -0.005488666593394104,
+                0.8139290810875711
+              ]
+            ],
+            [
+              [
+                0.8312158481750839,
+                -3.405643918084307e-05
+              ],
+              [
+                0.002352612822466322,
+                0.8223740529481718
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.007973224763306419,
+          "jackknife_se": 0.003423230575876929,
+          "bootstrap_se": 0.0033820508640882096,
+          "bootstrap_ci95": [
+            0.0011907456231584213,
+            0.014425063031357276
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0031681485074163476,
+          "jackknife_se": 0.00322683161474528,
+          "bootstrap_se": 0.0032093755926025213,
+          "bootstrap_ci95": [
+            -0.00963957005728101,
+            0.003009393249846652
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.8399501265106624,
+              -0.005894660915389555
+            ],
+            [
+              -0.0013879984873719057,
+              0.8313000988174598
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002648945554156077,
+              0.002353121312931478
+            ],
+            [
+              0.0019068695463344163,
+              0.0021809012032116787
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0026471625245942285,
+              0.0023318590375213683
+            ],
+            [
+              0.001888943810194876,
+              0.0021558026974821194
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8344962316805283,
+                -0.010484750805668025
+              ],
+              [
+                -0.005072437827710505,
+                0.8271367805012187
+              ]
+            ],
+            [
+              [
+                0.8449807676879152,
+                -0.0012361658739128303
+              ],
+              [
+                0.0024090657126073925,
+                0.8355239024061357
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008650027693202555,
+          "jackknife_se": 0.003205964105360526,
+          "bootstrap_se": 0.003170394089896407,
+          "bootstrap_ci95": [
+            0.0022995661288723406,
+            0.014674183043502681
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.00450666242801765,
+          "jackknife_se": 0.0029607925795570706,
+          "bootstrap_se": 0.0029475824957129466,
+          "bootstrap_ci95": [
+            -0.010522601538889932,
+            0.001161839270761994
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.8370857781354781,
+              -0.00546836368383305
+            ],
+            [
+              -0.0011675111981140113,
+              0.8284493329067203
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002631003885703885,
+              0.00229550305829359
+            ],
+            [
+              0.0019146248783071438,
+              0.0021515608131044374
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002630843123393346,
+              0.0022772426568674047
+            ],
+            [
+              0.001898206120411752,
+              0.002126407259395259
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8316878281937234,
+                -0.009959354406830365
+              ],
+              [
+                -0.004889821296765108,
+                0.8243835931484673
+              ]
+            ],
+            [
+              [
+                0.8421043980732578,
+                -0.0009653025950134467
+              ],
+              [
+                0.0025996805538141482,
+                0.8326181383907477
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008636445228757839,
+          "jackknife_se": 0.0031552610459532246,
+          "bootstrap_se": 0.0031229528629194707,
+          "bootstrap_ci95": [
+            0.002423971882491877,
+            0.014536544847609734
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004300852485719039,
+          "jackknife_se": 0.002941989484693446,
+          "bootstrap_se": 0.002931595297890055,
+          "bootstrap_ci95": [
+            -0.010270053370566495,
+            0.0013455003207940939
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              -0.013861762105622955,
+              0.0010483935952255979
+            ],
+            [
+              -0.00029012032537570386,
+              -0.013184959175726818
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0006929506796154718,
+              0.000510030127207062
+            ],
+            [
+              0.0006707474330592281,
+              0.0006254434905228546
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0006824260998463309,
+              0.0005022080026330399
+            ],
+            [
+              0.0006559307166057783,
+              0.0006175091241452422
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                -0.01523955620427262,
+                5.883709955639255e-05
+              ],
+              [
+                -0.0015878652161572689,
+                -0.014364845027038758
+              ]
+            ],
+            [
+              [
+                -0.012552468222692579,
+                0.0020137627314161157
+              ],
+              [
+                0.0009880272811028214,
+                -0.011914803436871301
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": -0.0006768029298961364,
+          "jackknife_se": 0.000812079696050179,
+          "bootstrap_se": 0.000797166473990507,
+          "bootstrap_ci95": [
+            -0.0022416230986794213,
+            0.0008777635660850905
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.0013385139206013022,
+          "jackknife_se": 0.0008065689127521002,
+          "bootstrap_se": 0.0007836922370113916,
+          "bootstrap_ci95": [
+            -0.00018858318855573811,
+            0.002920101176742267
+          ]
+        }
+      },
+      "common_four_count": 6032677,
+      "full_counts_by_axis_leg": [
+        [
+          6172030.0,
+          6172217.0
+        ],
+        [
+          6172543.0,
+          6172085.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9774218531018157,
+          0.9773922400978449
+        ],
+        [
+          0.9773406195793208,
+          0.9774131432084944
+        ]
+      ]
+    },
+    "mag25.1_radius_gt0.56": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.8087122201485667,
+              -0.004041740404908272
+            ],
+            [
+              -0.0013775866503769679,
+              0.8011386130491859
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0024897279687165308,
+              0.0023323773796056248
+            ],
+            [
+              0.002045183070569982,
+              0.0022168602704661718
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0024823924382559462,
+              0.0023142362957643634
+            ],
+            [
+              0.002028120213192255,
+              0.0021894204196522293
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8036501923122263,
+                -0.00859945838587953
+              ],
+              [
+                -0.005367070371997913,
+                0.796980458853456
+              ]
+            ],
+            [
+              [
+                0.8134431011193768,
+                0.0004700589483830871
+              ],
+              [
+                0.002674067318768499,
+                0.8054089160188987
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.007573607099380819,
+          "jackknife_se": 0.0031906446821295758,
+          "bootstrap_se": 0.0031520987056215147,
+          "bootstrap_ci95": [
+            0.001242151496359717,
+            0.01347457875957749
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0026641537545313045,
+          "jackknife_se": 0.003067482988095277,
+          "bootstrap_se": 0.0030515761359773577,
+          "bootstrap_ci95": [
+            -0.008801901212151757,
+            0.003221616455470964
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.821834130587069,
+              -0.005367320445270559
+            ],
+            [
+              -0.0011866061577820843,
+              0.8135539184291478
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0025011295563950936,
+              0.002264355280018855
+            ],
+            [
+              0.001914553352058543,
+              0.002201154579530687
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002502373890031792,
+              0.0022454571444382003
+            ],
+            [
+              0.0018978716723427112,
+              0.002175034945142068
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8167025364668506,
+                -0.00979754722498125
+              ],
+              [
+                -0.004874569727161133,
+                0.8094191205956094
+              ]
+            ],
+            [
+              [
+                0.8266538093268913,
+                -0.0009340159615942668
+              ],
+              [
+                0.0026351861800033146,
+                0.8178363957458623
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008280212157921185,
+          "jackknife_se": 0.003206716138521568,
+          "bootstrap_se": 0.003169747180285899,
+          "bootstrap_ci95": [
+            0.0018737129228955014,
+            0.014272389493898044
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004180714287488475,
+          "jackknife_se": 0.0028736163708162478,
+          "bootstrap_se": 0.0028637507801917883,
+          "bootstrap_ci95": [
+            -0.009919648742289325,
+            0.0013214855156947049
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.8188873658364842,
+              -0.00512120616105559
+            ],
+            [
+              -0.0008998378591285936,
+              0.8105559195516834
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0024609222312641085,
+              0.0022714572836709406
+            ],
+            [
+              0.0018824206800867444,
+              0.002171899045455982
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0024612388826771355,
+              0.002254128466421012
+            ],
+            [
+              0.001867817707051224,
+              0.002148280546529013
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8138701273977472,
+                -0.009566894235460732
+              ],
+              [
+                -0.004564529511612228,
+                0.8064394400857481
+              ]
+            ],
+            [
+              [
+                0.8236489191533918,
+                -0.000671104891126083
+              ],
+              [
+                0.002840040465592481,
+                0.8147604175235146
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00833144628480087,
+          "jackknife_se": 0.0031136871903125647,
+          "bootstrap_se": 0.0030781649242117796,
+          "bootstrap_ci95": [
+            0.0021477790233955436,
+            0.01419508492070927
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004221368301926997,
+          "jackknife_se": 0.00289775982712872,
+          "bootstrap_se": 0.0028882904870018776,
+          "bootstrap_ci95": [
+            -0.009971925688645336,
+            0.001324678122721606
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              -0.013121910438502304,
+              0.0013255800403622871
+            ],
+            [
+              -0.0001909804925948836,
+              -0.012415305379961938
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0004786186648547644,
+              0.0005402600431741142
+            ],
+            [
+              0.0006408519885139465,
+              0.0005663627653787844
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0004742258782665341,
+              0.0005349318403706181
+            ],
+            [
+              0.0006293189448243784,
+              0.0005534006740084772
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                -0.014062395007341078,
+                0.0002490970916484686
+              ],
+              [
+                -0.0013987102740831406,
+                -0.013472526335246624
+              ]
+            ],
+            [
+              [
+                -0.012196086704513174,
+                0.00235805394863546
+              ],
+              [
+                0.0010420191066461985,
+                -0.011276069606025303
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": -0.000706605058540366,
+          "jackknife_se": 0.000718771562526263,
+          "bootstrap_se": 0.0007123857310462365,
+          "bootstrap_ci95": [
+            -0.002132185108150239,
+            0.0006675468686734437
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.0015165605329571707,
+          "jackknife_se": 0.0007460887656108698,
+          "bootstrap_se": 0.0007275660362555812,
+          "bootstrap_ci95": [
+            0.00011338603706404561,
+            0.002970907393840269
+          ]
+        }
+      },
+      "common_four_count": 6367650,
+      "full_counts_by_axis_leg": [
+        [
+          6514247.0,
+          6514604.0
+        ],
+        [
+          6514924.0,
+          6515033.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9774959408201747,
+          0.9774423740875117
+        ],
+        [
+          0.9773943640785372,
+          0.9773780117460649
+        ]
+      ]
+    },
+    "mag24.9_radius_gt0.60": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.926574727730483,
+              -0.004768573960245649
+            ],
+            [
+              -0.0009589159855147219,
+              0.9181659612560539
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002766344798773979,
+              0.0026321006035619904
+            ],
+            [
+              0.0019887361482386003,
+              0.0025304381969338758
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0027258324744848616,
+              0.0026119729471132795
+            ],
+            [
+              0.001970612173993612,
+              0.0024926896698528843
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9210833257239263,
+                -0.009884564519060494
+              ],
+              [
+                -0.004817298044535309,
+                0.9132780502353017
+              ]
+            ],
+            [
+              [
+                0.9318021164780169,
+                0.0001941397244604669
+              ],
+              [
+                0.0028705869625648313,
+                0.9230818275787909
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008408766474429119,
+          "jackknife_se": 0.00351485764150617,
+          "bootstrap_se": 0.0034664736850597783,
+          "bootstrap_ci95": [
+            0.001691765219237307,
+            0.015328720891715905
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0038096579747309276,
+          "jackknife_se": 0.0033871010591885876,
+          "bootstrap_se": 0.0033802499590048895,
+          "bootstrap_ci95": [
+            -0.010627391463071347,
+            0.002510540499305157
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.917951222007228,
+              -0.004298150677959211
+            ],
+            [
+              -0.0003591804478243841,
+              0.9097611293010985
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002856332296899206,
+              0.0025054638032130302
+            ],
+            [
+              0.0020886571307703493,
+              0.0022752443214376435
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0028346462149234615,
+              0.0024861682623900563
+            ],
+            [
+              0.0020593881732073405,
+              0.002244424543285349
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9121811511422862,
+                -0.00914782023336138
+              ],
+              [
+                -0.0044327078616413365,
+                0.9052733565557902
+              ]
+            ],
+            [
+              [
+                0.92336556270129,
+                0.0005081412763995011
+              ],
+              [
+                0.0036419410220576115,
+                0.9141158278990031
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00819009270612947,
+          "jackknife_se": 0.0034641346806107065,
+          "bootstrap_se": 0.0034231717496091365,
+          "bootstrap_ci95": [
+            0.0015314157399500955,
+            0.014850501928051096
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.003938970230134827,
+          "jackknife_se": 0.0032728905756662244,
+          "bootstrap_se": 0.003257211531555644,
+          "bootstrap_ci95": [
+            -0.010505655236093894,
+            0.002282622075841885
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.9148726026510057,
+              -0.004737866632786562
+            ],
+            [
+              -0.0003168746748278414,
+              0.9059501028433247
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0027802201773241284,
+              0.0025369828220384518
+            ],
+            [
+              0.0020473020023482782,
+              0.002297211048674572
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002757367526550517,
+              0.0025200753177546933
+            ],
+            [
+              0.0020222731588688285,
+              0.002265536288032814
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9092320006495852,
+                -0.009629046481663552
+              ],
+              [
+                -0.004363542027444092,
+                0.9014064255240549
+              ]
+            ],
+            [
+              [
+                0.9201025766509303,
+                0.00018661953774091873
+              ],
+              [
+                0.003579723564045461,
+                0.9103499971296192
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008922499807681006,
+          "jackknife_se": 0.0033531807203762763,
+          "bootstrap_se": 0.003309401024957168,
+          "bootstrap_ci95": [
+            0.002564376336175439,
+            0.015452651923572619
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004420991957958721,
+          "jackknife_se": 0.0032010665311528424,
+          "bootstrap_se": 0.003191386246805523,
+          "bootstrap_ci95": [
+            -0.010791347312911797,
+            0.001625079122667937
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              0.008623505723254987,
+              -0.00047042328228643834
+            ],
+            [
+              -0.0005997355376903378,
+              0.008404831954955339
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0008752853277888755,
+              0.0008487221631490865
+            ],
+            [
+              0.0007393868003528728,
+              0.0008763694438398659
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0008687586666867415,
+              0.0008513894333914294
+            ],
+            [
+              0.000719702717224422,
+              0.0008561475002673244
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.0068893971530004485,
+                -0.002150594997802656
+              ],
+              [
+                -0.002030366202368496,
+                0.006737122987490049
+              ]
+            ],
+            [
+              [
+                0.010276339831342915,
+                0.001182665004920161
+              ],
+              [
+                0.0007822638969956564,
+                0.0100636323998815
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00021867376829964869,
+          "jackknife_se": 0.0012622666664751253,
+          "bootstrap_se": 0.0012500581922115608,
+          "bootstrap_ci95": [
+            -0.002223930889982442,
+            0.002651053472520259
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.00012931225540389934,
+          "jackknife_se": 0.0010796790204037664,
+          "bootstrap_se": 0.0010643696168789653,
+          "bootstrap_ci95": [
+            -0.0019515063092014604,
+            0.0022322346127726885
+          ]
+        }
+      },
+      "common_four_count": 5126984,
+      "full_counts_by_axis_leg": [
+        [
+          5281940.0,
+          5282348.0
+        ],
+        [
+          5282149.0,
+          5282496.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.970663051833228,
+          0.9705880793919673
+        ],
+        [
+          0.970624645385808,
+          0.9705608863688681
+        ]
+      ]
+    },
+    "mag25_radius_gt0.60": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.9071377585399245,
+              -0.003515943696695493
+            ],
+            [
+              -0.0005625152517299477,
+              0.8974846804701047
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0028388314631449005,
+              0.0027295769755433076
+            ],
+            [
+              0.0019727591732208332,
+              0.002334902514675856
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002805116737591815,
+              0.0026993938789099275
+            ],
+            [
+              0.0019470449351754139,
+              0.0022996110430303714
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9015050502015075,
+                -0.008699431634258611
+              ],
+              [
+                -0.004332239444536733,
+                0.8929752338130804
+              ]
+            ],
+            [
+              [
+                0.9123887649862882,
+                0.0017453070884944045
+              ],
+              [
+                0.0032545845635679896,
+                0.9019989118173798
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.009653078069819854,
+          "jackknife_se": 0.0035709600764430925,
+          "bootstrap_se": 0.0035174922494723734,
+          "bootstrap_ci95": [
+            0.0026981166243122663,
+            0.016635767456999306
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0029534284449655454,
+          "jackknife_se": 0.003622149934804916,
+          "bootstrap_se": 0.0035907942375724504,
+          "bootstrap_ci95": [
+            -0.01023287420820316,
+            0.0038388474845891902
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.8987262073713881,
+              -0.004230954740583083
+            ],
+            [
+              0.00048473519075008096,
+              0.8900926163918854
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0027042795110031755,
+              0.0024766640650893336
+            ],
+            [
+              0.002045332820476384,
+              0.0021285537434410267
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0026820238645801553,
+              0.002450922778798036
+            ],
+            [
+              0.002018127475505398,
+              0.0020983305761792448
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.893177947664238,
+                -0.00896137207742884
+              ],
+              [
+                -0.0035213483783250944,
+                0.885921994280831
+              ]
+            ],
+            [
+              [
+                0.9037834521752559,
+                0.0005390734565435424
+              ],
+              [
+                0.004399078859234447,
+                0.8942266586952485
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00863359097950267,
+          "jackknife_se": 0.003197257327526299,
+          "bootstrap_se": 0.0031449185846438416,
+          "bootstrap_ci95": [
+            0.0025347449860387756,
+            0.014739282710942218
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004715689931333164,
+          "jackknife_se": 0.003283866593052897,
+          "bootstrap_se": 0.003255166529957634,
+          "bootstrap_ci95": [
+            -0.01130512457652568,
+            0.0015058852981693408
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.8959528368380435,
+              -0.00410068251571471
+            ],
+            [
+              0.0005017833032216472,
+              0.8864500207730615
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0026731521533895795,
+              0.0024591718688026756
+            ],
+            [
+              0.0020593371556921684,
+              0.002182833837755385
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002654653998953798,
+              0.0024347915179423214
+            ],
+            [
+              0.0020340118316210898,
+              0.0021501166357910397
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8905000280424037,
+                -0.008797394975063034
+              ],
+              [
+                -0.0035358430211795645,
+                0.8822022914780848
+              ]
+            ],
+            [
+              [
+                0.9009968185839349,
+                0.000686477661005462
+              ],
+              [
+                0.004439072829283844,
+                0.890694119713678
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.009502816064982045,
+          "jackknife_se": 0.003154337155808366,
+          "bootstrap_se": 0.0031044668525171473,
+          "bootstrap_ci95": [
+            0.003543183408259701,
+            0.015570570574888108
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004602465818936357,
+          "jackknife_se": 0.003223300106857003,
+          "bootstrap_se": 0.0031978506032394553,
+          "bootstrap_ci95": [
+            -0.011028477948873471,
+            0.0015266411620095501
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              0.008411551168536424,
+              0.00071501104388759
+            ],
+            [
+              -0.0010472504424800287,
+              0.00739206407821924
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0009082293948568009,
+              0.0007949002587613915
+            ],
+            [
+              0.0008138622803456617,
+              0.0008594164853910804
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0008897437364799117,
+              0.0007874400974631493
+            ],
+            [
+              0.0007948634649786541,
+              0.000839996674943657
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.006633061257180694,
+                -0.0008171718851235186
+              ],
+              [
+                -0.0026162549229178807,
+                0.005749585341233568
+              ]
+            ],
+            [
+              [
+                0.01013118779468903,
+                0.0022579905780248178
+              ],
+              [
+                0.0004835680448447806,
+                0.009060476894369156
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0010194870903171838,
+          "jackknife_se": 0.0012217777910526763,
+          "bootstrap_se": 0.0011931467298250708,
+          "bootstrap_ci95": [
+            -0.0013571491982978857,
+            0.003304551116761095
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.0017622614863676183,
+          "jackknife_se": 0.0010701394471009558,
+          "bootstrap_se": 0.0010473688587455125,
+          "bootstrap_ci95": [
+            -0.0002500106871688022,
+            0.0038238536152989727
+          ]
+        }
+      },
+      "common_four_count": 5412739,
+      "full_counts_by_axis_leg": [
+        [
+          5577528.0,
+          5577720.0
+        ],
+        [
+          5577518.0,
+          5577629.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9704548323199812,
+          0.9704214266761328
+        ],
+        [
+          0.9704565722602778,
+          0.9704372592727125
+        ]
+      ]
+    },
+    "mag25.1_radius_gt0.60": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.8896211609778656,
+              -0.002839766925642977
+            ],
+            [
+              -0.0003643932079328696,
+              0.880036336696452
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0026807496170311203,
+              0.002523644449601879
+            ],
+            [
+              0.0020936633689787173,
+              0.0023489152299926708
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0026516285921579868,
+              0.0024966740829320973
+            ],
+            [
+              0.0020697715284162957,
+              0.0023197317744730714
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8842531547868745,
+                -0.0077200963814561905
+              ],
+              [
+                -0.004362311210477161,
+                0.8755863639711696
+              ]
+            ],
+            [
+              [
+                0.8946089576941918,
+                0.0020211077482583132
+              ],
+              [
+                0.0037576783372348594,
+                0.8846222561576468
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.009584824281413606,
+          "jackknife_se": 0.0033972274104690178,
+          "bootstrap_se": 0.0033388896702604507,
+          "bootstrap_ci95": [
+            0.0029766090710299314,
+            0.016032453985574156
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0024753737177101074,
+          "jackknife_se": 0.0034214027601837693,
+          "bootstrap_se": 0.003392222373325564,
+          "bootstrap_ci95": [
+            -0.009404660509638426,
+            0.003880443643186893
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.8809066240771845,
+              -0.003932606699491858
+            ],
+            [
+              0.00043198004686495185,
+              0.8722994244045539
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0025875683575704404,
+              0.0023569597205120845
+            ],
+            [
+              0.0021021384438123444,
+              0.0021550613097149436
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002570999219196762,
+              0.0023332556534103417
+            ],
+            [
+              0.0020788541904525623,
+              0.0021216727392072733
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8756853034568076,
+                -0.00847139395378166
+              ],
+              [
+                -0.003654572036844981,
+                0.8681260688910684
+              ]
+            ],
+            [
+              [
+                0.8857957633647033,
+                0.0006039537009898431
+              ],
+              [
+                0.00445349652658261,
+                0.8764909029258956
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008607199672630572,
+          "jackknife_se": 0.0032293327417075167,
+          "bootstrap_se": 0.0031755926759881804,
+          "bootstrap_ci95": [
+            0.0024306859804364895,
+            0.014795795839947092
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.00436458674635681,
+          "jackknife_se": 0.0031945327042432184,
+          "bootstrap_se": 0.0031721979653775156,
+          "bootstrap_ci95": [
+            -0.010864896042579637,
+            0.001559294449607131
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.877921431158464,
+              -0.004120801216852944
+            ],
+            [
+              0.0005383592002668566,
+              0.8685143117044242
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0025765630418282375,
+              0.002413333563281285
+            ],
+            [
+              0.0020854452937802983,
+              0.0021661554719775754
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002560729494266979,
+              0.0023903351613264656
+            ],
+            [
+              0.0020615490728918867,
+              0.002134134262362023
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8727021032585449,
+                -0.008759626244406977
+              ],
+              [
+                -0.0035142424069650015,
+                0.8643015930144476
+              ]
+            ],
+            [
+              [
+                0.8828040547680461,
+                0.0004853824475940661
+              ],
+              [
+                0.004593124505250198,
+                0.8727415484545188
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.009407119454039825,
+          "jackknife_se": 0.003174646687228275,
+          "bootstrap_se": 0.0031208844538701177,
+          "bootstrap_ci95": [
+            0.0033118353131314977,
+            0.015573906196060939
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0046591604171198,
+          "jackknife_se": 0.003171777939297455,
+          "bootstrap_se": 0.0031490753656522445,
+          "bootstrap_ci95": [
+            -0.011139702118036233,
+            0.0012195939492208674
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              0.008714536900681136,
+              0.0010928397738488808
+            ],
+            [
+              -0.0007963732547978215,
+              0.0077369122918981015
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0006693534306246217,
+              0.0007826919386562479
+            ],
+            [
+              0.00076682936599049,
+              0.0008494863686134012
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0006592190169608614,
+              0.0007835008438443445
+            ],
+            [
+              0.0007547646891729368,
+              0.0008331788229614527
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.007393565786587361,
+                -0.00044103120884388434
+              ],
+              [
+                -0.002269711666453281,
+                0.006114003763417017
+              ]
+            ],
+            [
+              [
+                0.009988261436938409,
+                0.0026379829380100933
+              ],
+              [
+                0.0006956034166083172,
+                0.009375412440757321
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0009776246087830343,
+          "jackknife_se": 0.0011361876958122235,
+          "bootstrap_se": 0.0011233672297336073,
+          "bootstrap_ci95": [
+            -0.0012773260052558548,
+            0.003108426253567639
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.0018892130286467025,
+          "jackknife_se": 0.0010179648783919307,
+          "bootstrap_se": 0.001004023389873611,
+          "bootstrap_ci95": [
+            -8.514127992067578e-05,
+            0.0038740142916031733
+          ]
+        }
+      },
+      "common_four_count": 5691202,
+      "full_counts_by_axis_leg": [
+        [
+          5865462.0,
+          5866025.0
+        ],
+        [
+          5865493.0,
+          5866142.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9702904903313669,
+          0.9701973653368338
+        ],
+        [
+          0.9702853622022906,
+          0.9701780147838222
+        ]
+      ]
+    },
+    "mag24.9_radius_gt0.64": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.97595202678781,
+              -0.003089219225595575
+            ],
+            [
+              0.00021410127107403162,
+              0.970270875281575
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002432305588013568,
+              0.002515765160488468
+            ],
+            [
+              0.0020573183368458045,
+              0.002654016354418931
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002396260473434527,
+              0.0024983809140102656
+            ],
+            [
+              0.0020208634992957843,
+              0.002608608953155
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9712358965464581,
+                -0.00803477903446044
+              ],
+              [
+                -0.00371452296743149,
+                0.9651690270933996
+              ]
+            ],
+            [
+              [
+                0.9806350820177918,
+                0.0015868981431143858
+              ],
+              [
+                0.004236043203017612,
+                0.9753789679517909
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.005681151506235049,
+          "jackknife_se": 0.003220112891932936,
+          "bootstrap_se": 0.003178954330675558,
+          "bootstrap_ci95": [
+            -0.0006504329028068356,
+            0.011857592579920553
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0033033204966696067,
+          "jackknife_se": 0.0035154586669661676,
+          "bootstrap_se": 0.003481883471198433,
+          "bootstrap_ci95": [
+            -0.010498916645218084,
+            0.0031117004437691107
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.9258283339782949,
+              -0.0018176092246245737
+            ],
+            [
+              1.5970359746712994e-05,
+              0.9195817627518567
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0027651949125952215,
+              0.002376719614130526
+            ],
+            [
+              0.002197699232916985,
+              0.0023242530868996586
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002744205988048552,
+              0.002364825262179159
+            ],
+            [
+              0.0021631998312450296,
+              0.0023009551934442445
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9203375750568104,
+                -0.006524611239001492
+              ],
+              [
+                -0.00416791667255366,
+                0.9150430634374181
+              ]
+            ],
+            [
+              [
+                0.9310316423939259,
+                0.0026151016640937074
+              ],
+              [
+                0.0042382697640819715,
+                0.9240153422634686
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.006246571226438236,
+          "jackknife_se": 0.0032625678310892123,
+          "bootstrap_se": 0.0032347924046597213,
+          "bootstrap_ci95": [
+            -0.00012667596813074585,
+            0.012623582179998781
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0018335795843712867,
+          "jackknife_se": 0.0033812667224772668,
+          "bootstrap_se": 0.003352267858018274,
+          "bootstrap_ci95": [
+            -0.008761551812803515,
+            0.0044171278830798955
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.9232577508063549,
+              -0.0020470914955527755
+            ],
+            [
+              -0.0002435809557103035,
+              0.9169720665394884
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0026345207801021495,
+              0.0022966070367949534
+            ],
+            [
+              0.002186036798667867,
+              0.0023585342622781127
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0026155876467085005,
+              0.0022875155643886703
+            ],
+            [
+              0.002152345058029664,
+              0.0023345680784962073
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9180158708993205,
+                -0.0065728652843716415
+              ],
+              [
+                -0.004435395803479961,
+                0.9123319255388914
+              ]
+            ],
+            [
+              [
+                0.9282228213842908,
+                0.002272263889135475
+              ],
+              [
+                0.0039308703001153245,
+                0.9214533561094154
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.006285684266866487,
+          "jackknife_se": 0.003150856252497902,
+          "bootstrap_se": 0.0031272031462153452,
+          "bootstrap_ci95": [
+            0.00014870773288137303,
+            0.012418204839942914
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0018035105398424719,
+          "jackknife_se": 0.0033024175882921053,
+          "bootstrap_se": 0.003278945753591853,
+          "bootstrap_ci95": [
+            -0.008624507694744763,
+            0.00428336945509425
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              0.05012369280951512,
+              -0.0012716100009710013
+            ],
+            [
+              0.00019813091132731862,
+              0.050689112529718305
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0011565613705624073,
+              0.001037042571433373
+            ],
+            [
+              0.0008990022098025626,
+              0.0011632337052647093
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0011477317735327653,
+              0.0010181342376738899
+            ],
+            [
+              0.0008885114833955181,
+              0.001137596391182892
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.04785263750997345,
+                -0.0032667683928673677
+              ],
+              [
+                -0.0015718785692478306,
+                0.04845242891934601
+              ]
+            ],
+            [
+              [
+                0.05236757976566053,
+                0.0007244152644272341
+              ],
+              [
+                0.0018909719190200352,
+                0.05291111106482452
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": -0.0005654197202031863,
+          "jackknife_se": 0.0017058542273332706,
+          "bootstrap_se": 0.0016845145152796389,
+          "bootstrap_ci95": [
+            -0.0038687168335477915,
+            0.002705615160101829
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.00146974091229832,
+          "jackknife_se": 0.0015065350861910767,
+          "bootstrap_se": 0.0014741905873819718,
+          "bootstrap_ci95": [
+            -0.004320565825239528,
+            0.001461148738448305
+          ]
+        }
+      },
+      "common_four_count": 4374642,
+      "full_counts_by_axis_leg": [
+        [
+          4548759.0,
+          4549024.0
+        ],
+        [
+          4549116.0,
+          4549252.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9617220872769914,
+          0.9616660628741462
+        ],
+        [
+          0.9616466144191531,
+          0.9616178659700539
+        ]
+      ]
+    },
+    "mag25_radius_gt0.64": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.957565387902095,
+              -0.001608917298816681
+            ],
+            [
+              0.0005704087084888364,
+              0.9503385092463543
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0025377630486746305,
+              0.002702133035463197
+            ],
+            [
+              0.0018690211154641866,
+              0.0024709200149366124
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0025056711176409956,
+              0.0026812582786472036
+            ],
+            [
+              0.0018306940066265714,
+              0.0024331822414784747
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9525665741109737,
+                -0.0069064820985281555
+              ],
+              [
+                -0.0029451909796709475,
+                0.9455058747523525
+              ]
+            ],
+            [
+              [
+                0.9623664396782995,
+                0.0034498653554134247
+              ],
+              [
+                0.004232542302943812,
+                0.9550665826003952
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.007226878655740676,
+          "jackknife_se": 0.003355885781999438,
+          "bootstrap_se": 0.003309941059027643,
+          "bootstrap_ci95": [
+            0.0006686925405644085,
+            0.01361304246657397
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0021793260073055174,
+          "jackknife_se": 0.003642665075679825,
+          "bootstrap_se": 0.0035947548289895666,
+          "bootstrap_ci95": [
+            -0.009481868943882492,
+            0.004581401719918951
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.9085419325941186,
+              -0.001960660441580763
+            ],
+            [
+              0.0009247627106731603,
+              0.9014956025894912
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0025844788568511966,
+              0.002426009869924595
+            ],
+            [
+              0.00212380503835634,
+              0.002175322358155047
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0025648789013364317,
+              0.0024100178280453974
+            ],
+            [
+              0.00208721121653143,
+              0.0021506324501951485
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9033130002464361,
+                -0.0067718387912484015
+              ],
+              [
+                -0.003097322396322917,
+                0.8971674356168858
+              ]
+            ],
+            [
+              [
+                0.9133370656857052,
+                0.002601947035463958
+              ],
+              [
+                0.005040130574089705,
+                0.9056838635504829
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.007046330004627399,
+          "jackknife_se": 0.0030349273641536137,
+          "bootstrap_se": 0.0029936960241687084,
+          "bootstrap_ci95": [
+            0.0010864274994881408,
+            0.012907307880929319
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0028854231522539237,
+          "jackknife_se": 0.003410858365114858,
+          "bootstrap_se": 0.003371046469786242,
+          "bootstrap_ci95": [
+            -0.009792927475272481,
+            0.003307175622435887
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.9063203797304693,
+              -0.0016683545500893317
+            ],
+            [
+              0.0005898706082972516,
+              0.8988713145952117
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0024457145205926682,
+              0.0023001651404312108
+            ],
+            [
+              0.002164123935013107,
+              0.0021789746448120724
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0024306187032560956,
+              0.002287029843480621
+            ],
+            [
+              0.002127142719906582,
+              0.002153287651762955
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9013903803391589,
+                -0.006232468361706182
+              ],
+              [
+                -0.0035714207457194615,
+                0.8944695498879557
+              ]
+            ],
+            [
+              [
+                0.9108968619216551,
+                0.00263015726438555
+              ],
+              [
+                0.004756440724210873,
+                0.9030327909614076
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00744906513525756,
+          "jackknife_se": 0.0029206151644203433,
+          "bootstrap_se": 0.002887103446021816,
+          "bootstrap_ci95": [
+            0.0017333480909100117,
+            0.01309817890252273
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0022582251583865834,
+          "jackknife_se": 0.0033571783118051487,
+          "bootstrap_se": 0.0033195890148861183,
+          "bootstrap_ci95": [
+            -0.009181551112439311,
+            0.003881402704675177
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              0.04902345530797636,
+              0.0003517431427640821
+            ],
+            [
+              -0.0003543540021843239,
+              0.04884290665686308
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.001125822192229786,
+              0.0010045426808543087
+            ],
+            [
+              0.0008662632629275051,
+              0.0010402212510898553
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0011024860637207732,
+              0.0009882848838828914
+            ],
+            [
+              0.0008559667625780681,
+              0.0010218855612319385
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.04682084756007387,
+                -0.0015560176923931934
+              ],
+              [
+                -0.002026607885140457,
+                0.04690700218784681
+              ]
+            ],
+            [
+              [
+                0.051162198131161435,
+                0.0023260507953437415
+              ],
+              [
+                0.001325452078818028,
+                0.0509448327237668
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.000180548651113277,
+          "jackknife_se": 0.0014546371747695464,
+          "bootstrap_se": 0.0014164732953703947,
+          "bootstrap_ci95": [
+            -0.002596684786879469,
+            0.002978074424127183
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.0007060971449484063,
+          "jackknife_se": 0.0015351175684666244,
+          "bootstrap_se": 0.0015013161134622161,
+          "bootstrap_ci95": [
+            -0.002173424380507761,
+            0.003766401879886628
+          ]
+        }
+      },
+      "common_four_count": 4603051,
+      "full_counts_by_axis_leg": [
+        [
+          4788036.0,
+          4788081.0
+        ],
+        [
+          4788240.0,
+          4788292.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9613651609971187,
+          0.9613561257631189
+        ],
+        [
+          0.9613242026297762,
+          0.9613137628198113
+        ]
+      ]
+    },
+    "mag25.1_radius_gt0.64": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.9408125950490259,
+              -0.0014437392929477265
+            ],
+            [
+              0.0006678596041565786,
+              0.9333975353975915
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002552114081027891,
+              0.002426551593122343
+            ],
+            [
+              0.002080754896518546,
+              0.0024437595807149425
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0025186204369275433,
+              0.0024065882174000523
+            ],
+            [
+              0.002040788229686908,
+              0.0024147097755083786
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9357766608691102,
+                -0.006294928382564533
+              ],
+              [
+                -0.0033135897095895586,
+                0.9287341313472687
+              ]
+            ],
+            [
+              [
+                0.9456789984007615,
+                0.0030845705450671976
+              ],
+              [
+                0.0047802076985949725,
+                0.938174937027766
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.007415059651434408,
+          "jackknife_se": 0.0032431748360546193,
+          "bootstrap_se": 0.0031933787317901348,
+          "bootstrap_ci95": [
+            0.0010538188412727747,
+            0.013454769185394962
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.002111598897104305,
+          "jackknife_se": 0.0036336233196518864,
+          "bootstrap_se": 0.0035891639340863172,
+          "bootstrap_ci95": [
+            -0.009394944876499795,
+            0.004532058738502281
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.8925334072609941,
+              -0.00214441120759101
+            ],
+            [
+              0.0006211096695225677,
+              0.8854005402441508
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0025348496147259,
+              0.0023541314718619165
+            ],
+            [
+              0.00217609170859476,
+              0.0021517572750425953
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0025163345845876242,
+              0.0023388999442855926
+            ],
+            [
+              0.0021412072691207786,
+              0.0021278352896315625
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8873752681417706,
+                -0.006818189053151093
+              ],
+              [
+                -0.0035539864141876038,
+                0.881190755589723
+              ]
+            ],
+            [
+              [
+                0.8972584045564792,
+                0.0023013018024374376
+              ],
+              [
+                0.004852171933530512,
+                0.8895674665467453
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.007132867016843236,
+          "jackknife_se": 0.003072852549593986,
+          "bootstrap_se": 0.003030880641306383,
+          "bootstrap_ci95": [
+            0.0010865949994526946,
+            0.013004033919722952
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0027655208771135776,
+          "jackknife_se": 0.0034620947784700005,
+          "bootstrap_se": 0.003427974929409461,
+          "bootstrap_ci95": [
+            -0.009780518534518473,
+            0.0035204872988117033
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.8901138591452397,
+              -0.0021829289754819303
+            ],
+            [
+              0.00043083769483397226,
+              0.8824673253331288
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0024221074558759895,
+              0.002321238629963881
+            ],
+            [
+              0.0022047927213096623,
+              0.00215712412122179
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0024070408415741425,
+              0.0023062462057722322
+            ],
+            [
+              0.002167621736534103,
+              0.002134223068218901
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8852147301876748,
+                -0.006787844891181065
+              ],
+              [
+                -0.003770564831479482,
+                0.8782640111417733
+              ]
+            ],
+            [
+              [
+                0.8946449034688743,
+                0.002200966278286393
+              ],
+              [
+                0.004771804941183367,
+                0.8866941792693124
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0076465338121108894,
+          "jackknife_se": 0.0029382473457032422,
+          "bootstrap_se": 0.002902254634358039,
+          "bootstrap_ci95": [
+            0.0018791806763812564,
+            0.013300341233597497
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0026137666703159026,
+          "jackknife_se": 0.0034736251744821424,
+          "bootstrap_se": 0.003438900023138466,
+          "bootstrap_ci95": [
+            -0.009695465998568208,
+            0.003729879739997579
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              0.04827918778803186,
+              0.0007006719146432836
+            ],
+            [
+              4.674993463401093e-05,
+              0.04799699515344069
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0010543168750176161,
+              0.0009547977219932862
+            ],
+            [
+              0.0008720914800097725,
+              0.001018079355229976
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0010437724071283771,
+              0.000942981538440263
+            ],
+            [
+              0.0008606500280768641,
+              0.0010070384360504857
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.046201518119901565,
+                -0.001126291848022102
+              ],
+              [
+                -0.0016365216964636241,
+                0.0461010818257165
+              ]
+            ],
+            [
+              [
+                0.05029991608977477,
+                0.002574987824339672
+              ],
+              [
+                0.0017649777334491322,
+                0.0500546878639922
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00028219263459117183,
+          "jackknife_se": 0.0014020768331270974,
+          "bootstrap_se": 0.0013851162076622529,
+          "bootstrap_ci95": [
+            -0.002458488212506246,
+            0.00301177224949754
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.0006539219800092725,
+          "jackknife_se": 0.001401806237535809,
+          "bootstrap_se": 0.001373023354677059,
+          "bootstrap_ci95": [
+            -0.002061473766578824,
+            0.0033436610889618383
+          ]
+        }
+      },
+      "common_four_count": 4821869,
+      "full_counts_by_axis_leg": [
+        [
+          5017563.0,
+          5017649.0
+        ],
+        [
+          5017727.0,
+          5018079.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9609981977306513,
+          0.9609817267010905
+        ],
+        [
+          0.960966788348589,
+          0.9608993800217175
+        ]
+      ]
+    },
+    "uncut": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.5503659852973689,
+              -0.0046651172295645105
+            ],
+            [
+              -0.0003667623471346806,
+              0.543631632530486
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.001956092069648482,
+              0.0017353441130220737
+            ],
+            [
+              0.0015845443262666188,
+              0.0017698221009115357
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0019442325579647932,
+              0.001714613545039279
+            ],
+            [
+              0.001564935921625147,
+              0.0017529196744608636
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.5464677222656931,
+                -0.007950251582829117
+              ],
+              [
+                -0.0034826056606089457,
+                0.5402530471319611
+              ]
+            ],
+            [
+              [
+                0.554130739894996,
+                -0.001214017191209295
+              ],
+              [
+                0.0026200079611705244,
+                0.5470712835831907
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.006734352766882945,
+          "jackknife_se": 0.0026268698975764056,
+          "bootstrap_se": 0.002605066453422509,
+          "bootstrap_ci95": [
+            0.0015158612736606823,
+            0.011703833744260601
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.00429835488242983,
+          "jackknife_se": 0.0022925887491449855,
+          "bootstrap_se": 0.0022775113115998595,
+          "bootstrap_ci95": [
+            -0.00874638833649526,
+            0.00020126137380436514
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.5551637885059498,
+              -0.004161677162633621
+            ],
+            [
+              -0.00035475791427983595,
+              0.5500224309521626
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.001889291277149531,
+              0.0017592970031100618
+            ],
+            [
+              0.001581251685730238,
+              0.0016876413325677489
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.001883092216732955,
+              0.001735532772835671
+            ],
+            [
+              0.0015600866987264604,
+              0.0016743498431561438
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.5513973323801378,
+                -0.00748219105952879
+              ],
+              [
+                -0.003426267914254315,
+                0.546835574368033
+              ]
+            ],
+            [
+              [
+                0.5588286295144063,
+                -0.0006672543631067054
+              ],
+              [
+                0.0026299853320069367,
+                0.5533447564302418
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.005141357553787196,
+          "jackknife_se": 0.0025588577647333395,
+          "bootstrap_se": 0.0025429816763486196,
+          "bootstrap_ci95": [
+            3.785987051012082e-05,
+            0.010030099938505815
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0038069192483537848,
+          "jackknife_se": 0.002324939218934896,
+          "bootstrap_se": 0.0023092865199420354,
+          "bootstrap_ci95": [
+            -0.00830969006588172,
+            0.0007934495805103787
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.5554315920236302,
+              -0.004257549407034553
+            ],
+            [
+              -0.0002928429350528156,
+              0.5501199455121614
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0018542347088791292,
+              0.0017219650859881738
+            ],
+            [
+              0.0015709844789293576,
+              0.0016737352198153777
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.001846970020740937,
+              0.0017008756154024889
+            ],
+            [
+              0.0015499513128540128,
+              0.0016591422186343237
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.5517294534279765,
+                -0.007481040529847843
+              ],
+              [
+                -0.003374565944787171,
+                0.5469591322194158
+              ]
+            ],
+            [
+              [
+                0.5589972037176183,
+                -0.0008498737265734146
+              ],
+              [
+                0.002690581865544949,
+                0.5534088206007229
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0053116465114688705,
+          "jackknife_se": 0.0025181152105494035,
+          "bootstrap_se": 0.0025016715861424397,
+          "bootstrap_ci95": [
+            0.0002904798583263898,
+            0.01010180374784046
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.003964706471981738,
+          "jackknife_se": 0.002283136558940019,
+          "bootstrap_se": 0.0022682610748590644,
+          "bootstrap_ci95": [
+            -0.008383937455794648,
+            0.0005549643940319157
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              -0.00479780320858092,
+              -0.0005034400669308896
+            ],
+            [
+              -1.2004432854844662e-05,
+              -0.006390798421676669
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0003002980519337411,
+              0.00030775040760003025
+            ],
+            [
+              0.0002920783667204984,
+              0.0002956097768079525
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0002947867676453574,
+              0.00030674455751424496
+            ],
+            [
+              0.00028906739698339223,
+              0.0002898794089916042
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                -0.005386916488934537,
+                -0.0011085217027555448
+              ],
+              [
+                -0.0005908429552354457,
+                -0.006956387862736927
+              ]
+            ],
+            [
+              [
+                -0.004225099235043006,
+                0.00010090263791657483
+              ],
+              [
+                0.0005543390718140838,
+                -0.005826698538497588
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0015929952130957492,
+          "jackknife_se": 0.00033136344586750746,
+          "bootstrap_se": 0.00032507979668372125,
+          "bootstrap_ci95": [
+            0.0009392720408001349,
+            0.0022138270585940643
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0004914356340760448,
+          "jackknife_se": 0.0004228197776837886,
+          "bootstrap_se": 0.0004144991729773572,
+          "bootstrap_ci95": [
+            -0.0012851618207654985,
+            0.0003420440616131831
+          ]
+        }
+      },
+      "common_four_count": 11596939,
+      "full_counts_by_axis_leg": [
+        [
+          11711851.0,
+          11712027.0
+        ],
+        [
+          11712160.0,
+          11711792.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9901883997670394,
+          0.990173519921018
+        ],
+        [
+          0.9901622757885821,
+          0.9901933879973278
+        ]
+      ]
+    },
+    "mag25": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.7508436964293577,
+              -0.00472026019263152
+            ],
+            [
+              -0.0012305411815489815,
+              0.742670763453106
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002706720737201887,
+              0.002246056802543662
+            ],
+            [
+              0.0018846408430831432,
+              0.0020909881214711793
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002691873321199639,
+              0.0022226158991321384
+            ],
+            [
+              0.0018713946168293603,
+              0.002059436080636514
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.7453466424644126,
+                -0.009061921934432293
+              ],
+              [
+                -0.004857971254455279,
+                0.7387230090105645
+              ]
+            ],
+            [
+              [
+                0.7560032699772409,
+                -0.00034495063409125743
+              ],
+              [
+                0.002519642202598528,
+                0.7467367190350352
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008172932976251657,
+          "jackknife_se": 0.003440098707489426,
+          "bootstrap_se": 0.0034077225144309824,
+          "bootstrap_ci95": [
+            0.0012474910730068847,
+            0.014605363468390139
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.003489719011082538,
+          "jackknife_se": 0.0029567490417301257,
+          "bootstrap_se": 0.002944961169128309,
+          "bootstrap_ci95": [
+            -0.009385956007269056,
+            0.002229202634114777
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.7533422013106004,
+              -0.005590939254477358
+            ],
+            [
+              -0.001077905675011875,
+              0.7455549995764525
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0025955196296328646,
+              0.002149506722994651
+            ],
+            [
+              0.0019013338251190216,
+              0.001958867164240033
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0025909746487002027,
+              0.0021278471402549504
+            ],
+            [
+              0.0018867888348624814,
+              0.0019361147004601357
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.7480889680460069,
+                -0.009812463691406445
+              ],
+              [
+                -0.004789376757002023,
+                0.7418077159716073
+              ]
+            ],
+            [
+              [
+                0.7582944274373472,
+                -0.001415235705389242
+              ],
+              [
+                0.0026470633014709904,
+                0.7493531918917694
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0077872017341478195,
+          "jackknife_se": 0.0031848873718315508,
+          "bootstrap_se": 0.0031584047994779305,
+          "bootstrap_ci95": [
+            0.0014036886692407077,
+            0.01378668131554716
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004513033579465483,
+          "jackknife_se": 0.002803949591009392,
+          "bootstrap_se": 0.002798455511012911,
+          "bootstrap_ci95": [
+            -0.010159724414212309,
+            0.0008931670750075887
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.7527305741471704,
+              -0.0051401706733102195
+            ],
+            [
+              -0.001028753389296313,
+              0.7446748654225243
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0025677872507874713,
+              0.002113402768940273
+            ],
+            [
+              0.0019106382452163048,
+              0.001953891409595472
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0025637132850170087,
+              0.0020929900304757303
+            ],
+            [
+              0.0018952423113543317,
+              0.0019308650911472444
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.7475669122300341,
+                -0.009288130013573382
+              ],
+              [
+                -0.0047704053018846285,
+                0.7409373824809949
+              ]
+            ],
+            [
+              [
+                0.757629614327118,
+                -0.0010173729225453068
+              ],
+              [
+                0.0027185511122126893,
+                0.7484289935484102
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008055708724646116,
+          "jackknife_se": 0.0031548955927326607,
+          "bootstrap_se": 0.0031315433585800533,
+          "bootstrap_ci95": [
+            0.0017255283161767393,
+            0.014049911120353647
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004111417284013907,
+          "jackknife_se": 0.0028063140752513207,
+          "bootstrap_se": 0.0027997820283699403,
+          "bootstrap_ci95": [
+            -0.009768301759999775,
+            0.001277962304275064
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              -0.0024985048812427024,
+              0.0008706790618458384
+            ],
+            [
+              -0.00015263550653710645,
+              -0.0028842361233465397
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0005884207329137175,
+              0.00045741201938882895
+            ],
+            [
+              0.0005785335500438873,
+              0.00048729350057105447
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0005771093376025864,
+              0.00045220361406814993
+            ],
+            [
+              0.0005655576187046725,
+              0.0004801277126153088
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                -0.0036738104375987762,
+                -2.2922455545188162e-05
+              ],
+              [
+                -0.0012473706345019293,
+                -0.0037834680061886866
+              ]
+            ],
+            [
+              [
+                -0.0013834701704389092,
+                0.0017510823678385694
+              ],
+              [
+                0.0009797656121651483,
+                -0.0018886937305293704
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00038573124210383725,
+          "jackknife_se": 0.0006845780359315079,
+          "bootstrap_se": 0.0006711708419241144,
+          "bootstrap_ci95": [
+            -0.0009685118085167892,
+            0.0016787662015743635
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.0010233145683829449,
+          "jackknife_se": 0.0007202076845886836,
+          "bootstrap_se": 0.0007019141843621427,
+          "bootstrap_ci95": [
+            -0.00037192391102878477,
+            0.0024056530802713558
+          ]
+        }
+      },
+      "common_four_count": 6554755,
+      "full_counts_by_axis_leg": [
+        [
+          6663693.0,
+          6664051.0
+        ],
+        [
+          6663931.0,
+          6663744.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9836520079781587,
+          0.9835991651324397
+        ],
+        [
+          0.9836168771855531,
+          0.983644479739918
+        ]
+      ]
+    },
+    "mag25.8": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.6199235707632523,
+              -0.004972724129848723
+            ],
+            [
+              -0.0008550925314737461,
+              0.612880927960594
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.001917843375358583,
+              0.0018443367368000422
+            ],
+            [
+              0.001735319660020709,
+              0.0018600234883128818
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0019117399112989076,
+              0.0018244537783907696
+            ],
+            [
+              0.0017145810658098916,
+              0.0018394032531610363
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.6161114382272801,
+                -0.00849459722786045
+              ],
+              [
+                -0.004268857253394347,
+                0.6093629088183474
+              ]
+            ],
+            [
+              [
+                0.6236560785454957,
+                -0.0013830440013227006
+              ],
+              [
+                0.002493480991987581,
+                0.6165327007111391
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0070426428026583165,
+          "jackknife_se": 0.0026566076512858413,
+          "bootstrap_se": 0.0026416843723502995,
+          "bootstrap_ci95": [
+            0.001814437846038139,
+            0.012117122941968986
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004117631598374977,
+          "jackknife_se": 0.0025188472780214594,
+          "bootstrap_se": 0.00249868016379012,
+          "bootstrap_ci95": [
+            -0.009072326156646288,
+            0.0007420283251506875
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.6236014318390918,
+              -0.00458271348069204
+            ],
+            [
+              -0.00045237439356532303,
+              0.6173252053224655
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0019107757216187725,
+              0.0018024443854002497
+            ],
+            [
+              0.0017106191815747106,
+              0.0017201610316619233
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0019061921150633674,
+              0.0017845227095125208
+            ],
+            [
+              0.0016883095032026831,
+              0.0017009344514220153
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.619775539097139,
+                -0.008045176767115123
+              ],
+              [
+                -0.003745700672981757,
+                0.6140521136892205
+              ]
+            ],
+            [
+              [
+                0.6273320520010568,
+                -0.0010872785818473055
+              ],
+              [
+                0.0028625475736807804,
+                0.6206712040007735
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.006276226516626293,
+          "jackknife_se": 0.0025439401779258626,
+          "bootstrap_se": 0.0025291194892434,
+          "bootstrap_ci95": [
+            0.0012426193065922437,
+            0.011159120228413677
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0041303390871267175,
+          "jackknife_se": 0.0025021058478857877,
+          "bootstrap_se": 0.0024908283452470155,
+          "bootstrap_ci95": [
+            -0.00912431527618348,
+            0.0006612934027805575
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.6235243743092052,
+              -0.004505708225396321
+            ],
+            [
+              -0.0004465607939009049,
+              0.6171696660558156
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0018483491913459662,
+              0.001788709522778407
+            ],
+            [
+              0.0017126172995516487,
+              0.0017335699596367899
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0018440431538681646,
+              0.00177183999291589
+            ],
+            [
+              0.001689769352066058,
+              0.0017133637838343198
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.6198231019348001,
+                -0.007959881028675177
+              ],
+              [
+                -0.003742662825081661,
+                0.6139031083357653
+              ]
+            ],
+            [
+              [
+                0.627121556704056,
+                -0.001047772291313484
+              ],
+              [
+                0.0028691023911915107,
+                0.6205737700293813
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.006354708253389574,
+          "jackknife_se": 0.002487644845622911,
+          "bootstrap_se": 0.002473141582808179,
+          "bootstrap_ci95": [
+            0.0014541665057557524,
+            0.011133462039422115
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004059147431495417,
+          "jackknife_se": 0.002494420274361881,
+          "bootstrap_se": 0.002482119978716569,
+          "bootstrap_ci95": [
+            -0.00903448967236689,
+            0.000667536820866634
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              -0.0036778610758394503,
+              -0.00039001064915668293
+            ],
+            [
+              -0.00040271813790842306,
+              -0.004444277361871474
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.00027945823983718186,
+              0.0003609403637226785
+            ],
+            [
+              0.00033918782303969354,
+              0.0003545837948878529
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0002735025412425003,
+              0.0003571630055459477
+            ],
+            [
+              0.0003397759026067996,
+              0.00035044589775643783
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                -0.004228751077172304,
+                -0.0010722436734310668
+              ],
+              [
+                -0.0010581512881534614,
+                -0.005132323077315998
+              ]
+            ],
+            [
+              [
+                -0.003144317646473077,
+                0.00032998476750041643
+              ],
+              [
+                0.00026793195028098943,
+                -0.0037480401191627545
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0007664162860320234,
+          "jackknife_se": 0.0004454667329725867,
+          "bootstrap_se": 0.00043424448245831134,
+          "bootstrap_ci95": [
+            -8.77875115717186e-05,
+            0.0016158849592956795
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 1.2707488751740291e-05,
+          "jackknife_se": 0.0005043701423269246,
+          "bootstrap_se": 0.0004989013195225846,
+          "bootstrap_ci95": [
+            -0.0009383235883567737,
+            0.001013543717714035
+          ]
+        }
+      },
+      "common_four_count": 9579121,
+      "full_counts_by_axis_leg": [
+        [
+          9689297.0,
+          9689662.0
+        ],
+        [
+          9689618.0,
+          9689185.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.988629102813135,
+          0.988591862131001
+        ],
+        [
+          0.9885963512699881,
+          0.988640530653507
+        ]
+      ]
+    },
+    "mag25.8_radius_gt0.60": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.8144179316081323,
+              -0.00453654338446113
+            ],
+            [
+              -9.223721839276479e-05,
+              0.8055099778407803
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002318944965270942,
+              0.0022746568730607295
+            ],
+            [
+              0.001980148069854241,
+              0.002218555229347673
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002301928365474583,
+              0.0022472158757554993
+            ],
+            [
+              0.001954087600013548,
+              0.002192811343934401
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8098248967900612,
+                -0.008840396568704424
+              ],
+              [
+                -0.003890567206627991,
+                0.8013110281133062
+              ]
+            ],
+            [
+              [
+                0.8187905369867858,
+                -0.00012559035767523806
+              ],
+              [
+                0.0037521658656778705,
+                0.8098672138305302
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008907953767351984,
+          "jackknife_se": 0.00302529738171709,
+          "bootstrap_se": 0.002996318955267165,
+          "bootstrap_ci95": [
+            0.0030793712569527564,
+            0.01477815164357776
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.004444306166068365,
+          "jackknife_se": 0.0031446245474620886,
+          "bootstrap_se": 0.0031003544732910006,
+          "bootstrap_ci95": [
+            -0.010650920091073813,
+            0.0014031581216596646
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.8065316551084605,
+              -0.004335768202164387
+            ],
+            [
+              0.0008043184223199464,
+              0.7990226766874211
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0022161525681539864,
+              0.0021442343886514882
+            ],
+            [
+              0.0020696606610259545,
+              0.0020473470574583204
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0022046392469319645,
+              0.0021307774974962165
+            ],
+            [
+              0.002045670155674836,
+              0.002020750368284362
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8021124739167267,
+                -0.008469363700150572
+              ],
+              [
+                -0.0032326945448823076,
+                0.795096229120298
+              ]
+            ],
+            [
+              [
+                0.8107550994659466,
+                -0.0001100517213422407
+              ],
+              [
+                0.004785981992265307,
+                0.8030574889803824
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0075089784210393695,
+          "jackknife_se": 0.002794218614893772,
+          "bootstrap_se": 0.0027664937201050885,
+          "bootstrap_ci95": [
+            0.002108989572157244,
+            0.012958759933986453
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0051400866244843335,
+          "jackknife_se": 0.0030464691950480367,
+          "bootstrap_se": 0.003019753915046565,
+          "bootstrap_ci95": [
+            -0.011215388261440735,
+            0.000599935335458568
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.8038447225545259,
+              -0.004712750095214803
+            ],
+            [
+              0.0007331786410658762,
+              0.795907284422671
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0021530330987216207,
+              0.0021917559721595092
+            ],
+            [
+              0.0020656422641369696,
+              0.002082827584895664
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002142597108998197,
+              0.00218017942774449
+            ],
+            [
+              0.002039274148833997,
+              0.002051987493541482
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.7995739857930366,
+                -0.00894055480519418
+              ],
+              [
+                -0.0032998295871338196,
+                0.7918791243592759
+              ]
+            ],
+            [
+              [
+                0.8079402886713826,
+                -0.00040022554796533856
+              ],
+              [
+                0.004738641170851646,
+                0.7999823871637833
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00793743813185488,
+          "jackknife_se": 0.0027508493639536555,
+          "bootstrap_se": 0.0027221875795061606,
+          "bootstrap_ci95": [
+            0.002655523670509555,
+            0.013276051806996357
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.005445928736280679,
+          "jackknife_se": 0.003008382203749481,
+          "bootstrap_se": 0.002982711846540551,
+          "bootstrap_ci95": [
+            -0.011395284285991026,
+            0.00025244180552569395
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              0.007886276499671774,
+              -0.00020077518229674306
+            ],
+            [
+              -0.0008965556407127112,
+              0.00648730115335916
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.000622401692496768,
+              0.0007312322291617525
+            ],
+            [
+              0.0007326845029791662,
+              0.000679197036783882
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0006084657440155,
+              0.0007265423472168743
+            ],
+            [
+              0.0007225136150826776,
+              0.0006732268133615637
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.006683467927629883,
+                -0.0016024212603873871
+              ],
+              [
+                -0.00232774306002955,
+                0.0051793740770470584
+              ]
+            ],
+            [
+              [
+                0.009079637010984203,
+                0.0012594042847886837
+              ],
+              [
+                0.0005010850818500202,
+                0.007809589511123823
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.0013989753463126142,
+          "jackknife_se": 0.0009109777905762141,
+          "bootstrap_se": 0.0008945653559078478,
+          "bootstrap_ci95": [
+            -0.00035466238668237503,
+            0.00311672964125598
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": 0.0006957804584159684,
+          "jackknife_se": 0.0009343121089045632,
+          "bootstrap_se": 0.0009274639907946688,
+          "bootstrap_ci95": [
+            -0.0010661640391207503,
+            0.0025513631768053252
+          ]
+        }
+      },
+      "common_four_count": 7026056,
+      "full_counts_by_axis_leg": [
+        [
+          7252460.0,
+          7252923.0
+        ],
+        [
+          7252177.0,
+          7252370.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.968782454505092,
+          0.9687206109867704
+        ],
+        [
+          0.9688202590753093,
+          0.9687944768399848
+        ]
+      ]
+    },
+    "mag25.8_radius_ge0.75": {
+      "full": {
+        "matrix": {
+          "value": [
+            [
+              0.9093607813577875,
+              -0.0025730760538054107
+            ],
+            [
+              0.0013074447074960369,
+              0.9006670035540991
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.0033129263846209287,
+              0.003238669779807837
+            ],
+            [
+              0.0031952325093170357,
+              0.0031406131759531063
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.003269874053230759,
+              0.0031844371653089554
+            ],
+            [
+              0.003165209680300295,
+              0.0031114804985565487
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.9028235604201533,
+                -0.008828944263237394
+              ],
+              [
+                -0.004905915542824584,
+                0.8945608016446522
+              ]
+            ],
+            [
+              [
+                0.9157569799350289,
+                0.0036782340352983674
+              ],
+              [
+                0.007587990262984249,
+                0.9066443821211728
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008693777803688407,
+          "jackknife_se": 0.004339941854466841,
+          "bootstrap_se": 0.004284251011213711,
+          "bootstrap_ci95": [
+            0.00019057671380680042,
+            0.0170276948341436
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0038805207613014474,
+          "jackknife_se": 0.004516497592302827,
+          "bootstrap_se": 0.004440360711696335,
+          "bootstrap_ci95": [
+            -0.012586241634781803,
+            0.00482926634759912
+          ]
+        }
+      },
+      "common_four": {
+        "matrix": {
+          "value": [
+            [
+              0.8066278549149902,
+              -0.0022767068136900644
+            ],
+            [
+              0.0001311522952539828,
+              0.7981188461234606
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002673428674986257,
+              0.0026661610745477974
+            ],
+            [
+              0.00303488182570267,
+              0.0024326790667127413
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.002664743586771106,
+              0.0026196190737747204
+            ],
+            [
+              0.0029913726960287966,
+              0.002413638586924552
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.8013095998638775,
+                -0.007396743737318731
+              ],
+              [
+                -0.005650534128540382,
+                0.7933940234935324
+              ]
+            ],
+            [
+              [
+                0.8116697786273508,
+                0.00291018400513338
+              ],
+              [
+                0.006077984446126721,
+                0.8028688280320645
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.008509008791529604,
+          "jackknife_se": 0.0037739642793630486,
+          "bootstrap_se": 0.003741702225410465,
+          "bootstrap_ci95": [
+            0.0010430321479048931,
+            0.01574521898676536
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0024078591089440474,
+          "jackknife_se": 0.004224817796841175,
+          "bootstrap_se": 0.004156714547188289,
+          "bootstrap_ci95": [
+            -0.010495041946051638,
+            0.00574731930123236
+          ]
+        }
+      },
+      "common_axis_pair": {
+        "matrix": {
+          "value": [
+            [
+              0.805051905469652,
+              -0.0027858212680779222
+            ],
+            [
+              0.0007063969908684464,
+              0.795775698682227
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.002631512452501556,
+              0.0027153559886346043
+            ],
+            [
+              0.0031240632752142284,
+              0.0023895726973177183
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.00262179625683052,
+              0.0026693005163476264
+            ],
+            [
+              0.0030852092232612647,
+              0.0023688082518437924
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.7997828341574019,
+                -0.008055747734256581
+              ],
+              [
+                -0.005287095652056006,
+                0.7911497065215386
+              ]
+            ],
+            [
+              [
+                0.8100400806964702,
+                0.0024811788533337853
+              ],
+              [
+                0.006918768180757469,
+                0.8004448361401603
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.009276206787425023,
+          "jackknife_se": 0.003667407434010871,
+          "bootstrap_se": 0.003630822533951181,
+          "bootstrap_ci95": [
+            0.0019131443797720975,
+            0.016205578478670025
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0034922182589463687,
+          "jackknife_se": 0.00440241312913461,
+          "bootstrap_se": 0.004329770487795132,
+          "bootstrap_ci95": [
+            -0.011937882132092093,
+            0.00510456728403133
+          ]
+        }
+      },
+      "membership_and_normalization_remainder": {
+        "matrix": {
+          "value": [
+            [
+              0.1027329264427973,
+              -0.00029636924011534633
+            ],
+            [
+              0.001176292412242054,
+              0.1025481574306385
+            ]
+          ],
+          "jackknife_se": [
+            [
+              0.001742587434558302,
+              0.0014735176004164077
+            ],
+            [
+              0.0014800759223609476,
+              0.0017389471870098803
+            ]
+          ],
+          "bootstrap_se": [
+            [
+              0.0016988721352918256,
+              0.0014552054578917857
+            ],
+            [
+              0.001455768431965812,
+              0.001711045374000903
+            ]
+          ],
+          "bootstrap_ci95": [
+            [
+              [
+                0.09938625316900543,
+                -0.0031561931682272068
+              ],
+              [
+                -0.0015946550280275815,
+                0.09921921434140045
+              ]
+            ],
+            [
+              [
+                0.10610460292479683,
+                0.0025539325424335023
+              ],
+              [
+                0.0040647401563523,
+                0.10590193247454961
+              ]
+            ]
+          ]
+        },
+        "diagonal_difference": {
+          "value": 0.00018476901215880304,
+          "jackknife_se": 0.0020633857232920418,
+          "bootstrap_se": 0.0020472213982842013,
+          "bootstrap_ci95": [
+            -0.00370864305745367,
+            0.004314595013708458
+          ]
+        },
+        "offdiagonal_difference": {
+          "value": -0.0014726616523574,
+          "jackknife_se": 0.002137920389493795,
+          "bootstrap_se": 0.0021051435224269254,
+          "bootstrap_ci95": [
+            -0.005717588420075817,
+            0.00258321417862561
+          ]
+        }
+      },
+      "common_four_count": 2807916,
+      "full_counts_by_axis_leg": [
+        [
+          3023285.0,
+          3024820.0
+        ],
+        [
+          3024421.0,
+          3024287.0
+        ]
+      ],
+      "common_fraction_by_axis_leg": [
+        [
+          0.9287632492470939,
+          0.9282919314207126
+        ],
+        [
+          0.9284143973342336,
+          0.9284555334860746
+        ]
+      ]
+    }
+  }
+}

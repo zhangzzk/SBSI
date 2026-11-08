@@ -1,0 +1,203 @@
+{
+  "definition": "32 randomly sampled seed-sensitive (>0.1) and32 stable (<0.001) original-case first-leg fits; enriched diagnostic, not population rates. Cross-node pilot differences are recorded, not assumed zero. Each live default fit repeats exactly within this job before same-image continuation comparisons. Continuations freeze the fitted PSF and start at the previous solution with tighter LM criteria.",
+  "groups": {
+    "seed_sensitive": {
+      "default_A_vs_default_B": {
+        "valid_pairs": 32,
+        "shape_delta_quantiles": [
+          0.10229315139921982,
+          0.4888966154261331,
+          1.149382452925609,
+          1.732155883919417
+        ],
+        "shape_change_over_0.1": 32,
+        "objective_gain_quantiles": [
+          -3451498.797865392,
+          -0.4407169213736779,
+          1863.4175468086376,
+          13594.637727816158
+        ],
+        "objective_gain_gt1": 11,
+        "nonzero_flags": 0
+      },
+      "tight_A_vs_tight_B": {
+        "valid_pairs": 32,
+        "shape_delta_quantiles": [
+          1.3815533505545652e-06,
+          0.3640542942463535,
+          1.1423438131493535,
+          1.7281864236910152
+        ],
+        "shape_change_over_0.1": 19,
+        "objective_gain_quantiles": [
+          -11489.86828840896,
+          -1.3654025678988546e-06,
+          1183.0779759707666,
+          13594.635423927219
+        ],
+        "objective_gain_gt1": 6,
+        "nonzero_flags": 0
+      },
+      "continue_A_vs_continue_B": {
+        "valid_pairs": 31,
+        "shape_delta_quantiles": [
+          3.1299597386957867e-06,
+          0.36696742473342325,
+          1.1503716102797847,
+          1.7281760670342186
+        ],
+        "shape_change_over_0.1": 19,
+        "objective_gain_quantiles": [
+          -11489.868288226076,
+          -4.9513764679431915e-06,
+          1314.2113198679435,
+          13594.635423927219
+        ],
+        "objective_gain_gt1": 6,
+        "nonzero_flags": 0
+      },
+      "continue_A_vs_default_A": {
+        "valid_pairs": 32,
+        "shape_delta_quantiles": [
+          0.00013876186060999413,
+          0.014964969097240377,
+          0.16007778744595202,
+          0.20832149104407388
+        ],
+        "shape_change_over_0.1": 5,
+        "objective_gain_quantiles": [
+          0.0002567248357081553,
+          0.03672774549522728,
+          0.9004736172850252,
+          152157.42481182984
+        ],
+        "objective_gain_gt1": 3,
+        "nonzero_flags": 0
+      },
+      "continue_B_vs_default_B": {
+        "valid_pairs": 31,
+        "shape_delta_quantiles": [
+          0.00030466300535259005,
+          0.02281739126528809,
+          0.4339738971272298,
+          0.8560599711753936
+        ],
+        "shape_change_over_0.1": 6,
+        "objective_gain_quantiles": [
+          0.00017068834858946502,
+          0.02522545397550857,
+          3.713136994143497,
+          1926.0567413334938
+        ],
+        "objective_gain_gt1": 6,
+        "nonzero_flags": 1
+      },
+      "psf_pars_max_abs_diff_quantiles": [
+        0.0,
+        4.163336342344337e-17,
+        5.551115123125783e-17,
+        5.551115123125783e-17
+      ],
+      "cross_node_default_replay_max_abs": 0.12728591399308303
+    },
+    "stable_control": {
+      "default_A_vs_default_B": {
+        "valid_pairs": 32,
+        "shape_delta_quantiles": [
+          1.213184568282788e-05,
+          0.00027295965389347726,
+          0.0008953750263849371,
+          0.001586846481835269
+        ],
+        "shape_change_over_0.1": 0,
+        "objective_gain_quantiles": [
+          -0.04976372997043654,
+          -0.0003567316098269657,
+          0.006881624905327046,
+          0.2241240944713354
+        ],
+        "objective_gain_gt1": 0,
+        "nonzero_flags": 0
+      },
+      "tight_A_vs_tight_B": {
+        "valid_pairs": 32,
+        "shape_delta_quantiles": [
+          2.259811932026068e-08,
+          1.5198436222885192e-06,
+          1.096714671912358e-05,
+          0.00011621792080696025
+        ],
+        "shape_change_over_0.1": 0,
+        "objective_gain_quantiles": [
+          -0.00038164602665347047,
+          3.483364707790315e-10,
+          1.581453034305015e-07,
+          1.7348771507386118e-05
+        ],
+        "objective_gain_gt1": 0,
+        "nonzero_flags": 0
+      },
+      "continue_A_vs_continue_B": {
+        "valid_pairs": 32,
+        "shape_delta_quantiles": [
+          2.259811932026068e-08,
+          1.6526360830243503e-06,
+          2.8983919013084183e-05,
+          0.00014412686813536357
+        ],
+        "shape_change_over_0.1": 0,
+        "objective_gain_quantiles": [
+          -0.0004874736478086561,
+          8.004008122952655e-09,
+          7.533766620326801e-07,
+          2.6760331820696592e-05
+        ],
+        "objective_gain_gt1": 0,
+        "nonzero_flags": 0
+      },
+      "continue_A_vs_default_A": {
+        "valid_pairs": 32,
+        "shape_delta_quantiles": [
+          3.83703630947585e-06,
+          0.00040039914015167766,
+          0.001405849244215579,
+          0.004881760603399843
+        ],
+        "shape_change_over_0.1": 0,
+        "objective_gain_quantiles": [
+          3.9663230381847825e-05,
+          0.0031941085990183637,
+          0.04867449439234415,
+          0.6787903304211795
+        ],
+        "objective_gain_gt1": 0,
+        "nonzero_flags": 0
+      },
+      "continue_B_vs_default_B": {
+        "valid_pairs": 32,
+        "shape_delta_quantiles": [
+          2.412914414440248e-06,
+          0.00031210014813057296,
+          0.0015545947569972972,
+          0.0049920078635089515
+        ],
+        "shape_change_over_0.1": 0,
+        "objective_gain_quantiles": [
+          2.407900319667533e-05,
+          0.0018351978123973822,
+          0.0368292513746383,
+          0.9029113347642124
+        ],
+        "objective_gain_gt1": 0,
+        "nonzero_flags": 0
+      },
+      "psf_pars_max_abs_diff_quantiles": [
+        0.0,
+        5.551115123125783e-17,
+        5.551115123125783e-17,
+        5.551115123125783e-17
+      ],
+      "cross_node_default_replay_max_abs": 0.0015001342801901352
+    }
+  }
+}

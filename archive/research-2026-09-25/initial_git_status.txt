@@ -1,0 +1,240 @@
+ M .gitignore
+ M AGENTS.md
+ M README.md
+ M configs/likelihood.json
+ M doc/API.md
+ M doc/CATALOGUE_PRIOR.md
+ M doc/CONVENTIONS.md
+ M doc/ENVIRONMENT.md
+ M doc/INFERENCE.md
+ M doc/WORKLOG.md
+ D examples/flow_training.yaml
+ D examples/job_blendemu.sh
+ D examples/measurement_flow_contours.png
+ D examples/sbsi_api_tutorial.ipynb
+ D jobs/job_audit_mixed_shear_E_photometric.sh
+ D jobs/job_build_mixed_shear_E_photometric_target.sh
+ D jobs/job_build_selection_normalization_g0_size075.sh
+ D jobs/job_compare_flow_training_distribution.sh
+ D jobs/job_compare_mock_constgold_properties_100k.sh
+ D jobs/job_complement_learned_retrieval_center.sh
+ D jobs/job_complement_mass_diagnostic.sh
+ D jobs/job_complete_likelihood_closure.sh
+ D jobs/job_evaluate_constgold_complete_forward_c40_44_49.sh
+ D jobs/job_evaluate_constgold_complete_forward_c40_59.sh
+ D jobs/job_evaluate_constgold_complete_forward_c40_59_noecut.sh
+ D jobs/job_evaluate_constgold_response_ladder_E500_transition_c40_59.sh
+ D jobs/job_evaluate_constgold_response_ladder_c40_59.sh
+ D jobs/job_evaluate_constgold_truth_shape_population_c40_59.sh
+ D jobs/job_evaluate_constgold_twoleg_c40_49.sh
+ D jobs/job_forward_constgold_oneleg_response_100k.sh
+ D jobs/job_infer_v1.sh
+ D jobs/job_infer_v1_full16384_n500k_combine.sh
+ D jobs/job_infer_v1_full16384_n500k_partition.sh
+ D jobs/job_inference_candidate_ladder.sh
+ D jobs/job_inference_constgold_pass1_mag24_diagnostic.sh
+ D jobs/job_inference_constgold_plus_size075_n100k_m16384.sh
+ M jobs/job_inference_hybrid_chain.sh
+ D jobs/job_inference_proxy_topk_size075_n100k.sh
+ D jobs/job_inference_proxy_topk_size075_n20k.sh
+ D jobs/job_inference_stratified_screen.sh
+ D jobs/job_likelihood_landscape.sh
+ D jobs/job_plot_constgold_complete_forward_c40_59.sh
+ D jobs/job_prepare_complete_likelihood_mock.sh
+ D jobs/job_prepare_complete_size075_n100k.sh
+ D jobs/job_prepare_complete_size075_n20k.sh
+ D jobs/job_prepare_disjoint_constgold_plus_sample_100k.sh
+ D jobs/job_prepare_n500k_mock_g0.sh
+ D jobs/job_prepare_stacked_n500k_mock.sh
+ D jobs/job_smoke_proxy_topk_n1024.sh
+ D jobs/job_train_mixed_shear_E_photometric.sh
+ M models/README.md
+ M pyproject.toml
+ M sbsi/catalogue_likelihood.py
+ M sbsi/catalogue_null.py
+ M sbsi/catalogue_sampling.py
+ M sbsi/cli.py
+ D sbsi/flow.py
+ D sbsi/flow_coupling_target.py
+ D sbsi/flow_training.py
+ M sbsi/forward_catalogue.py
+ D sbsi/image_closure.py
+ D sbsi/learned_retrieval_diagnostic.py
+ M sbsi/measurement_model.py
+ M sbsi/models.py
+ M sbsi/selection_model.py
+ D sbsi/spline_flow.py
+ D sbsi/training.py
+ D scripts/audit_flow_derivative_losses.py
+ D scripts/build_flow_coupling_target.py
+ D scripts/combine_numerical_recenter_partitions.py
+ D scripts/compare_estimator_arms.py
+ D scripts/compare_flow_training_distribution.py
+ D scripts/compare_mock_constgold_divergence_bins.py
+ D scripts/compare_mock_constgold_divergence_by_magnitude.py
+ D scripts/compare_mock_constgold_properties.py
+ D scripts/evaluate_constgold_complete_forward_response.py
+ D scripts/evaluate_constgold_twoleg_response.py
+ D scripts/forward_constgold_oneleg_response.py
+ D scripts/plot_complete_forward_properties.py
+ M scripts/prepare_constgold_inference_input.py
+ D scripts/prepare_disjoint_constgold_plus_sample.py
+ D scripts/prepare_image_closure_mock.py
+ D scripts/run_catalogue_closure.py
+ D scripts/run_constgold_v33_response_experiments_c40_139.sh
+ M scripts/run_inference.py
+ D scripts/run_section5_nonzero_closure.py
+ D scripts/run_section5_numerical_recenter.py
+ D scripts/run_section5_powered_exact.py
+ D scripts/run_section5_powered_importance.py
+ D scripts/summarize_catalogue_bias.py
+ D scripts/summarize_catalogue_closure.py
+ M tests/test_api.py
+ D tests/test_catalogue_bias_summary.py
+ M tests/test_catalogue_likelihood.py
+ M tests/test_catalogue_null.py
+ M tests/test_cli.py
+ D tests/test_compare_estimator_arms.py
+ D tests/test_evaluate_constgold_complete_forward_response.py
+ D tests/test_flow_coupling_target.py
+ D tests/test_image_closure.py
+ D tests/test_learned_retrieval_diagnostic.py
+ M tests/test_measurement_model.py
+ M tests/test_release_config.py
+?? archive/
+?? configs/inference_v1_2_16k.json
+?? configs/likelihood_v3_5_like.json
+?? configs/likelihood_v3_6_like.json
+?? configs/models_v3_6_like.json
+?? doc/JOINT_CALIBRATION.md
+?? doc/REPOSITORY.md
+?? doc/V36_DOMAIN_RECOVERY.md
+?? doc/V36_FEATURE_SIMPLIFICATION.md
+?? doc/V36_INFERENCE_REVIEW.md
+?? doc/V36_MODEL_COMPARISON.md
+?? doc/V36_RECOVERY_PLAN.md
+?? jobs/job_assemble_disk_inference.sh
+?? jobs/job_audit_disk_population.sh
+?? jobs/job_audit_v36_domain_observed.sh
+?? jobs/job_audit_v36_domain_response.sh
+?? jobs/job_audit_v36_new_models.sh
+?? jobs/job_audit_v36_saved_rows.sh
+?? jobs/job_benchmark_v36_inference.sh
+?? jobs/job_check_v36_f8.sh
+?? jobs/job_check_v36_model_audit.sh
+?? jobs/job_combine_disk_production.sh
+?? jobs/job_disk_fullprior_pilot.sh
+?? jobs/job_disk_inference_pilot.sh
+?? jobs/job_disk_lru_validation.sh
+?? jobs/job_disk_production.sh
+?? jobs/job_plot_disk_faint_corners.sh
+?? jobs/job_plot_disk_joint_likelihood.sh
+?? jobs/job_plot_disk_truth_corners.sh
+?? jobs/job_prepare_disk_inference.sh
+?? jobs/job_prepare_v36_f8.sh
+?? jobs/job_prepare_v36_inference.sh
+?? jobs/job_prepare_v36_prior_shards.sh
+?? jobs/job_probe_disk_auxiliary.sh
+?? jobs/job_probe_disk_curvature.sh
+?? jobs/job_probe_disk_derivative_reference.sh
+?? jobs/job_probe_disk_likelihood.sh
+?? jobs/job_probe_disk_proposal.sh
+?? jobs/job_subsample_v36_prior.sh
+?? jobs/job_summarize_v36_f8.sh
+?? jobs/job_summarize_v36_new_models.sh
+?? jobs/job_v36_classifier_f8_inputs.sh
+?? jobs/job_v36_classifier_occam_check.sh
+?? jobs/job_v36_classifier_occam_evaluate.sh
+?? jobs/job_v36_classifier_occam_evaluate_fixed.sh
+?? jobs/job_v36_classifier_occam_summary.sh
+?? jobs/job_v36_classifier_occam_train.sh
+?? jobs/job_v36_f8_labels.sh
+?? jobs/job_v36_f8_stage.sh
+?? jobs/job_validate_disk_tail.sh
+?? sbsi/catalogue_disk_cache.py
+?? sbsi/catalogue_disk_likelihood.py
+?? sbsi/catalogue_disk_response.py
+?? sbsi/crowding.py
+?? sbsi/disk_inference_store.py
+?? sbsi/disk_response_transport.py
+?? sbsi/flow_disk.py
+?? sbsi/flow_physical_disk.py
+?? sbsi/flow_size_condition.py
+?? sbsi/output_conditioned_response.py
+?? scripts/amend_v36_classifier_acceptance.py
+?? scripts/audit_disk_curvature.py
+?? scripts/audit_disk_population.py
+?? scripts/audit_inference_uncertainty.py
+?? scripts/audit_v36_cut_transfer.py
+?? scripts/audit_v36_domain_response.py
+?? scripts/audit_v36_saved_rows.py
+?? scripts/benchmark_tilted_prior.py
+?? scripts/benchmark_v36_inference.py
+?? scripts/build_model_cache_from_zero_view.py
+?? scripts/check_disk_pilot_replay.py
+?? scripts/check_v36_classifier_ablation.py
+?? scripts/check_v36_classifier_status.py
+?? scripts/check_v36_f8_status.py
+?? scripts/compare_v36_saved_models.py
+?? scripts/decompose_v36_population_error.py
+?? scripts/plot_disk_faint_corners.py
+?? scripts/plot_disk_joint_likelihood.py
+?? scripts/plot_disk_truth_corners.py
+?? scripts/plot_v36_model_comparison.py
+?? scripts/prepare_disk_prior_shard.py
+?? scripts/prepare_prior_domain_cache.py
+?? scripts/prepare_v36_classifier_f8_inputs.py
+?? scripts/probe_disk_auxiliary.py
+?? scripts/probe_disk_curvature.py
+?? scripts/probe_disk_derivative_reference.py
+?? scripts/probe_disk_likelihood_failure.py
+?? scripts/probe_disk_proposal.py
+?? scripts/project_v36_flow_features.py
+?? scripts/review_v36_closecrowd.py
+?? scripts/run_disk_inference.py
+?? scripts/run_v36_classifier_ablation.py
+?? scripts/run_v36_f8_stage.py
+?? scripts/setup_v36_classifier_ablation.py
+?? scripts/setup_v36_classifier_f8_inputs.py
+?? scripts/setup_v36_f8_experiment.py
+?? scripts/subsample_disk_prior.py
+?? scripts/summarize_disk_curvature_probe.py
+?? scripts/summarize_disk_likelihood_failure.py
+?? scripts/summarize_disk_tail_validation.py
+?? scripts/summarize_v36_classifier_ablation.py
+?? scripts/summarize_v36_domain_response.py
+?? scripts/summarize_v36_f8.py
+?? scripts/validate_disk_tail_integration.py
+?? tests/test_blocked_cdf.py
+?? tests/test_catalogue_disk_cache.py
+?? tests/test_catalogue_disk_likelihood.py
+?? tests/test_catalogue_disk_response.py
+?? tests/test_constgold_inference_input.py
+?? tests/test_disk_auxiliary_probe.py
+?? tests/test_disk_curvature_probe.py
+?? tests/test_disk_faint_corners.py
+?? tests/test_disk_inference_store.py
+?? tests/test_disk_joint_likelihood_plot.py
+?? tests/test_disk_likelihood_failure_probe.py
+?? tests/test_disk_population_audit.py
+?? tests/test_disk_prior_preparation.py
+?? tests/test_disk_prior_subsample.py
+?? tests/test_disk_response_transport.py
+?? tests/test_disk_runtime_compatibility.py
+?? tests/test_disk_truth_corners.py
+?? tests/test_inference_uncertainty_audit.py
+?? tests/test_output_conditioned_response.py
+?? tests/test_prior_domain_cache.py
+?? tests/test_scene_classifier_features.py
+?? tests/test_scene_geometry_coordinates.py
+?? tests/test_selection_model.py
+?? tests/test_v36_classifier_ablation.py
+?? tests/test_v36_classifier_acceptance_amendment.py
+?? tests/test_v36_classifier_f8_inputs.py
+?? tests/test_v36_classifier_scoring.py
+?? tests/test_v36_cut_transfer.py
+?? tests/test_v36_domain_response.py
+?? tests/test_v36_feature_projection.py
+?? tests/test_v36_models.py
+?? tests/test_v36_population_error.py
+?? tests/test_v36_saved_models.py

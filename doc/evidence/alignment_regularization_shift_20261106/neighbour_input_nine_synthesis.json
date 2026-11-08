@@ -1,0 +1,86 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "cut": "mag25_radius_gt0.60",
+  "definition": "Common-all-four usability; equal average of separately normalized A/B opposite-group responses. Errors=simulation-model; case bootstrap SE; fixed checkpoints.",
+  "simulation_shape": {
+    "value": 0.09017547112525137,
+    "case_se": 0.0016430745176304962
+  },
+  "simulation_selection": {
+    "value": 0.002925020256124277,
+    "case_se": 0.00041790898707326957
+  },
+  "rows": {
+    "generated_nine_weak": {
+      "model_shape_response": {
+        "value": 0.08495816327202263,
+        "case_se": 0.00031573120395118643
+      },
+      "shape_error": {
+        "value": 0.005217307853228742,
+        "case_se": 0.0014918748725052645
+      },
+      "total_error_including_selection": {
+        "value": 0.008142328109353017,
+        "case_se": 0.001772876555008686
+      }
+    },
+    "measured_photometry_nine_weak": {
+      "model_shape_response": {
+        "value": 0.09151244419800425,
+        "case_se": 0.0004270667824374336
+      },
+      "shape_error": {
+        "value": -0.0013369730727528784,
+        "case_se": 0.001546248373725918
+      },
+      "total_error_including_selection": {
+        "value": 0.0015880471833713966,
+        "case_se": 0.0018388650533121252
+      }
+    },
+    "measured_shape_and_photometry": {
+      "model_shape_response": {
+        "value": 0.09144931884335351,
+        "case_se": 0.0003915637890286379
+      },
+      "shape_error": {
+        "value": -0.0012738477181021418,
+        "case_se": 0.0014584637203629508
+      },
+      "total_error_including_selection": {
+        "value": 0.0016511725380221332,
+        "case_se": 0.0017616621348982924
+      }
+    }
+  },
+  "paired_model_response_changes": {
+    "nine_weak": {
+      "generated_to_measured_photometry": {
+        "value": 0.00655428092598162,
+        "case_se": 0.00017491884294669788
+      },
+      "conditional_to_measured_shape": {
+        "value": -6.312535465073654e-05,
+        "case_se": 0.00011491532607791684
+      }
+    }
+  },
+  "generated_to_measured_selected_mass_ratio": {
+    "nine_weak": {
+      "value": 0.9983240403964766,
+      "case_se": 0.001624269138801081
+    }
+  },
+  "limitations": [
+    "Four development scenes, not independent acceptance.",
+    "Generated-to-measured-photometry substitution changes photometry and selection as well as conditioning; not a unique causal separation of those effects.",
+    "Conditional-to-measured-shape comparison retains the same measured photometry and selection weights.",
+    "These within-group opposite responses are not the globally normalized coherent contribution and must not be doubled."
+  ]
+}

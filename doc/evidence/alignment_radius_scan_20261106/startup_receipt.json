@@ -1,0 +1,171 @@
+{
+  "utc": "2026-11-06T07:42:29.508636+00:00",
+  "pilot_receipts": {
+    "1": {
+      "arm": "cartesian",
+      "case": 1000,
+      "seconds": 288.6653664300102,
+      "parents": 883944,
+      "pairs": 16024507,
+      "measured": [
+        {
+          "cross_rows": 292879,
+          "shape_rows": 294441,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 883944,
+          "parent_usable": 292842,
+          "parent_absent_crossmatch": 591065,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292734,
+          "shape_rows": 294330,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1596,
+          "parent_rows": 883944,
+          "parent_usable": 292699,
+          "parent_absent_crossmatch": 591210,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "measured_replay_max_abs": null,
+      "shear_axis": 1,
+      "existing_cuts_replay": {
+        "uncut": {
+          "model_max_abs": 5.820766091346741e-11,
+          "simulation_max_abs": 1.2278178473934531e-11
+        },
+        "mag25": {
+          "model_max_abs": 1.4551915228366852e-10,
+          "simulation_max_abs": 4.0472514228895307e-11
+        },
+        "mag25.8": {
+          "model_max_abs": 1.7462298274040222e-10,
+          "simulation_max_abs": 3.637978807091713e-12
+        },
+        "mag25_radius_gt0.60": {
+          "model_max_abs": 2.0372681319713593e-10,
+          "simulation_max_abs": 1.8189894035458565e-11
+        },
+        "mag25.8_radius_gt0.60": {
+          "model_max_abs": 1.1641532182693481e-10,
+          "simulation_max_abs": 5.9117155615240335e-12
+        },
+        "mag25.8_radius_ge0.75": {
+          "model_max_abs": 4.3655745685100555e-11,
+          "simulation_max_abs": 5.6843418860808015e-12
+        }
+      },
+      "checkpoint": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "checkpoint_sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "source_sha256": "01eaddc27b92dd17b537f102e2094b560ac02a23fc2e2b9fc5561aff6d31fea9",
+      "helper_sha256": "3f78a0f1fc5fed977546d51f465a1248feb11a8c63ddc3e6be9abb66e29adaa9",
+      "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+      "flags_sha256": "904da8f40e47d8fd3b998e14ef977bd7295a513bfdbc04a4f01aa1c6c79ce90e"
+    },
+    "2": {
+      "arm": "cartesian",
+      "case": 1000,
+      "seconds": 287.8141853730194,
+      "parents": 883944,
+      "pairs": 16024507,
+      "measured": [
+        {
+          "cross_rows": 292824,
+          "shape_rows": 294390,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1566,
+          "parent_rows": 883944,
+          "parent_usable": 292790,
+          "parent_absent_crossmatch": 591120,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292820,
+          "shape_rows": 294371,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1551,
+          "parent_rows": 883944,
+          "parent_usable": 292782,
+          "parent_absent_crossmatch": 591124,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "measured_replay_max_abs": null,
+      "shear_axis": 2,
+      "existing_cuts_replay": {
+        "uncut": {
+          "model_max_abs": 5.820766091346741e-11,
+          "simulation_max_abs": 2.319211489520967e-11
+        },
+        "mag25": {
+          "model_max_abs": 1.4551915228366852e-10,
+          "simulation_max_abs": 2.6830093702301383e-11
+        },
+        "mag25.8": {
+          "model_max_abs": 8.731149137020111e-11,
+          "simulation_max_abs": 2.773958840407431e-11
+        },
+        "mag25_radius_gt0.60": {
+          "model_max_abs": 1.4551915228366852e-10,
+          "simulation_max_abs": 2.546585164964199e-11
+        },
+        "mag25.8_radius_gt0.60": {
+          "model_max_abs": 2.9103830456733704e-11,
+          "simulation_max_abs": 3.54702933691442e-11
+        },
+        "mag25.8_radius_ge0.75": {
+          "model_max_abs": 2.9103830456733704e-11,
+          "simulation_max_abs": 4.547473508864641e-13
+        }
+      },
+      "checkpoint": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "checkpoint_sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "source_sha256": "01eaddc27b92dd17b537f102e2094b560ac02a23fc2e2b9fc5561aff6d31fea9",
+      "helper_sha256": "3f78a0f1fc5fed977546d51f465a1248feb11a8c63ddc3e6be9abb66e29adaa9",
+      "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+      "flags_sha256": "18360de2a5acb5f8f856e3688e8945bb8390955e8a272aec9e4a6880a7a057b5"
+    }
+  },
+  "pilot_report_job": "17786001",
+  "queue": "               JOBID    PARTITION      STATE     TIME NODELIST(REASON)\n          17786000_4          cip    RUNNING     0:55 cip-cl-h01g02n3\n          17786000_3          cip    RUNNING     0:55 cip-cl-h01g02n2\n          17786000_2          cip    RUNNING     0:55 cip-cl-h01g01n2\n   17786000_[8-79%6]    cip,inter    PENDING     0:00 (JobArrayTaskLimit)\n          17786000_7        inter    RUNNING     0:24 met-cl-vis01\n          17786000_6        inter    RUNNING     0:24 met-cl-vis01\n          17786000_5        inter    RUNNING     0:24 met-cl-vis01\n",
+  "full_stage_logs": {
+    "2": [
+      "PROGRESS cartesian 1040 block 200 seconds 77.7",
+      "PROGRESS cartesian 1040 block 300 seconds 109.3",
+      "PROGRESS cartesian 1040 block 400 seconds 140.6"
+    ],
+    "3": [
+      "PROGRESS cartesian 1040 block 200 seconds 77.9",
+      "PROGRESS cartesian 1040 block 300 seconds 109.1",
+      "PROGRESS cartesian 1040 block 400 seconds 140.6"
+    ],
+    "4": [
+      "PROGRESS cartesian 1080 block 100 seconds 46.6",
+      "PROGRESS cartesian 1080 block 200 seconds 78.1",
+      "PROGRESS cartesian 1080 block 300 seconds 109.7"
+    ],
+    "5": [
+      "READY cartesian 1080 parents 884738 pairs 16041398 GPU NVIDIA GeForce RTX 2080 Ti",
+      "PROGRESS cartesian 1080 block 0 seconds 32.1",
+      "PROGRESS cartesian 1080 block 100 seconds 84.8"
+    ],
+    "6": [
+      "READY cartesian 1120 parents 886209 pairs 16077746 GPU NVIDIA GeForce RTX 2080 Ti",
+      "PROGRESS cartesian 1120 block 0 seconds 31.9",
+      "PROGRESS cartesian 1120 block 100 seconds 84.7"
+    ],
+    "7": [
+      "READY cartesian 1120 parents 886209 pairs 16077746 GPU NVIDIA GeForce RTX 2080 Ti",
+      "PROGRESS cartesian 1120 block 0 seconds 32.2",
+      "PROGRESS cartesian 1120 block 100 seconds 86.7"
+    ]
+  },
+  "full_stage_checked_utc": "2026-11-06T07:44:05.994091+00:00",
+  "all_six_workers_progressing": true
+}

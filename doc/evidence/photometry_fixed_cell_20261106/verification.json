@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "checks": [
+    "Original arrays preserved",
+    "Different sub-bin photometry becomes exactly identical",
+    "Representative remains in original bin",
+    "Paired selected mass and both coefficient moments conserved",
+    "Known selection-weighted reference coefficient contrast",
+    "All Python sources parse"
+  ]
+}

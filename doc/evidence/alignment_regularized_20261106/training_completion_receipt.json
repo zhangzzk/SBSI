@@ -1,0 +1,90 @@
+{
+  "utc": "2026-11-06T08:40:54.784539+00:00",
+  "all_training_complete": true,
+  "training_report_job": "17788251",
+  "axis2_baseline_pilot_completed": "17787232_1",
+  "axis1_baseline_pilot": "running with regular block progress",
+  "constant_shear_endpoint_results": "pending",
+  "arms": {
+    "nll_control": {
+      "validation_nll_change": 0.018848380119083075,
+      "validation_probe_before": 10.209856012288915,
+      "validation_probe_after": 11.436296372092764,
+      "checkpoint": {
+        "arm": {
+          "name": "nll_control",
+          "cuts": "nine",
+          "weight": 0.0
+        },
+        "steps": 64,
+        "sha256": "85a7ee5d93fedc0c300f57e6bfc448b55e26a397d0ec016601ba18744ffbe1ca",
+        "reload_exact": true,
+        "seconds": 43.83598998101661
+      }
+    },
+    "single_weak": {
+      "validation_nll_change": 0.000880464175029072,
+      "validation_probe_before": 10.209856012288915,
+      "validation_probe_after": 3.725925360528902,
+      "checkpoint": {
+        "arm": {
+          "name": "single_weak",
+          "cuts": "single",
+          "weight": 0.001
+        },
+        "steps": 64,
+        "sha256": "9fa3058ceb007feacfd5790e70e82790651ea4febbdea3da13fd647df9ad51ee",
+        "reload_exact": true,
+        "seconds": 137.31332328199642
+      }
+    },
+    "nine_weak": {
+      "validation_nll_change": 0.0007040023198192635,
+      "validation_probe_before": 10.209856012288915,
+      "validation_probe_after": 3.81982027611366,
+      "checkpoint": {
+        "arm": {
+          "name": "nine_weak",
+          "cuts": "nine",
+          "weight": 0.001
+        },
+        "steps": 64,
+        "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e",
+        "reload_exact": true,
+        "seconds": 148.03882982896175
+      }
+    },
+    "single_strong": {
+      "validation_nll_change": 0.0029664421618416092,
+      "validation_probe_before": 10.209856012288915,
+      "validation_probe_after": 2.440566515013178,
+      "checkpoint": {
+        "arm": {
+          "name": "single_strong",
+          "cuts": "single",
+          "weight": 0.01
+        },
+        "steps": 64,
+        "sha256": "44e02c32bce6695c5552da3c6f7995f599531e1afd1f54b2edbc20c2375f757c",
+        "reload_exact": true,
+        "seconds": 133.82631218800088
+      }
+    },
+    "nine_strong": {
+      "validation_nll_change": 0.002764375993738355,
+      "validation_probe_before": 10.209856012288915,
+      "validation_probe_after": 2.0631924776314703,
+      "checkpoint": {
+        "arm": {
+          "name": "nine_strong",
+          "cuts": "nine",
+          "weight": 0.01
+        },
+        "steps": 64,
+        "sha256": "81458232427964c3ed0abfd2e4a7603fc6610566e1b94fc9b40b047de56ca52c",
+        "reload_exact": true,
+        "seconds": 153.68633445102023
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "rotation_inverse_and_norm": "passed",
+  "standardized_rotation_determinant": "1, including zero-intrinsic fallback",
+  "density_change_of_variables_max_error": 5.082073628592809e-07,
+  "physical_support": "passed",
+  "save_load": "exact"
+}

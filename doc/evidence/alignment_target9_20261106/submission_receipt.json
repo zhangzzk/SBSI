@@ -1,0 +1,4 @@
+{
+  "utc": "2026-11-06T08:00:02.712215+00:00",
+  "queue": "               JOBID      STATE       TIME NODELIST(REASON)\n   17787261_[2-79%6]    PENDING       0:00 (Dependency)\n    17787232_[0-1%2]    PENDING       0:00 (Dependency)\n            17787294    PENDING       0:00 (BeginTime)\n            17787293    PENDING       0:00 (Dependency)\n            17787262    PENDING       0:00 (Dependency)\n"
+}

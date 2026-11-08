@@ -1,0 +1,126 @@
+{
+  "case": 1000,
+  "axis": 1,
+  "cut": "mag25_radius_gt0.60",
+  "definition": "Single development scene; no between-case SE. DeltaR=simulation-model. m_percent=100*(Rsim11/Rmodel11-1).",
+  "arms": {
+    "control": {
+      "predicted_usability_generated_selection": {
+        "simulation_response": [
+          0.8992219452125052,
+          0.006820372788628661
+        ],
+        "flow_contribution": [
+          0.723971185770056,
+          0.001134794773147915
+        ],
+        "emulator_contribution": [
+          0.1728313270355009,
+          1.0500503361919801e-05
+        ],
+        "delta_response": [
+          0.0024194324069483075,
+          0.005675077512118827
+        ],
+        "m_percent": 0.26978430283155497
+      },
+      "true_usability_generated_selection": {
+        "simulation_response": [
+          0.8992219452125052,
+          0.006820372788628661
+        ],
+        "flow_contribution": [
+          0.7231298406796091,
+          0.001144458531302985
+        ],
+        "emulator_contribution": [
+          0.17186591410265842,
+          1.2484740105716615e-05
+        ],
+        "delta_response": [
+          0.004226190430237753,
+          0.00566342951721996
+        ],
+        "m_percent": 0.47220228784949914
+      },
+      "true_usability_true_selection": {
+        "simulation_response": [
+          0.8992219452125052,
+          0.006820372788628661
+        ],
+        "flow_contribution": [
+          0.696001181803443,
+          0.0022932453244888158
+        ],
+        "emulator_contribution": [
+          0.17079517946901684,
+          2.243168062735017e-05
+        ],
+        "delta_response": [
+          0.032425583940045355,
+          0.004504695783512496
+        ],
+        "m_percent": 3.7408537216797377
+      }
+    },
+    "weighted": {
+      "predicted_usability_generated_selection": {
+        "simulation_response": [
+          0.8992219452125052,
+          0.006820372788628661
+        ],
+        "flow_contribution": [
+          0.7206519825795433,
+          -0.000417856392962057
+        ],
+        "emulator_contribution": [
+          0.17550419674646098,
+          2.413369111526059e-05
+        ],
+        "delta_response": [
+          0.003065765886500871,
+          0.007214095490475458
+        ],
+        "m_percent": 0.342101740436207
+      },
+      "true_usability_generated_selection": {
+        "simulation_response": [
+          0.8992219452125052,
+          0.006820372788628661
+        ],
+        "flow_contribution": [
+          0.7197316090626895,
+          -0.00021903072563699282
+        ],
+        "emulator_contribution": [
+          0.17447572671007783,
+          2.7851934467820545e-05
+        ],
+        "delta_response": [
+          0.0050146094397378604,
+          0.007011551579797833
+        ],
+        "m_percent": 0.5607882242885331
+      },
+      "true_usability_true_selection": {
+        "simulation_response": [
+          0.8992219452125052,
+          0.006820372788628661
+        ],
+        "flow_contribution": [
+          0.6948747283474379,
+          0.0010590730772745856
+        ],
+        "emulator_contribution": [
+          0.1711870365902506,
+          3.681975291247097e-05
+        ],
+        "delta_response": [
+          0.03316018027481671,
+          0.005724479958441605
+        ],
+        "m_percent": 3.8288470427051413
+      }
+    }
+  }
+}

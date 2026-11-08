@@ -1,0 +1,4746 @@
+{
+  "definition": "Frozen older joint Cartesian vs latest weighted factorized flow, same40 scenes, portable64 antithetic draws, predicted usability/generated selection, new paired-seed measured reference. Independent per-leg normalization, m_i=100*(Rmeasured_ii/Rmodel_ii-1). Paired whole-scene errors. Development evidence, not independent acceptance.",
+  "checkpoint": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_trajectory_20261105/galsbi_fs2rate/selected.pt",
+    "sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd"
+  },
+  "source_sha256": "7b320ecfcee5ffc6a477ca51eaf80bc8d251515a51d55960c23478697499da04",
+  "measurement_matching_totals": {
+    "cross_without_shape": 0,
+    "shape_without_cross": 228683
+  },
+  "receipts": [
+    {
+      "case": 1000,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "b8e2d67808ab32a2d29ae94408e324962d088793d9871a1020f56d1469116732",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+      "flags_sha256": "904da8f40e47d8fd3b998e14ef977bd7295a513bfdbc04a4f01aa1c6c79ce90e",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": {
+        "legacy_response_max_abs": 4.440892098500626e-16,
+        "legacy_count_max_abs": 1.7462298274040222e-10,
+        "portable_minus_legacy_response_terms": [
+          [
+            -0.00045521929487724044,
+            -0.00021826001883749793,
+            0.00011393588431213297,
+            0.00017449782834620046
+          ]
+        ]
+      },
+      "parent_count": 883944,
+      "pair_count": 16024507,
+      "gpu": "NVIDIA A40-8Q",
+      "seconds": 520.9222232970642
+    },
+    {
+      "case": 1000,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "14aaecb44a81b187a818448edd13c200f664ce063ccbaacbc8006ea35a8618dd",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+      "flags_sha256": "18360de2a5acb5f8f856e3688e8945bb8390955e8a272aec9e4a6880a7a057b5",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883944,
+      "pair_count": 16024507,
+      "gpu": "NVIDIA A40-8Q",
+      "seconds": 248.45433199498802
+    },
+    {
+      "case": 1040,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "6c8a1576c38401c7009e47aa21d7653bbf15c1bba4fa9ae6cf23eacd15f47460",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "77c3a34e4d87208bbee829ad530d6df5d44951988c980a6c524f511aeefa8fe5",
+      "flags_sha256": "d202d06409400b0230139a999a8dc38ffb3227c7828b6dbfe903d5335081aaf9",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883991,
+      "pair_count": 16024926,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 249.92422791104764
+    },
+    {
+      "case": 1040,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "65093da7419883737a4ae810a65aa7f29e90339b43acff90db2ac7ae3dcbaaab",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "77c3a34e4d87208bbee829ad530d6df5d44951988c980a6c524f511aeefa8fe5",
+      "flags_sha256": "44dd19b89a91133d3fe79765cfc6cea562e638697ecfb1d7cd7684f115384345",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883991,
+      "pair_count": 16024926,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 250.06761293299496
+    },
+    {
+      "case": 1080,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "862a04ea66654fe53618b26b02b4503ce53d350eaabbd3a5af7a573f970eac12",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "9c4a8f6e1ad8cb1c01e470fc097fd826b1e528759c4dee105a488294f33217bb",
+      "flags_sha256": "558c8dc62e32c13eb8e5ecef56fc962003b809cf5c78881bb8ae8693eb674288",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884738,
+      "pair_count": 16041398,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 283.84319294290617
+    },
+    {
+      "case": 1080,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "272a50846876cc7b2c18ebd9db9dfc184f5d17c1ee6f3a248c3548b71e176492",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "9c4a8f6e1ad8cb1c01e470fc097fd826b1e528759c4dee105a488294f33217bb",
+      "flags_sha256": "a3b207ac79d49395af07e38929d3fc2081cc1160f8aa44da384dcc6f4cf6369e",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884738,
+      "pair_count": 16041398,
+      "gpu": "Quadro P5000",
+      "seconds": 523.4504364099703
+    },
+    {
+      "case": 1120,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "a6496b40e9a1912ec3a8ca9b718f80a9bf1bbbbba32d09a98cc937f0a110a488",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "1f42f2dc6db9ca8abc12c1cc90c6bec387bc1e1ab791bcc401e17bfc8e41e1eb",
+      "flags_sha256": "29a4d92061e8770538731d386c69e0634ef5f39599b88db279eba6843db1b6bf",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886209,
+      "pair_count": 16077746,
+      "gpu": "Quadro P5000",
+      "seconds": 516.4250653269701
+    },
+    {
+      "case": 1120,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "3b4ee13c3241522b3d59bcac20d39353b8c90a6b2d4db83a51410adb95b57f2a",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "1f42f2dc6db9ca8abc12c1cc90c6bec387bc1e1ab791bcc401e17bfc8e41e1eb",
+      "flags_sha256": "8eaf2fe6b00eb968665d16a94e15cdb63cb38829f3027214308d991f7b4ce8c8",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886209,
+      "pair_count": 16077746,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 443.2183780861087
+    },
+    {
+      "case": 1001,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "060ca281e680172fe24c957bc20523d8676ed560733aef1633e11d9f7ec98e5d",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "f118531d6b0a621fde06ec9d1e338be7ff942954553bde1b71cec39e678689a7",
+      "flags_sha256": "56faefb81b68623323893b44a35f837b2c7ae39e55f144438f09bfe6a8f36f75",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886466,
+      "pair_count": 16084275,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 247.56156230112538
+    },
+    {
+      "case": 1001,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "61c048a1d047cda3ee2792bc0abe0db57b65c0b8238d279b6d1c36ac32cdda10",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "f118531d6b0a621fde06ec9d1e338be7ff942954553bde1b71cec39e678689a7",
+      "flags_sha256": "fac7ed8017ed2bf225aacaff58196a0513ed9dcef01a048f12dc072dd67cd44e",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 5.551115123125783e-17,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886466,
+      "pair_count": 16084275,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 244.81715906504542
+    },
+    {
+      "case": 1041,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "3245ff7c184bab9b027aede632d6b9c5329ab461e6df195d24ed1b10fa31210b",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "d6967b0f184c3fdaafcf44b8203a1bb3a5e4ed3d8134adaf64322410938fd9e1",
+      "flags_sha256": "86ebe7b0eb04cb84de1bb1bb20815be196ab229299921361d007ada793bb1ea4",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884198,
+      "pair_count": 16029971,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 267.37480104202405
+    },
+    {
+      "case": 1041,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "8a71221543ff22654cc8beb10fe94af900392e92269b7d5ca6581bff3175eba8",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "d6967b0f184c3fdaafcf44b8203a1bb3a5e4ed3d8134adaf64322410938fd9e1",
+      "flags_sha256": "91875847150330bd4dcb447d6b0128a8a433fd8c7ffc966d11657c80349ef491",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884198,
+      "pair_count": 16029971,
+      "gpu": "Quadro P5000",
+      "seconds": 516.8649774199584
+    },
+    {
+      "case": 1081,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "f9b3ec6f140d00d76035c2b9a2f9e9752a675145feb26cc1a40a3fcc54c2ace1",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "6c9b629dcbc1a81ed52a9aed41826f4e07e4cee46be6e491faaaf3c19576bb95",
+      "flags_sha256": "2c92d2a0a20f202e56ced4b0f5327ae509bb0bd0321d37f00e7cf1d75dba91af",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 8.881784197001252e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885266,
+      "pair_count": 16058749,
+      "gpu": "Quadro P5000",
+      "seconds": 514.2594574720133
+    },
+    {
+      "case": 1081,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "c99025cbd0c4f10f59568bdb8e1bc7f8e28b2bda7c83974c21829dbd058401d8",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "6c9b629dcbc1a81ed52a9aed41826f4e07e4cee46be6e491faaaf3c19576bb95",
+      "flags_sha256": "11ba31e483ea10cdb23e7a42d1beee195c5ef784737098df21d7c8abc5a5bdd9",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885266,
+      "pair_count": 16058749,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 439.21592169068754
+    },
+    {
+      "case": 1121,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "e2d9aac6a4d45a7bf99087e30112b8c23b26f2c01a76d9bf1cef163a3f86759a",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "ecb308914548070fcdad5b65b0d9bfecfc8f340b56ca6d03af9c85e01fb62658",
+      "flags_sha256": "5b17b9db670ec100d17d4698166cb8252499362a1885e0847644d5f5b8cf6bda",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885534,
+      "pair_count": 16058941,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 247.37891583284363
+    },
+    {
+      "case": 1121,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "57c428e0c6ca32a518c71c9a581d1cc366e612c4ea1f8e6a3a2b26bfd04014b7",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "ecb308914548070fcdad5b65b0d9bfecfc8f340b56ca6d03af9c85e01fb62658",
+      "flags_sha256": "217f6ab794cc9cb87e73df24337f226a3a3d34ab8bda2595644c2fb8479e021f",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885534,
+      "pair_count": 16058941,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 238.48236513102893
+    },
+    {
+      "case": 1002,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "febc80bc2920da64c248604252f571ab8e7813d8ea9494a5ab5f666f9871dd31",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "80269d4097706c1af8b3a9edd090f72b13354465f740a003854ca613ffc31a71",
+      "flags_sha256": "b558dbf9bd7e2e322f1fda7b3cd00bb2c7196b6f017512c2498adb8a291050ae",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885209,
+      "pair_count": 16051800,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 275.57220040494576
+    },
+    {
+      "case": 1002,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "6f26528d341cd9e3ce304e3f01725ff13a82534f7626b6566985a98206748f55",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "80269d4097706c1af8b3a9edd090f72b13354465f740a003854ca613ffc31a71",
+      "flags_sha256": "8e9d1d697bf2765f9817fdd3aeafade8ad2e5fea9858d0b503ee00ce8e6dbc4d",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885209,
+      "pair_count": 16051800,
+      "gpu": "Quadro P5000",
+      "seconds": 508.6734478290309
+    },
+    {
+      "case": 1042,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "b3535d5fa8e66be266f040675f585df62be3b5536e4747576022ee1dce54eae3",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "bb1e141dab608af5f2ef4ccb479d275ddc36ec57740f2c704828adf7df253479",
+      "flags_sha256": "7d91dca6d22c0d1e68ca4ffadfe1585a7995ddf38204d4ac8b93d3d77a5eea4d",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885441,
+      "pair_count": 16062503,
+      "gpu": "Quadro P5000",
+      "seconds": 500.3831254770048
+    },
+    {
+      "case": 1042,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "e28c10119300e90fd823e42b4c058de94f4bffc720fc2c16a578f8b9e380b661",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "bb1e141dab608af5f2ef4ccb479d275ddc36ec57740f2c704828adf7df253479",
+      "flags_sha256": "2be5ffb2df6301d5d6291cc227f4174476441861851d8fbd8eec26a2b04e54c7",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885441,
+      "pair_count": 16062503,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 442.52829307923093
+    },
+    {
+      "case": 1082,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "88e4436358fa7dc88bb651acffc6e6b14805fe978dd69dfee47395d765c1fdfe",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "05d620786c6f603bc1f75fbf6655f72493a07ac3ecc0267c740cb1c9fb94ebba",
+      "flags_sha256": "d4316f1fa76fd06d6544b7127a247c53419bd95bfd0eb61a2a534a0a0e84b177",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883309,
+      "pair_count": 16009137,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 243.24214069731534
+    },
+    {
+      "case": 1082,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "74752cec3e1f500131befd8ef00257879794b8bd9f1739c9b78aa8cf5f68fa0d",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "05d620786c6f603bc1f75fbf6655f72493a07ac3ecc0267c740cb1c9fb94ebba",
+      "flags_sha256": "e8e83d21fd7b1cd8969c2fa6ee109dbedf65cd4758600e92c82af686ac7bf604",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883309,
+      "pair_count": 16009137,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 248.46702260896564
+    },
+    {
+      "case": 1122,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "1a7117f7828eb6024ee6235c2760b87c7af2eb435c1108ee205c36754b27761c",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "82e1df634f7d231b6e98b662131b2cb17eca8b23a5a534fc76d7b25f93b8d78e",
+      "flags_sha256": "2a4c02a3c08457a1a003a94a87df9a6294fb06ee4c57d3f5e2405dd3e76774b9",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886009,
+      "pair_count": 16075878,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 267.59093024092726
+    },
+    {
+      "case": 1122,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "2f4016984752a2bfd1473203a616fb71734396beb3481584f90dd22a0e9239b2",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "82e1df634f7d231b6e98b662131b2cb17eca8b23a5a534fc76d7b25f93b8d78e",
+      "flags_sha256": "eaf410af420a34995675419295c9d645253133ba5cc134bf817767ca913a82b1",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886009,
+      "pair_count": 16075878,
+      "gpu": "Quadro P5000",
+      "seconds": 508.9819957280415
+    },
+    {
+      "case": 1003,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "1817092b084beebb4c24525e52f0be3efd17c82c88afe114fe586d447cf7ef00",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "0c0893ae2d7c648996ebfe80ba521b813efba29b87c561b234c651fef5ef878c",
+      "flags_sha256": "b264e577668991101e41964e7938192b52e2fdb9c3dc1677021591a28b861856",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884869,
+      "pair_count": 16045035,
+      "gpu": "Quadro P5000",
+      "seconds": 513.9734657719964
+    },
+    {
+      "case": 1003,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "95f047c01b0da64f2aeefef45807d2e2b5d501d60d17df1af58fb7ae43bfe70c",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "0c0893ae2d7c648996ebfe80ba521b813efba29b87c561b234c651fef5ef878c",
+      "flags_sha256": "e04933d3472a8a286327dc5675c3ab9f2545b5814470f9a0cf55a5a56ca1fb94",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 3.3306690738754696e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884869,
+      "pair_count": 16045035,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 438.510467546992
+    },
+    {
+      "case": 1043,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "f33ccd99b7cda3298f35cab8e79cd48cc4679ccdf7b2fe5281b4853e3d8e0203",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "5b825b3ef9d5414395187431ae6eb1f5268ccfa0ea4900d5cb32d98082d54212",
+      "flags_sha256": "8acec52c673d24d50671546a1ebff70f5072a29f7c8ac6e0c751c55f98222f59",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885185,
+      "pair_count": 16050211,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 259.96649820310995
+    },
+    {
+      "case": 1043,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "b02f15b4519f3a95e3c4abccd24f0968776b1b73ff25f5ad8129518e8ff0fe6c",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "5b825b3ef9d5414395187431ae6eb1f5268ccfa0ea4900d5cb32d98082d54212",
+      "flags_sha256": "e632b292062da04d5ed03c102be285c53dad6c2e17abb373dc5a52c2295467f0",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885185,
+      "pair_count": 16050211,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 239.12962392705958
+    },
+    {
+      "case": 1083,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "fda9460ac970637c27f224cc53caab0dc6ef7240d1bc05de67aada4662b45fa2",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "cf8a25b64b9daec004aae40d34c93e24291dacf7406c75c5611274e59afba521",
+      "flags_sha256": "5c11056af5b7b3e3d97b86e5eff20862a0bc2827c3a97165f0fbfc3db6704b88",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885264,
+      "pair_count": 16057111,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 288.9749272579793
+    },
+    {
+      "case": 1083,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "7d00bea71244034708fff829d7c4bc6629cb328bdb1d448cd1b23a828d9af3bc",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "cf8a25b64b9daec004aae40d34c93e24291dacf7406c75c5611274e59afba521",
+      "flags_sha256": "f36a3349dc5ce865264ed84c37b63ceefc012265d1dcc7b5b42ea57ee1f9dafb",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 1.1102230246251565e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885264,
+      "pair_count": 16057111,
+      "gpu": "Quadro P5000",
+      "seconds": 507.7654332880047
+    },
+    {
+      "case": 1123,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "fc070c5424df5e18d9d2c932201fb59b292262526f8f12cc07d787ae60a610b2",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "6ba80f71f640862699503f65018fb3ab2cd93e82385ffae4315eefa2ac9194c0",
+      "flags_sha256": "a558dec3fe9b4d46d0faed6798671eae8276cad1e62c5d7a2a26db8f60ed7185",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883737,
+      "pair_count": 16020383,
+      "gpu": "Quadro P5000",
+      "seconds": 513.3499517339515
+    },
+    {
+      "case": 1123,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "2e3930b60b623e26ccfe9fc937d4dcf37c6f6de14a21a3cfb165f2d611df6f1c",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "6ba80f71f640862699503f65018fb3ab2cd93e82385ffae4315eefa2ac9194c0",
+      "flags_sha256": "0599b5733b7dd1750730a24d7260f214c5419cced2076541764891b991f7ab77",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883737,
+      "pair_count": 16020383,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 440.6489400831051
+    },
+    {
+      "case": 1004,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "1e6302ba8e094b55d75596d8a77f96c5daee58737ac16c5edafbc47cb11a1a05",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "7ede963aa344f297efb470b94ebdd204448af58a324dce6f6f8ecc041869a125",
+      "flags_sha256": "75a20ce4248c774f3ad5551924227518ffb8237d3f308c9da70df5ac38f1bf35",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 8.881784197001252e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883795,
+      "pair_count": 16021351,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 246.1091900197789
+    },
+    {
+      "case": 1004,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "b55cee492dcba3f5a774a48bdb616bcea9fe2a21bcfdeee5538b3170c8a02b04",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "7ede963aa344f297efb470b94ebdd204448af58a324dce6f6f8ecc041869a125",
+      "flags_sha256": "af11cf0efc372629e81bd6fe2b92e8ae38ca4c4c06ae4720df1a48788afb12f7",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883795,
+      "pair_count": 16021351,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 243.93156396900304
+    },
+    {
+      "case": 1044,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "f0bd118dc348bfdd3b8e763e54421bcda32999139a977c4e466cd347c047dd20",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "5a1db70d69ac9217e80fdbaadd6b31e4dd84d2dfe4b9813bb07f4533c0cbfed5",
+      "flags_sha256": "052767db7574dbc0167c4869f33e4c2dae60629af9bec8b6a929733d29ca0b4c",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884796,
+      "pair_count": 16046257,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 259.75270662794355
+    },
+    {
+      "case": 1044,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "7e441aff886287266b9b7384f36f32a7c4b5f2bf2c6084f289ca0575d71f424d",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "5a1db70d69ac9217e80fdbaadd6b31e4dd84d2dfe4b9813bb07f4533c0cbfed5",
+      "flags_sha256": "21a4429eace20a38670c5f2ab18eecfdcbb6159af3578563820772695a06bfbc",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.7755575615628914e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884796,
+      "pair_count": 16046257,
+      "gpu": "Quadro P5000",
+      "seconds": 506.86930801399285
+    },
+    {
+      "case": 1084,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "d96e1f7d5d916c58cf68d6709e98813692c29dac741ac257d3391aab13ad558a",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "7480f457386871c1ed676b97840abf70ace7776e00be3b454fab56effd526063",
+      "flags_sha256": "85fc8ccf88ea708404d27bfd1a39396dca029be7bbb0e8ea809ac62d8f2d667e",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883496,
+      "pair_count": 16014154,
+      "gpu": "Quadro P5000",
+      "seconds": 513.6986874249997
+    },
+    {
+      "case": 1084,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "5a28d9602c580c0ff8a1a1fb48643eb2391801412c12e60a341f34fa2dc59728",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "7480f457386871c1ed676b97840abf70ace7776e00be3b454fab56effd526063",
+      "flags_sha256": "e2cc78a6730b9fe7525b24517c3348d2fa9961ab789329ab086cf8eb3bf00bf6",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883496,
+      "pair_count": 16014154,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 443.7112780539319
+    },
+    {
+      "case": 1124,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "0eb807e20b56bf6f630261a6d7690957a8c2090e6b22437827f6d93f324fb307",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "50eab53244ca72e19ce5a8783c0fc160da532675f04a4f185b7e71f7803c9ad2",
+      "flags_sha256": "31980049347b472db7b3f436feb555ec8417942cab87c028f6709e88bfc596bc",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884340,
+      "pair_count": 16034251,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 245.20902590826154
+    },
+    {
+      "case": 1124,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "4d05ce5b4945874a01c29274ffda69bca7cc447e2bce46a70ddab253d8874be3",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "50eab53244ca72e19ce5a8783c0fc160da532675f04a4f185b7e71f7803c9ad2",
+      "flags_sha256": "fe0d4098627db69aa46289678f1e15c8a0cfb0911e1ce879ff03f9bc1786d30c",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 1.1102230246251565e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884340,
+      "pair_count": 16034251,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 237.94492890604306
+    },
+    {
+      "case": 1005,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "546f8dac3024a8b615287a2337d471f5cde2a318e42f337a5a6d3141ae4bdd8c",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "ebbc9c0a00287bd99577502647fbaf559bb99d5be8f2c3428e4d98cd86dfd77c",
+      "flags_sha256": "2b54b45fd86fd049722d32029371f7e6551e4540522702c813865051538796fb",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883627,
+      "pair_count": 16022363,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 261.0366520930547
+    },
+    {
+      "case": 1005,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "9152f3fdd6e6e270c4b61980b1c4364e570222b83b0cb54e491d341b88cda151",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "ebbc9c0a00287bd99577502647fbaf559bb99d5be8f2c3428e4d98cd86dfd77c",
+      "flags_sha256": "7d1aaed9bb73bd9bd383d395fc9fa69afaa64a97ef4d40795032bda762862f8c",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 1.1102230246251565e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883627,
+      "pair_count": 16022363,
+      "gpu": "Quadro P5000",
+      "seconds": 514.9639777690172
+    },
+    {
+      "case": 1045,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "808e798e27b168ca8683197a657a0e9e5451cdc413053b4689768a2de1dd2c91",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "05702852615c6c2d53739fe11b914c8d9b379ae1574d968e3d7622030dc2f2b2",
+      "flags_sha256": "34aa00d9fc58022700482aa7619c8a0c1f45a3631b3d90fbbd44a47670c3ea2d",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884909,
+      "pair_count": 16045827,
+      "gpu": "Quadro P5000",
+      "seconds": 501.71201265597483
+    },
+    {
+      "case": 1045,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "56239d616c8a98cf8489fd5e4cc87ccbb9527d71ef32d546f9cc4cd91144f7f9",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "05702852615c6c2d53739fe11b914c8d9b379ae1574d968e3d7622030dc2f2b2",
+      "flags_sha256": "a37ba7823c8221020a8de1bf532cbd84bf04ebcaec922bd945b191726d697cb0",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 1.1102230246251565e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884909,
+      "pair_count": 16045827,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 445.863018788863
+    },
+    {
+      "case": 1085,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "dbbb8a93267fcf85be4f197b69dfaf0bff5957e1861928a51f569ca1091dc5af",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "9b436790bba40ca45108ac54a57f305a32bfbd9af58b556198623e004f57ac94",
+      "flags_sha256": "97931197490bbbc9def3faaf5cda56c1bc94a9cf46237e746f3e73feabcf4de9",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885570,
+      "pair_count": 16063813,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 245.40055180201307
+    },
+    {
+      "case": 1085,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "f3bc8a637b8247e92ab0251835206a241e4d02bb14f0d81927171fe2eaf1a8da",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "9b436790bba40ca45108ac54a57f305a32bfbd9af58b556198623e004f57ac94",
+      "flags_sha256": "014ce66ec70e44c3c7696fe0b4cd56e1c08aef9ebdfd9a1cbfaf5989c86c866d",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.7755575615628914e-17,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885570,
+      "pair_count": 16063813,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 252.4205864869291
+    },
+    {
+      "case": 1125,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "2c4d323c123a4f7be00f63772c6ab5f73eb8077e1d23d4bbf81d1f2ce0a3ba80",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "0726422b4ebf0252274095d88b54e15f2649a093424f59752c797bd77729e0f3",
+      "flags_sha256": "4282c1744e505376df957d0260b32a01dfdac7b103892c201f79f94cd750509d",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 1.1102230246251565e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886662,
+      "pair_count": 16095338,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 248.02346396900248
+    },
+    {
+      "case": 1125,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "97120d7b8c691b1a1cd334c53053f561e94275051a74dc7365b12366097b6c7e",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "0726422b4ebf0252274095d88b54e15f2649a093424f59752c797bd77729e0f3",
+      "flags_sha256": "5cce51826d15fc490a24693b8ac9ee6690ed6578832aea3872ca55d8ddfb1e67",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 1.1102230246251565e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886662,
+      "pair_count": 16095338,
+      "gpu": "Quadro P5000",
+      "seconds": 508.00695046799956
+    },
+    {
+      "case": 1006,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "85b3f51bd049ff9066a1529f67cfab79be5324fe00ccf8f9aa731420c4bb5b48",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "f036c8eb7181c0760e0739478aa392bcbecc318fe332cd234c367d111a1369e6",
+      "flags_sha256": "18606f8cb3408e542e60563637dc0d07ca50c1fa72b9715888398c160dd217d0",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884922,
+      "pair_count": 16047484,
+      "gpu": "Quadro P5000",
+      "seconds": 511.6626701870118
+    },
+    {
+      "case": 1006,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "9edb5044e5f9df1763f0356742baa805b7172990f7fc2c93411feca915ae1bcf",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "f036c8eb7181c0760e0739478aa392bcbecc318fe332cd234c367d111a1369e6",
+      "flags_sha256": "455612b3b7e24b10cbe0540ee04c5f146c5a883fc64041d3ceac73575a65eea9",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884922,
+      "pair_count": 16047484,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 437.2808577879332
+    },
+    {
+      "case": 1046,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "a717836831d0d57fb0989431be006cd3d41ef2934fc1ca42f110850801e03311",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "2397364ddafc1bb2be0a85890a3e5898fedf23ba2580527840443e704afa5063",
+      "flags_sha256": "1cfe8599690d5093500ed31ecc56b7f9cc0ca0f3464bb8b163fd4d41f56823bf",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885069,
+      "pair_count": 16053225,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 260.19001251319423
+    },
+    {
+      "case": 1046,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "584e53339c47485882ca1e76f5d19b374155e7bc1caca6f153c36142f2bf331d",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "2397364ddafc1bb2be0a85890a3e5898fedf23ba2580527840443e704afa5063",
+      "flags_sha256": "8efc558754f24d505c33efe31c27f154cfb15ab781a915c0ea95495d950142cc",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885069,
+      "pair_count": 16053225,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 242.41075019491836
+    },
+    {
+      "case": 1086,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "39d182d3a1d3ec8d4881bf4aad071a198bac431423aaab4af272f6d3676a6937",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "92525bb5af0382127da343b682f17fc06118b6395c4250be22c5564b6466c323",
+      "flags_sha256": "25962b8410184f1c4a30f1b55ae627dd5de752ee6b58a9724347cfa27526530f",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 882700,
+      "pair_count": 15992479,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 279.2162959839916
+    },
+    {
+      "case": 1086,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "e36620aba0ddd82b3d35f68156afb97d30f4b3301cbe47fd0fc0567ed949b1c5",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "92525bb5af0382127da343b682f17fc06118b6395c4250be22c5564b6466c323",
+      "flags_sha256": "09b77e49b67157d587c6b682ec89977fbb91d4d395ee1a6ddbbfd3dc2000ef25",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 882700,
+      "pair_count": 15992479,
+      "gpu": "Quadro P5000",
+      "seconds": 512.1244805949973
+    },
+    {
+      "case": 1126,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "a5ce6e29782f964fe7b743005e8eebcc1a32d733b42a4f5d01ff61772770ddef",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "525f128cd0d18c7bbe1f460b9963487c74b9ae9d3a981b711d50bc7f4071a390",
+      "flags_sha256": "da516553234a84a7b4a4f5a0147432f07956af41f0eac46fa01987c4a153f9bb",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 882780,
+      "pair_count": 15995461,
+      "gpu": "Quadro P5000",
+      "seconds": 511.5547033229959
+    },
+    {
+      "case": 1126,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "994c776705c22cb4403d6d22c44a826ef71ccd37cc984438a1237c6ac07d8a3e",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "525f128cd0d18c7bbe1f460b9963487c74b9ae9d3a981b711d50bc7f4071a390",
+      "flags_sha256": "ed1b15bcc245d3c60a1fc810dbe0f6206459c69507af687854e4f459a43b601c",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 8.881784197001252e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 882780,
+      "pair_count": 15995461,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 443.31425951980054
+    },
+    {
+      "case": 1007,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "82e182ee4acf5883be659f8dbabf58c2231ede01ba3b1f516722781849f2da60",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "a462341c8c2b458ce7c0613900464e645eba8a763b361c841ddaafbc8f3e68bc",
+      "flags_sha256": "0dfd134c42c3ce5e86ad4600c88dcb62e14e0aadd531774d9c374ac2066401cd",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 8.881784197001252e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884762,
+      "pair_count": 16046767,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 234.3146721860394
+    },
+    {
+      "case": 1007,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "67dc847121889f7ac31a90285e0d0414b1113b0282f750fe2e9622479c9f96cb",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "a462341c8c2b458ce7c0613900464e645eba8a763b361c841ddaafbc8f3e68bc",
+      "flags_sha256": "1e125f8b17af969658eb0ca387cb6a33b4579279f1349437e1f56e1e56ab13e3",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 8.881784197001252e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884762,
+      "pair_count": 16046767,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 242.94213759794366
+    },
+    {
+      "case": 1047,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "e3c914b649ea0beb5fc3350bc5e9066147dac0fea1448826586a79973af25bf4",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "7a20794eb3c39b5db95090f9a39607b7a2e3675ec8ea7578577f5dc9d9456c55",
+      "flags_sha256": "cdb1ba2d132b5f3fcf89abdeb9248d632a6abb53f918fada311532395367c7cc",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886686,
+      "pair_count": 16093711,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 251.43632898293436
+    },
+    {
+      "case": 1047,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "0b91b97f6f7477070526773347daa6b4bb41d22581c2d1f886ad47d875132cfa",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "7a20794eb3c39b5db95090f9a39607b7a2e3675ec8ea7578577f5dc9d9456c55",
+      "flags_sha256": "5f37fb82addb9cb93ff1db8f7e7a6255db14914ff91d6672abaeee7bb78999af",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 1.1102230246251565e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 886686,
+      "pair_count": 16093711,
+      "gpu": "Quadro P5000",
+      "seconds": 507.3953100310173
+    },
+    {
+      "case": 1087,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "4b1491e76ad9eb7fb4cb17e6800d9c430573a3b6b357ac0ebae5cf9f79ec7455",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "5b567c839868906e39c1beeb75fc662eb5cb518a161461549550d77883dfae0d",
+      "flags_sha256": "5a07b2dd459d46ca17a7a991d4ae1537d3cadfad3ef6a09cc884a6ab44ce677a",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885221,
+      "pair_count": 16054693,
+      "gpu": "Quadro P5000",
+      "seconds": 502.02689406403806
+    },
+    {
+      "case": 1087,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "ea4a70a9e61ce4c4af8b31c688ba4724ec9dca900b3c3ca5cea398742fd4e7b6",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "5b567c839868906e39c1beeb75fc662eb5cb518a161461549550d77883dfae0d",
+      "flags_sha256": "030d0b80477ce35a28e41b31dafdb8b4cb3d1ca36beba65fcbfc5b864421b732",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885221,
+      "pair_count": 16054693,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 443.5354151446372
+    },
+    {
+      "case": 1127,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "987245f18491341d0277908450a99a346952a1f648870ff59536e3f98319ee0e",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "5631b9f14c08a76b77a834f03baf006d35466545d2f6d3bfcdd918b7a8cfc81d",
+      "flags_sha256": "b2aca579c8069c6f7c55a480c0d6cb46a1fe9610902be0d12bb8f820eb276535",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 1.3322676295501878e-15,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885519,
+      "pair_count": 16058063,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 230.07043149508536
+    },
+    {
+      "case": 1127,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "cda205c41bf9da6a24d47342feaae9404ad1032860d9022e785b0eaa4fbd6323",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "5631b9f14c08a76b77a834f03baf006d35466545d2f6d3bfcdd918b7a8cfc81d",
+      "flags_sha256": "c26e5cad0b86563ed37293c9240b6ca0668ba06f956cbd67779b5e173e1f083f",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885519,
+      "pair_count": 16058063,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 255.22869070107117
+    },
+    {
+      "case": 1008,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "a31a4252e6a16830107d23f41a26262cbc24ae156b26e212e9767c024e72b133",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "797659b1c0a825e329f956f7a8eb19ba169443770de437f171f841096628a337",
+      "flags_sha256": "e6b321e46127602c0024d14fee36a5409e8c1d253d65a34f6c5daa0bc362e70d",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885110,
+      "pair_count": 16056421,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 252.99324444809463
+    },
+    {
+      "case": 1008,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "2319bbb6b307b010138a0b51ea6a00ddf7e8571b972c5722efc3485f7fd9d197",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "797659b1c0a825e329f956f7a8eb19ba169443770de437f171f841096628a337",
+      "flags_sha256": "547aeec2ea54f86c37001b2449015379f977e318110ee2e0bc42b92e47c3ec89",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 8.881784197001252e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885110,
+      "pair_count": 16056421,
+      "gpu": "Quadro P5000",
+      "seconds": 505.97360593103804
+    },
+    {
+      "case": 1048,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "5f6576ec58bb4b61b67235ab93ac4fec60b019942beae8da19923d299d4f6acb",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "3eddf4ba659789206bdb258ac912a7d6e660f15bc56e249208039ac9116fe1b8",
+      "flags_sha256": "0f2e478e62d85dd76426793fd6f3de131f099b50190a669f208fcead5cf1ff11",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885261,
+      "pair_count": 16056392,
+      "gpu": "Quadro P5000",
+      "seconds": 500.99135551200015
+    },
+    {
+      "case": 1048,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "25ee09e9c62d4399346fec0ef5abc0d4eadb6e4bb6a6a6a124331d3dadc4a669",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "3eddf4ba659789206bdb258ac912a7d6e660f15bc56e249208039ac9116fe1b8",
+      "flags_sha256": "09800985bfa015712486fb44e8943285a5a46abaa9b859add4b66e7c1a684ae6",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885261,
+      "pair_count": 16056392,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 442.78594424622133
+    },
+    {
+      "case": 1088,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "317650d162ee444127ec309e328adbe1eacf91de9a5da228df8f19718b29401c",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "ff5d10cd15ce5773b199032c1d6d5d2d355837d36ff801dc6e239a096efebfd4",
+      "flags_sha256": "48d5c003c1cedff7c1bc766ea1c86205364040f6fdb7d1498a3e8f6c3f624607",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884135,
+      "pair_count": 16028508,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 230.50095768412575
+    },
+    {
+      "case": 1088,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "8c15bc1718ba5f11e005319851540aaddf909cd56c0c89e3b6ade9db7eeb296a",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "ff5d10cd15ce5773b199032c1d6d5d2d355837d36ff801dc6e239a096efebfd4",
+      "flags_sha256": "3043d08c5b2ad07f74929c4e02499dc4518f8cc045fb72b306e67587ec2407ba",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884135,
+      "pair_count": 16028508,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 257.4662409500452
+    },
+    {
+      "case": 1128,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "99197c6007ad1eadde0d455c15f81ecc531b89bd5701a86f986c8049cc4aec77",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "7b005033ed54cd1de930131de5849443751e97f7abbe99eaa588863d7d4b0b72",
+      "flags_sha256": "a75bbbef077c176c9ac4f5f0a40c0ea8895b4fc2ab8b71121c4064a51ea682a0",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883583,
+      "pair_count": 16020325,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 253.95968585193623
+    },
+    {
+      "case": 1128,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "91ce58367d74649412d8b52482b67252d1644a6e7bdd04858499d4e5fa96bf6a",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "7b005033ed54cd1de930131de5849443751e97f7abbe99eaa588863d7d4b0b72",
+      "flags_sha256": "092df0988c66326e838d99407aef778ee888180bcd9b3f4305d67555da39b5b9",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883583,
+      "pair_count": 16020325,
+      "gpu": "Quadro P5000",
+      "seconds": 514.9057059289771
+    },
+    {
+      "case": 1009,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "6ce17766c6ab942323b026c8e845a2d857a30e7f5f45b6f1ac99687299bf9fe2",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "f70a7ab340af00acbfbd0c134e566140faaa925e4c732262b404785af49c7b8a",
+      "flags_sha256": "5e8e7c409cdec22a6b8b9f7444f740e7066b2bf95928d55e17fa0a7ffd111d82",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885779,
+      "pair_count": 16065695,
+      "gpu": "Quadro P5000",
+      "seconds": 503.81373939599143
+    },
+    {
+      "case": 1009,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "79916e61258aab5857bcc04a7de805b239f446e03608e943ccf49e35fad97860",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "f70a7ab340af00acbfbd0c134e566140faaa925e4c732262b404785af49c7b8a",
+      "flags_sha256": "3f9095d8dc38f1058f75eef76091ad09ba634b2f2e2b4e7953d053cb44827823",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885779,
+      "pair_count": 16065695,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 445.918530699797
+    },
+    {
+      "case": 1049,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "367219cb8decf9cfe9c592c3875ed33b72a75677938df408828a4052113e3b78",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "b934f742fb9421d3de95eac3a78bc4294c04e05d749289ae6d3f4e61dc7a0b6a",
+      "flags_sha256": "e4295dd1fb469b8e3472fe4f1fb7510af42110b81a995ffb2c6701f8a60ba467",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883884,
+      "pair_count": 16025667,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 242.9621554929763
+    },
+    {
+      "case": 1049,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "895d672fbed35384a8fd930fe0925de9f3d85b57d58ede0eec1f5de2dcfcde5c",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "b934f742fb9421d3de95eac3a78bc4294c04e05d749289ae6d3f4e61dc7a0b6a",
+      "flags_sha256": "f60feb05cdc65ce81f70710243bd4beccfd70912e9d6da6e5ee78cbf5d9b4a66",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 4.440892098500626e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 883884,
+      "pair_count": 16025667,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 254.07779842196032
+    },
+    {
+      "case": 1089,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "346a407e86afaa3a381e4df51bd46cec17bd57bcf2749bbc025cd23964d86cd1",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "a3b36f635308c1a8073850d5b5e6ef75ac410f0566c3276a816df7a225e3b177",
+      "flags_sha256": "0a3f96d58611385871efe1e3c1926fbb539e62e9280575adeb242fc82d625754",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885640,
+      "pair_count": 16068461,
+      "gpu": "NVIDIA A40-16Q",
+      "seconds": 238.8599497700343
+    },
+    {
+      "case": 1089,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "2717149e1ead93971de15d03654cb439d42e15b91b06bd2048d732b10d7045c6",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "a3b36f635308c1a8073850d5b5e6ef75ac410f0566c3276a816df7a225e3b177",
+      "flags_sha256": "93da9c902f8e4cc6b8b8d333b723e835477d9a1a577ce62cdefb5420068d878c",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 2.220446049250313e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 885640,
+      "pair_count": 16068461,
+      "gpu": "Quadro P5000",
+      "seconds": 508.74564344401006
+    },
+    {
+      "case": 1129,
+      "axis": 1,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "6acf0c847e2e59f1866bf31a6a3aed72a7bcce6f315c30fddef127ddd1648fbd",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "81c35ca3b41dc4c50f7f6ea41fa5011bc3f645362fbfd87a5e20c50568bb67de",
+      "flags_sha256": "8a2f1be6fa150a2c6ac26f6e46abe5663d046c7ad083116d8d4fd726a20dac3e",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884076,
+      "pair_count": 16027327,
+      "gpu": "Quadro P5000",
+      "seconds": 504.83650482201483
+    },
+    {
+      "case": 1129,
+      "axis": 2,
+      "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+      "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+      "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+      "data_sha256": "0d7c938eb7d772b51101838e5849e8811792d4a8143722d9e895e4b00ca8c6b0",
+      "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+      "parent_sha256": "81c35ca3b41dc4c50f7f6ea41fa5011bc3f645362fbfd87a5e20c50568bb67de",
+      "flags_sha256": "78fbe95317aae9e7bcbe1e43ac4506e816e7ae8b31de42f195ec52a496e6a699",
+      "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+      "pool_max_abs": 6.661338147750939e-16,
+      "half_bank_identity_passed": true,
+      "legacy_replay": null,
+      "parent_count": 884076,
+      "pair_count": 16027327,
+      "gpu": "Tesla V100-SXM2-32GB",
+      "seconds": 442.84189153881744
+    }
+  ],
+  "pilot": {
+    "manifest_sha256": "2ecfcc0b771ee69d7136c93498282d80c3e1061847bbf6fd7026af12b3a592b3",
+    "records": [
+      {
+        "case": 1000,
+        "axis": 1,
+        "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+        "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+        "data_sha256": "b8e2d67808ab32a2d29ae94408e324962d088793d9871a1020f56d1469116732",
+        "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+        "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+        "flags_sha256": "904da8f40e47d8fd3b998e14ef977bd7295a513bfdbc04a4f01aa1c6c79ce90e",
+        "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+        "pool_max_abs": 6.661338147750939e-16,
+        "half_bank_identity_passed": true,
+        "legacy_replay": {
+          "legacy_response_max_abs": 4.440892098500626e-16,
+          "legacy_count_max_abs": 1.7462298274040222e-10,
+          "portable_minus_legacy_response_terms": [
+            [
+              -0.00045521929487724044,
+              -0.00021826001883749793,
+              0.00011393588431213297,
+              0.00017449782834620046
+            ]
+          ]
+        },
+        "parent_count": 883944,
+        "pair_count": 16024507,
+        "gpu": "NVIDIA A40-8Q",
+        "seconds": 520.9222232970642
+      },
+      {
+        "case": 1000,
+        "axis": 2,
+        "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+        "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+        "data_sha256": "14aaecb44a81b187a818448edd13c200f664ce063ccbaacbc8006ea35a8618dd",
+        "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+        "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+        "flags_sha256": "18360de2a5acb5f8f856e3688e8945bb8390955e8a272aec9e4a6880a7a057b5",
+        "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+        "pool_max_abs": 6.661338147750939e-16,
+        "half_bank_identity_passed": true,
+        "legacy_replay": null,
+        "parent_count": 883944,
+        "pair_count": 16024507,
+        "gpu": "NVIDIA A40-8Q",
+        "seconds": 248.45433199498802
+      }
+    ]
+  },
+  "cuts": {
+    "mag24.9_radius_gt0.56": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.8435692237949427,
+            -0.0004832121280755699
+          ],
+          [
+            0.0008015746912927025,
+            0.8421870288621721
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.001295838710988848,
+            0.0013237988967495118
+          ],
+          [
+            0.001262960642121528,
+            0.0015961009434548128
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8410256402385897,
+              -0.0030375782144042513
+            ],
+            [
+              -0.0016473575943888653,
+              0.839064659310398
+            ]
+          ],
+          [
+            [
+              0.8460564671805598,
+              0.0021374676523469144
+            ],
+            [
+              0.003222109962024512,
+              0.8452062547847814
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.8467307073386151,
+            0.0025589054513231293
+          ],
+          [
+            -0.0009578956129773278,
+            0.8351749578623446
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00030326520832330375,
+            0.00010686517728288519
+          ],
+          [
+            5.5141850512801605e-05,
+            0.00023768513782816637
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8461445048541888,
+              0.0023587812096290866
+            ],
+            [
+              -0.0010648300338139984,
+              0.8347140704754885
+            ]
+          ],
+          [
+            [
+              0.8473160451262695,
+              0.0027729099917155483
+            ],
+            [
+              -0.0008510391469259804,
+              0.8356414846755005
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.6900039965707546,
+            0.002460664256605764
+          ],
+          [
+            -0.0010561532901818833,
+            0.677500675720258
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00027173099972198394,
+            0.00010643853541174332
+          ],
+          [
+            5.3924452115146876e-05,
+            0.00021044694719057466
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.6894818607015817,
+              0.0022624584820601745
+            ],
+            [
+              -0.0011609615516254257,
+              0.6770854352426492
+            ]
+          ],
+          [
+            [
+              0.6905175496764844,
+              0.002674169171934501
+            ],
+            [
+              -0.0009526416771604853,
+              0.6779081407570369
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.15672671076786054,
+            9.8241194717364e-05
+          ],
+          [
+            9.825767720455599e-05,
+            0.15767428214208654
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00013033071113535463,
+            7.957086554283797e-06
+          ],
+          [
+            7.909964796434862e-06,
+            0.0001279067209323437
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.15645992669086142,
+              8.28821890039237e-05
+            ],
+            [
+              8.303013770709139e-05,
+              0.1574145540991994
+            ]
+          ],
+          [
+            [
+              0.1569812907142027,
+              0.00011369426955210501
+            ],
+            [
+              0.00011365886338684027,
+              0.15792459316550533
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.8389237838255234,
+            -0.0021159051483667195
+          ],
+          [
+            0.000979718297424673,
+            0.8396467473120922
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002966670745015885,
+            8.498240671099811e-05
+          ],
+          [
+            0.00010212510191489852,
+            0.00027764218472575193
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8383378714686988,
+              -0.0022830370651823807
+            ],
+            [
+              0.0007822934210124326,
+              0.8391154908502169
+            ]
+          ],
+          [
+            [
+              0.8394959791283954,
+              -0.0019495012240307895
+            ],
+            [
+              0.0011791908976829936,
+              0.8401923365321755
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          -0.3733753265674489,
+          0.8395930617669745
+        ],
+        "jackknife_se": [
+          0.1537962233717638,
+          0.18162532649027271
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.6769196153472556,
+            0.48585355927330154
+          ],
+          [
+            -0.0787610631743233,
+            1.1742811075824688
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          0.5537380223309407,
+          0.3025417008059472
+        ],
+        "jackknife_se": [
+          0.15526961352001584,
+          0.17926509302213608
+        ],
+        "bootstrap_ci95": [
+          [
+            0.24545897513743145,
+            -0.04687540841299853
+          ],
+          [
+            0.8536906636428515,
+            0.6374353572909763
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          -0.9271133488983896,
+          0.5370513609610272
+        ],
+        "jackknife_se": [
+          0.010088678178504664,
+          0.015621623948641618
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.9470152800848355,
+            0.5072770910315227
+          ],
+          [
+            -0.9078389319916991,
+            0.5669415029635322
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 0.2331088675997628,
+        "jackknife_se": 0.13321569316906562,
+        "bootstrap_ci95": [
+          -0.026076896863137106,
+          0.4862320597086653
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -1.2129683883344233,
+        "jackknife_se": 0.2056608651789949,
+        "bootstrap_ci95": [
+          -1.6134699328939432,
+          -0.8196930916273314
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          0.01078326459251766,
+          0.007255228118085988
+        ],
+        "jackknife_se": [
+          0.008026029713419435,
+          0.00786816128863783
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.004869239884907617,
+            -0.007684175390742509
+          ],
+          [
+            0.026375449969338046,
+            0.022401868635065214
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.56": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.8240180632827689,
+            -0.0005461861993039251
+          ],
+          [
+            -5.18940560743816e-05,
+            0.8230703361329272
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0012793276778801895,
+            0.0011954619662497103
+          ],
+          [
+            0.0011126085254383239,
+            0.001601001515556097
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8215331721685993,
+              -0.0028193434567404373
+            ],
+            [
+              -0.0021955027483218812,
+              0.8199269713076583
+            ]
+          ],
+          [
+            [
+              0.826495579350659,
+              0.0018424539460169967
+            ],
+            [
+              0.002095613907216183,
+              0.8260736404759494
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.8267699459375369,
+            0.002457666382592067
+          ],
+          [
+            -0.0008258359826142055,
+            0.8157104659671156
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002928244677774221,
+            9.46467064389981e-05
+          ],
+          [
+            5.288581064470899e-05,
+            0.00022634700995989105
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8262014593849019,
+              0.002280274715921861
+            ],
+            [
+              -0.0009292288630388072,
+              0.8152709181285069
+            ]
+          ],
+          [
+            [
+              0.827333917487652,
+              0.002648317634483663
+            ],
+            [
+              -0.0007237706323335909,
+              0.8161527626077657
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.6647763268801725,
+            0.002362138988656182
+          ],
+          [
+            -0.0009216197215831977,
+            0.6526939547730046
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00025591235427297176,
+            9.362909282111144e-05
+          ],
+          [
+            5.163083100535676e-05,
+            0.00019323200878272685
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.6642812183604949,
+              0.002185096469899158
+            ],
+            [
+              -0.001023624609568972,
+              0.6523086809527529
+            ]
+          ],
+          [
+            [
+              0.6652587456468414,
+              0.002549642866170063
+            ],
+            [
+              -0.000822407226325496,
+              0.6530652801865825
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.16199361905736434,
+            9.55273939358859e-05
+          ],
+          [
+            9.578373896899388e-05,
+            0.16301651119411084
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00013084336236322187,
+            7.689495181179906e-06
+          ],
+          [
+            7.64519560899336e-06,
+            0.0001290043402091835
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.16172708778886916,
+              8.059585744712487e-05
+            ],
+            [
+              8.104510694393124e-05,
+              0.1627542180254206
+            ]
+          ],
+          [
+            [
+              0.16224528139003713,
+              0.00011049163502417746
+            ],
+            [
+              0.00011059921562487248,
+              0.1632680830729436
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.8196214950552915,
+            -0.002046469365775462
+          ],
+          [
+            0.0010094677928573943,
+            0.8203803330810077
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00028835562877740754,
+            7.86378530716694e-05
+          ],
+          [
+            9.906602962126901e-05,
+            0.00027444549401813424
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8190584551733805,
+              -0.0022010085018545522
+            ],
+            [
+              0.0008170050449856755,
+              0.8198519454218465
+            ]
+          ],
+          [
+            [
+              0.8201762486607973,
+              -0.0018918410017777925
+            ],
+            [
+              0.0012024740366252135,
+              0.8209169910862923
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          -0.33284744665548205,
+          0.9022650159435708
+        ],
+        "jackknife_se": [
+          0.15275907864863267,
+          0.1870636112400995
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.6282106502708048,
+            0.5318267568941221
+          ],
+          [
+            -0.04114547410628636,
+            1.2557062378132293
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          0.5364144613094757,
+          0.32789706718310274
+        ],
+        "jackknife_se": [
+          0.15438812330463367,
+          0.18383092039002513
+        ],
+        "bootstrap_ci95": [
+          [
+            0.2357117929180491,
+            -0.034876316591948286
+          ],
+          [
+            0.8312587870963295,
+            0.6726957830954493
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          -0.8692619079649577,
+          0.574367948760468
+        ],
+        "jackknife_se": [
+          0.010097357721237666,
+          0.015725638501270116
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.8887290600304543,
+            0.5445291460898877
+          ],
+          [
+            -0.8498552545003277,
+            0.6049480327560919
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 0.28470878464404437,
+        "jackknife_se": 0.1378043140669993,
+        "bootstrap_ci95": [
+          0.018702245595203924,
+          0.54626686354356
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -1.2351124625990528,
+        "jackknife_se": 0.20173285706009253,
+        "bootstrap_ci95": [
+          -1.6160134158664146,
+          -0.8391390412589858
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          0.0090809654048285,
+          0.01401919019410336
+        ],
+        "jackknife_se": [
+          0.008549300355821512,
+          0.008138310249145395
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.007949443739621032,
+            -0.00137360266761144
+          ],
+          [
+            0.025046818380501656,
+            0.029832780230406027
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.56": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.807271361736844,
+            -4.534076291792959e-05
+          ],
+          [
+            9.247126928431024e-05,
+            0.8055233898392636
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0012358995228360997,
+            0.0011426948436618347
+          ],
+          [
+            0.0012295574443756088,
+            0.00156468576130651
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8049121702687316,
+              -0.0022681769152034137
+            ],
+            [
+              -0.0023161198050930037,
+              0.8024932827110098
+            ]
+          ],
+          [
+            [
+              0.8096602294738351,
+              0.0022496508242358716
+            ],
+            [
+              0.0024382226121128178,
+              0.808451823755825
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.8082134263702226,
+            0.0022948552621867547
+          ],
+          [
+            -0.0006736657905074845,
+            0.797512194053138
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002835943976747651,
+            9.030095882712845e-05
+          ],
+          [
+            5.1045019416792206e-05,
+            0.00023186018955606878
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8076637268410948,
+              0.002128571624387875
+            ],
+            [
+              -0.000773224573007526,
+              0.7970601964736552
+            ]
+          ],
+          [
+            [
+              0.8087618332040932,
+              0.0024762397151851696
+            ],
+            [
+              -0.0005747991823913315,
+              0.797964698505937
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.6413577508300133,
+            0.002204716940213715
+          ],
+          [
+            -0.0007638531034163606,
+            0.6295701600674867
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00024006568827460682,
+            8.94764601560979e-05
+          ],
+          [
+            4.922886475231312e-05,
+            0.00019344218778766947
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.6408921774031668,
+              0.002039508257984793
+            ],
+            [
+              -0.000861070990752775,
+              0.6291829373033456
+            ]
+          ],
+          [
+            [
+              0.6418100448877971,
+              0.0023846292767294042
+            ],
+            [
+              -0.0006691647276467627,
+              0.6299431475432966
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.1668556755402093,
+            9.013832197303734e-05
+          ],
+          [
+            9.018731290887396e-05,
+            0.1679420339856514
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00013167112919562282,
+            7.641643487235634e-06
+          ],
+          [
+            7.632602359604864e-06,
+            0.0001298909590313828
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.16658854732640305,
+              7.541040264257526e-05
+            ],
+            [
+              7.544908812896634e-05,
+              0.16767680819584757
+            ]
+          ],
+          [
+            [
+              0.16710634667392085,
+              0.00010480705327834316
+            ],
+            [
+              0.00010486940326606995,
+              0.16819346002685148
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.8016981591319305,
+            -0.0019858422229536202
+          ],
+          [
+            0.0010422767786561708,
+            0.802455143068266
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002779625220744179,
+            7.910739045135496e-05
+          ],
+          [
+            9.298149966031987e-05,
+            0.00026415748102445323
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8011558097551887,
+              -0.0021415509653442766
+            ],
+            [
+              0.0008643141456098468,
+              0.8019414223065943
+            ]
+          ],
+          [
+            [
+              0.8022326734164196,
+              -0.0018319526922523214
+            ],
+            [
+              0.0012235748758806372,
+              0.8029737612356191
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          -0.11656136889602875,
+          1.0045232970559148
+        ],
+        "jackknife_se": [
+          0.1529664192847904,
+          0.1855821613676766
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.4137934557329878,
+            0.6447036745024343
+          ],
+          [
+            0.17968071021207835,
+            1.3496555019390526
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          0.6951746790772262,
+          0.38235741866714523
+        ],
+        "jackknife_se": [
+          0.1553580027361897,
+          0.18305575483623865
+        ],
+        "bootstrap_ci95": [
+          [
+            0.3928249062011685,
+            0.026256095089025617
+          ],
+          [
+            0.9946793338984409,
+            0.7272321636355693
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          -0.8117360479732549,
+          0.6221658783887696
+        ],
+        "jackknife_se": [
+          0.009430891681880898,
+          0.01444251314493044
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.8300579540709124,
+            0.594864102429773
+          ],
+          [
+            -0.7935642013178665,
+            0.6502335599327058
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 0.44398096407994303,
+        "jackknife_se": 0.13593839949636743,
+        "bootstrap_ci95": [
+          0.18509066429644006,
+          0.7030216942690728
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -1.1210846659519436,
+        "jackknife_se": 0.2043573689957898,
+        "bootstrap_ci95": [
+          -1.5087964089652448,
+          -0.7269146040764252
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          0.013957625068306001,
+          0.011637663064623105
+        ],
+        "jackknife_se": [
+          0.00853927320897465,
+          0.008503790463458007
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.002510478043934727,
+            -0.004564290337371046
+          ],
+          [
+            0.03066936054163499,
+            0.0283188963384473
+          ]
+        ]
+      }
+    },
+    "mag24.9_radius_gt0.60": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.924685991842458,
+            0.00029218855062288943
+          ],
+          [
+            0.000822131275057552,
+            0.9221974903839643
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.001300555319389578,
+            0.001398629991975422
+          ],
+          [
+            0.0012336692963686123,
+            0.0015868881454675025
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9221666815422018,
+              -0.0024422714293747317
+            ],
+            [
+              -0.0015271060623279695,
+              0.919127488558427
+            ]
+          ],
+          [
+            [
+              0.9272289577884056,
+              0.002998154975466481
+            ],
+            [
+              0.0031847457155294804,
+              0.9251823466269486
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.9190870877414977,
+            0.0025484116977498314
+          ],
+          [
+            -0.0005944986398434093,
+            0.8972379804580224
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.000285042567202319,
+            9.723245320093893e-05
+          ],
+          [
+            6.914782063606902e-05,
+            0.00025153100430140406
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9185311024222071,
+              0.002357877712632822
+            ],
+            [
+              -0.0007293633416240223,
+              0.8967428942319038
+            ]
+          ],
+          [
+            [
+              0.9196434991177957,
+              0.002734817922046588
+            ],
+            [
+              -0.00046062180454340887,
+              0.8977217393821655
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.7507176125342333,
+            0.002442324800423068
+          ],
+          [
+            -0.0007006996413351724,
+            0.7278408288910323
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00025216203113166544,
+            9.53491271626329e-05
+          ],
+          [
+            6.701978031051444e-05,
+            0.00022683979405538327
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.7502263870519218,
+              0.002256064533946396
+            ],
+            [
+              -0.0008331074950728004,
+              0.7273920013166216
+            ]
+          ],
+          [
+            [
+              0.7511909002932855,
+              0.0026261264910212717
+            ],
+            [
+              -0.0005698582657171548,
+              0.7282743032184106
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.1683694752072644,
+            0.00010608689732676152
+          ],
+          [
+            0.00010620100149176126,
+            0.16939715156699028
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0001326661325305337,
+            8.576726495414526e-06
+          ],
+          [
+            8.554726420035621e-06,
+            0.0001309175369140374
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.1680989682594172,
+              8.942061582228648e-05
+            ],
+            [
+              8.950666741849458e-05,
+              0.16913403271771707
+            ]
+          ],
+          [
+            [
+              0.16862896245388123,
+              0.00012285768847839043
+            ],
+            [
+              0.00012294773863033546,
+              0.16965448507269157
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.9195451340524815,
+            -0.0023671569035365212
+          ],
+          [
+            0.0007257462687545113,
+            0.9201042273417009
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002910160234824267,
+            8.08522900510857e-05
+          ],
+          [
+            8.779812604540464e-05,
+            0.00027422160004931373
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9189748847439906,
+              -0.0025279299316663824
+            ],
+            [
+              0.0005577006648171361,
+              0.9195655374666747
+            ]
+          ],
+          [
+            [
+              0.9201037319292589,
+              -0.0022059454353133877
+            ],
+            [
+              0.0008944508596174024,
+              0.9206413460105425
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          0.6091810205623327,
+          2.7818160253537894
+        ],
+        "jackknife_se": [
+          0.14548435740335558,
+          0.17030955339431078
+        ],
+        "bootstrap_ci95": [
+          [
+            0.32403059273360013,
+            2.454264414773212
+          ],
+          [
+            0.8944078280265437,
+            3.0999439606592043
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          0.5590653030069781,
+          0.22750281762220492
+        ],
+        "jackknife_se": [
+          0.14470322822629383,
+          0.16619408340421038
+        ],
+        "bootstrap_ci95": [
+          [
+            0.2732645381742288,
+            -0.09340229608846254
+          ],
+          [
+            0.8413388259500237,
+            0.534701571696724
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          0.0501157175553546,
+          2.5543132077315844
+        ],
+        "jackknife_se": [
+          0.010169396537124255,
+          0.013364654778430322
+        ],
+        "bootstrap_ci95": [
+          [
+            0.030380463392893353,
+            2.5282269112698788
+          ],
+          [
+            0.06947065846589107,
+            2.580198657898008
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 1.695498522958061,
+        "jackknife_se": 0.12291320350088317,
+        "bootstrap_ci95": [
+          1.4557835723025283,
+          1.929063097456457
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -2.1726350047914567,
+        "jackknife_se": 0.19977853256412637,
+        "bootstrap_ci95": [
+          -2.5549716392869604,
+          -1.7718844827770677
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          -0.013249271236825955,
+          -0.007502957314597936
+        ],
+        "jackknife_se": [
+          0.011975647115154062,
+          0.011196028196470783
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.03675413373528447,
+            -0.02919272008075624
+          ],
+          [
+            0.009894406996530103,
+            0.014033007228478334
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.60": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.9048671238613875,
+            0.00032416559586618236
+          ],
+          [
+            -0.0002390198035154162,
+            0.9023800298477103
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0011854897538704297,
+            0.0013435897790871122
+          ],
+          [
+            0.0010787831129746921,
+            0.001583965085310142
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9025615066247776,
+              -0.0022914676374186024
+            ],
+            [
+              -0.0023046812012565603,
+              0.8993212555466915
+            ]
+          ],
+          [
+            [
+              0.9071704199205476,
+              0.002973955307993247
+            ],
+            [
+              0.001806525821347359,
+              0.9053814874198101
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.8989762978433261,
+            0.00245478809763969
+          ],
+          [
+            -0.0004927161725066392,
+            0.8783257918689055
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.000280290865420109,
+            8.989454198930693e-05
+          ],
+          [
+            6.622957967777729e-05,
+            0.00024314562094075623
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8984289508756845,
+              0.002279214123871468
+            ],
+            [
+              -0.0006216211989013049,
+              0.8778443381202188
+            ]
+          ],
+          [
+            [
+              0.8995195200379816,
+              0.002625574423779715
+            ],
+            [
+              -0.0003636651849029528,
+              0.8787897962344379
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.7246023479243616,
+            0.002351680307382132
+          ],
+          [
+            -0.0005962194076318094,
+            0.7028357594927879
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002437820084869692,
+            8.745213157962166e-05
+          ],
+          [
+            6.426973937094404e-05,
+            0.0002137331724747681
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.724123455020022,
+              0.0021800222626475233
+            ],
+            [
+              -0.0007209977249401506,
+              0.7024144741060785
+            ]
+          ],
+          [
+            [
+              0.7250635720841125,
+              0.0025199232253572774
+            ],
+            [
+              -0.00047062936561928113,
+              0.7032468148411641
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.17437394991896454,
+            0.00010310779025755825
+          ],
+          [
+            0.00010350323512517354,
+            0.1754900323761176
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00013288835652654275,
+            8.419118927340303e-06
+          ],
+          [
+            8.367117281638251e-06,
+            0.00013172238144872747
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.17410386221102186,
+              8.6774885675471e-05
+            ],
+            [
+              8.732850930698752e-05,
+              0.1752248778418316
+            ]
+          ],
+          [
+            [
+              0.1746318952373061,
+              0.00011966897635359852
+            ],
+            [
+              0.00011992574916372457,
+              0.17574833462359568
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.8998659863046026,
+            -0.002307930310482303
+          ],
+          [
+            0.0007549050540656707,
+            0.9004879858079566
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002812573421849179,
+            7.861343897939045e-05
+          ],
+          [
+            8.633385448960722e-05,
+            0.0002727525702955879
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.899309692976699,
+              -0.002460847415055719
+            ],
+            [
+              0.000590761898021258,
+              0.8999527671520173
+            ]
+          ],
+          [
+            [
+              0.9004072388777508,
+              -0.0021506708275565805
+            ],
+            [
+              0.0009216450548086607,
+              0.9010210545866043
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          0.6552815721831085,
+          2.7386464341007333
+        ],
+        "jackknife_se": [
+          0.13285812526696691,
+          0.17290987034726604
+        ],
+        "bootstrap_ci95": [
+          [
+            0.39519925489476304,
+            2.40400378935593
+          ],
+          [
+            0.9174788123602251,
+            3.0637188639978175
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          0.5557647064006188,
+          0.21011319080019852
+        ],
+        "jackknife_se": [
+          0.13142707492986716,
+          0.1689831330576193
+        ],
+        "bootstrap_ci95": [
+          [
+            0.2999897078776764,
+            -0.11889186157151399
+          ],
+          [
+            0.8122709829491004,
+            0.5272394420011999
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          0.09951686578248964,
+          2.5285332433005347
+        ],
+        "jackknife_se": [
+          0.010087899839558044,
+          0.013124644382036414
+        ],
+        "bootstrap_ci95": [
+          [
+            0.07973778627786143,
+            2.503231425476408
+          ],
+          [
+            0.11855505141698475,
+            2.5537650648356953
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 1.6969640031419209,
+        "jackknife_se": 0.12285305229626364,
+        "bootstrap_ci95": [
+          1.4545101233766056,
+          1.929744338971685
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -2.083364861917625,
+        "jackknife_se": 0.18635106544339608,
+        "bootstrap_ci95": [
+          -2.4431701561219983,
+          -1.7207021350256246
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          -0.019189450472922864,
+          -0.0005632791554077698
+        ],
+        "jackknife_se": [
+          0.011706506797817364,
+          0.010314677416222825
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.04179340029917822,
+            -0.020080394978967964
+          ],
+          [
+            0.0034403405417837477,
+            0.01961039898912275
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.60": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.8881102139614787,
+            0.0009304046055699147
+          ],
+          [
+            3.752771286074654e-05,
+            0.8848524479215396
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0011907363523269302,
+            0.001320351856964273
+          ],
+          [
+            0.0012125892439644977,
+            0.0015948888657320631
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.885820821545847,
+              -0.001657098323274078
+            ],
+            [
+              -0.0022932628721531135,
+              0.8818160475550378
+            ]
+          ],
+          [
+            [
+              0.8904569831641724,
+              0.0035133122874630844
+            ],
+            [
+              0.0023341032675338953,
+              0.8878695169350547
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.8804618794396738,
+            0.002286675195947946
+          ],
+          [
+            -0.00036183176977864996,
+            0.8607913273587775
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002743710624733775,
+            8.346347453144354e-05
+          ],
+          [
+            6.258229395393673e-05,
+            0.0002496399039244416
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8799211229319458,
+              0.0021217951248937586
+            ],
+            [
+              -0.00048404711564927334,
+              0.8602966924011759
+            ]
+          ],
+          [
+            [
+              0.8809889107606369,
+              0.002443110292618948
+            ],
+            [
+              -0.00024185540189855862,
+              0.8612732902881437
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.7005156977434718,
+            0.002189087001557981
+          ],
+          [
+            -0.00045956866247560003,
+            0.679653101265971
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.000230073376486913,
+            8.139151965518265e-05
+          ],
+          [
+            6.0021950498230586e-05,
+            0.0002157805423752273
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.7000676675239094,
+              0.002027161044382094
+            ],
+            [
+              -0.0005769505982874131,
+              0.6792283181455663
+            ]
+          ],
+          [
+            [
+              0.7009517084610511,
+              0.0023424242338153144
+            ],
+            [
+              -0.00034466433654861494,
+              0.6800667852453981
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.17994618169620194,
+            9.758819438996468e-05
+          ],
+          [
+            9.773689269695575e-05,
+            0.18113822609280655
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00013354018085050167,
+            8.163936375486575e-06
+          ],
+          [
+            8.156330408114632e-06,
+            0.00013238183448692218
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.17967672868381732,
+              8.176287148168602e-05
+            ],
+            [
+              8.195083554456154e-05,
+              0.18087110086181202
+            ]
+          ],
+          [
+            [
+              0.1802038999856903,
+              0.0001133932593168566
+            ],
+            [
+              0.00011355393766534214,
+              0.1813963710754039
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.8817189902250614,
+            -0.0022449090945631783
+          ],
+          [
+            0.0008184759214153569,
+            0.8823085040584597
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00027497258812712405,
+            7.697542758732064e-05
+          ],
+          [
+            7.85394633041718e-05,
+            0.0002671436274584616
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.8811764758627053,
+              -0.002396436303776698
+            ],
+            [
+              0.0006688865811199535,
+              0.8817806418057451
+            ]
+          ],
+          [
+            [
+              0.8822449276156425,
+              -0.0020912038296914785
+            ],
+            [
+              0.0009684604838796495,
+              0.8828283689872414
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          0.8686729886218769,
+          2.7952326885762657
+        ],
+        "jackknife_se": [
+          0.13832119820198627,
+          0.1768089373589071
+        ],
+        "bootstrap_ci95": [
+          [
+            0.5985786298597101,
+            2.461028389575251
+          ],
+          [
+            1.138896066568758,
+            3.1256553121880715
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          0.7248594855358448,
+          0.28832815861778993
+        ],
+        "jackknife_se": [
+          0.1380650890694736,
+          0.1728582239005339
+        ],
+        "bootstrap_ci95": [
+          [
+            0.45593596349735255,
+            -0.04081663616360226
+          ],
+          [
+            0.99328036369988,
+            0.6113430387369684
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          0.14381350308603214,
+          2.506904529958476
+        ],
+        "jackknife_se": [
+          0.009233996746235137,
+          0.012842844294402871
+        ],
+        "bootstrap_ci95": [
+          [
+            0.12590353333567395,
+            2.4819293691053317
+          ],
+          [
+            0.16134548046662367,
+            2.531162890642089
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 1.8319528385990713,
+        "jackknife_se": 0.12457393031870852,
+        "bootstrap_ci95": [
+          1.5901521199930044,
+          2.0684584126287273
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -1.9265596999543888,
+        "jackknife_se": 0.19675785103480983,
+        "bootstrap_ci95": [
+          -2.2986072573593304,
+          -1.5500773588562662
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          -0.0169805568275061,
+          -0.0030405662833965508
+        ],
+        "jackknife_se": [
+          0.01293393357928819,
+          0.010998209627119351
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.04201847383531465,
+            -0.024076625421677322
+          ],
+          [
+            0.007966971915368538,
+            0.01840053465946121
+          ]
+        ]
+      }
+    },
+    "mag24.9_radius_gt0.64": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.9777137547918952,
+            -0.001818951974737443
+          ],
+          [
+            0.0005399990179325991,
+            0.9758118879665694
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0018523628587640184,
+            0.0016466997827217114
+          ],
+          [
+            0.0014355212594797542,
+            0.0018444341687364303
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9741104551018369,
+              -0.005023770007355477
+            ],
+            [
+              -0.002220975577823538,
+              0.9722028774642015
+            ]
+          ],
+          [
+            [
+              0.9814178394867714,
+              0.001373375132623747
+            ],
+            [
+              0.0033723573871900204,
+              0.9792497767258437
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.967741800485588,
+            0.00238970613005459
+          ],
+          [
+            -0.00034923728414603555,
+            0.9472556528431049
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00031793107141270786,
+            9.63893122851315e-05
+          ],
+          [
+            6.69751701361029e-05,
+            0.00030747237209753463
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9671358656188569,
+              0.002206618795489938
+            ],
+            [
+              -0.00047851689653393163,
+              0.9466636174295632
+            ]
+          ],
+          [
+            [
+              0.9683690870456675,
+              0.0025785628012262394
+            ],
+            [
+              -0.00021740045227914873,
+              0.9478573873440936
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.7813989095810175,
+            0.0022584315972882596
+          ],
+          [
+            -0.0004804255781287281,
+            0.7597316328592572
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0002871127235984682,
+            9.426349205605838e-05
+          ],
+          [
+            6.661998583632584e-05,
+            0.0002821123969716803
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.7808448018469895,
+              0.0020794170261464423
+            ],
+            [
+              -0.0006097678945923618,
+              0.759187056910763
+            ]
+          ],
+          [
+            [
+              0.7819568251876466,
+              0.002442729155066653
+            ],
+            [
+              -0.0003480266883594381,
+              0.7602776012552035
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.18634289090457054,
+            0.00013127453276633058
+          ],
+          [
+            0.00013118829398269075,
+            0.18752401998384768
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00014760132645728267,
+            9.2333786816629e-06
+          ],
+          [
+            9.178642058184169e-06,
+            0.0001450349134443888
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.1860479717896269,
+              0.00011362005400652341
+            ],
+            [
+              0.00011358975658139397,
+              0.18723593304441336
+            ]
+          ],
+          [
+            [
+              0.18663060447948981,
+              0.00014919569330124324
+            ],
+            [
+              0.00014900482559542614,
+              0.18781001932398125
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.9687117238549949,
+            -0.002468153148337712
+          ],
+          [
+            0.0008231512044653785,
+            0.9693779454359343
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00031789242234654767,
+            9.155634582861671e-05
+          ],
+          [
+            0.00011234700158820954,
+            0.0003153360770817323
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9680959348246415,
+              -0.0026487189223324504
+            ],
+            [
+              0.0006144343611815641,
+              0.9687648023428175
+            ]
+          ],
+          [
+            [
+              0.9693297859806569,
+              -0.0022937050269433374
+            ],
+            [
+              0.0010435075283318407,
+              0.9699939660988093
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          1.0304354220623146,
+          3.014628103591188
+        ],
+        "jackknife_se": [
+          0.19131092240878617,
+          0.18981112067815886
+        ],
+        "bootstrap_ci95": [
+          [
+            0.654053014110822,
+            2.6425873239651936
+          ],
+          [
+            1.4132347890285912,
+            3.367467594325844
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          0.9292786197607539,
+          0.6637186827828767
+        ],
+        "jackknife_se": [
+          0.19081118639007102,
+          0.1881364406979635
+        ],
+        "bootstrap_ci95": [
+          [
+            0.5517897521775339,
+            0.2966748828760607
+          ],
+          [
+            1.3097633466713892,
+            1.0136329765772656
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          0.10115680230156077,
+          2.3509094208083114
+        ],
+        "jackknife_se": [
+          0.010129439749327483,
+          0.012991152857786051
+        ],
+        "bootstrap_ci95": [
+          [
+            0.08159757188726469,
+            2.325305874999511
+          ],
+          [
+            0.12048696037885887,
+            2.375108924450414
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 2.0225317628267514,
+        "jackknife_se": 0.13647426055239537,
+        "bootstrap_ci95": [
+          1.7547266594084587,
+          2.2855911126726345
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -1.9841926815288735,
+        "jackknife_se": 0.26599880819038646,
+        "bootstrap_ci95": [
+          -2.4860312264861815,
+          -1.4632982311101395
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          -0.006047881262793986,
+          -0.03886817075857696
+        ],
+        "jackknife_se": [
+          0.013013110849348518,
+          0.013397562690501595
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.031056611233134523,
+            -0.0654149646478841
+          ],
+          [
+            0.01892918790319442,
+            -0.013430803937044544
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.64": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.9582230420069332,
+            -0.0012074901370370142
+          ],
+          [
+            -0.00041614980315439324,
+            0.9569778059390306
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0017446471396899957,
+            0.0015668824146273085
+          ],
+          [
+            0.0012923960466046682,
+            0.001780969240692527
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9548217109409142,
+              -0.004186011212782627
+            ],
+            [
+              -0.0028893894288048493,
+              0.9535293593588486
+            ]
+          ],
+          [
+            [
+              0.9617423363396432,
+              0.0018590128443748278
+            ],
+            [
+              0.002102772954499379,
+              0.9603594590378652
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.9481533821931464,
+            0.0022753249631959557
+          ],
+          [
+            -0.00027140277536802826,
+            0.9289287031440402
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0003144714715614253,
+            8.884263721040479e-05
+          ],
+          [
+            6.175654200235972e-05,
+            0.0002939490990312217
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9475512855551632,
+              0.002104179576179842
+            ],
+            [
+              -0.0003891426026652464,
+              0.9283632213872508
+            ]
+          ],
+          [
+            [
+              0.9487670276702442,
+              0.0024494786331830864
+            ],
+            [
+              -0.00014788499808673382,
+              0.9295007335439238
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.7550021886909087,
+            0.002147411908666707
+          ],
+          [
+            -0.0003994753793323336,
+            0.7344930843002427
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00027694947866374056,
+            8.666557151158614e-05
+          ],
+          [
+            6.164557158283218e-05,
+            0.00026639435576985063
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.7544703325610737,
+              0.0019800182116490746
+            ],
+            [
+              -0.0005165809778658408,
+              0.733982662338323
+            ]
+          ],
+          [
+            [
+              0.7555412508403252,
+              0.0023176500511907982
+            ],
+            [
+              -0.000275883888690336,
+              0.7350032504976257
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.1931511935022376,
+            0.00012791305452925875
+          ],
+          [
+            0.0001280726039643072,
+            0.1944356188437975
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00014688920221931075,
+            9.005439257288936e-06
+          ],
+          [
+            8.91768842588209e-06,
+            0.0001452805448127828
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.19285999858457425,
+              0.00011057846025633937
+            ],
+            [
+              0.00011085311484283929,
+              0.19414910899573404
+            ]
+          ],
+          [
+            [
+              0.19343784727818628,
+              0.00014547462542838737
+            ],
+            [
+              0.0001455170769328193,
+              0.19472130197239865
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.9494336238606615,
+            -0.0024444977481190033
+          ],
+          [
+            0.0008618689835751731,
+            0.9500595962900726
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00030916909710802467,
+            9.028129454533823e-05
+          ],
+          [
+            0.00010857286092250911,
+            0.00031415625686407315
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9488382502807234,
+              -0.0026242323107709712
+            ],
+            [
+              0.0006577970808806324,
+              0.9494488272490058
+            ]
+          ],
+          [
+            [
+              0.9500324682568233,
+              -0.002273797144193697
+            ],
+            [
+              0.0010721742013914128,
+              0.950668924673436
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          1.0620285707882982,
+          3.0195108300621776
+        ],
+        "jackknife_se": [
+          0.18127794822874982,
+          0.18512808028993039
+        ],
+        "bootstrap_ci95": [
+          [
+            0.7073937772772193,
+            2.659684465388085
+          ],
+          [
+            1.4241344782893994,
+            3.366651809965779
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          0.925753831061038,
+          0.7281869133234586
+        ],
+        "jackknife_se": [
+          0.17994188149507126,
+          0.18335377132961084
+        ],
+        "bootstrap_ci95": [
+          [
+            0.5729125437974553,
+            0.37318961296907815
+          ],
+          [
+            1.2828349796048522,
+            1.0739675082638567
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          0.13627473972726012,
+          2.291323916738719
+        ],
+        "jackknife_se": [
+          0.01046296919980028,
+          0.01124141909385713
+        ],
+        "bootstrap_ci95": [
+          [
+            0.11608520102879105,
+            2.2687874879978405
+          ],
+          [
+            0.15617064707390882,
+            2.3125340916596087
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 2.040769700425238,
+        "jackknife_se": 0.1330097270063238,
+        "bootstrap_ci95": [
+          1.785239120227453,
+          2.2959964569028206
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -1.9574822592738794,
+        "jackknife_se": 0.2519957367467421,
+        "bootstrap_ci95": [
+          -2.429706774595142,
+          -1.463789419299548
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          -0.0043232738601295395,
+          -0.03505916942558862
+        ],
+        "jackknife_se": [
+          0.01231160503183614,
+          0.012445562970810108
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.02792190618137569,
+            -0.05967571397554994
+          ],
+          [
+            0.01928723512504449,
+            -0.0112736006982428
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.64": {
+      "measured_matrix": {
+        "value": [
+          [
+            0.941937411359264,
+            -0.0006630506638882122
+          ],
+          [
+            -4.821006737502266e-05,
+            0.9397882337112973
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0017815115881132137,
+            0.0015290017340480809
+          ],
+          [
+            0.0013639157254957174,
+            0.0017498189894876361
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9385225272196616,
+              -0.003597058593468035
+            ],
+            [
+              -0.002638053044166929,
+              0.9364255226829347
+            ]
+          ],
+          [
+            [
+              0.9454965030158625,
+              0.0023573186782880366
+            ],
+            [
+              0.002591374089089928,
+              0.9430689674257378
+            ]
+          ]
+        ]
+      },
+      "joint_matrix": {
+        "value": [
+          [
+            0.9303303973052164,
+            0.002075995144809682
+          ],
+          [
+            -0.00017542970409226448,
+            0.9121322195814772
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0003054555203399882,
+            8.665970976172205e-05
+          ],
+          [
+            6.383691229849554e-05,
+            0.00029419666956379404
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9297465594063008,
+              0.001909064559791695
+            ],
+            [
+              -0.00029577230377552706,
+              0.911560630695919
+            ]
+          ],
+          [
+            [
+              0.9309269067321327,
+              0.0022437389812530505
+            ],
+            [
+              -4.82163525254372e-05,
+              0.9127037284794555
+            ]
+          ]
+        ]
+      },
+      "joint_flow_matrix": {
+        "value": [
+          [
+            0.7308804712748626,
+            0.0019550659829920152
+          ],
+          [
+            -0.0002963147099957356,
+            0.7113082792544827
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.000259367165128429,
+            8.46803094767189e-05
+          ],
+          [
+            6.276538480511072e-05,
+            0.0002601933064147136
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.7303853890337385,
+              0.0017913462717737414
+            ],
+            [
+              -0.00041507133484836804,
+              0.7108133002629677
+            ]
+          ],
+          [
+            [
+              0.731388067977192,
+              0.0021185122879601413
+            ],
+            [
+              -0.00017152747124524718,
+              0.7118053990668197
+            ]
+          ]
+        ]
+      },
+      "joint_transport_matrix": {
+        "value": [
+          [
+            0.19944992603035366,
+            0.00012092916181767384
+          ],
+          [
+            0.00012088500590346992,
+            0.20082394032699455
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.00014761117306511152,
+            8.774589342177596e-06
+          ],
+          [
+            8.743589539060938e-06,
+            0.0001458734334365916
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.19915611555454016,
+              0.0001040040085388773
+            ],
+            [
+              0.00010400014507619537,
+              0.2005345671263016
+            ]
+          ],
+          [
+            [
+              0.19973553824029636,
+              0.00013796846473168576
+            ],
+            [
+              0.00013781996766748386,
+              0.20111106292855774
+            ]
+          ]
+        ]
+      },
+      "latest_matrix": {
+        "value": [
+          [
+            0.931854769888096,
+            -0.002381515188828453
+          ],
+          [
+            0.0009352093696539474,
+            0.9323444561184835
+          ]
+        ],
+        "jackknife_se": [
+          [
+            0.0003054406273797469,
+            8.713196320859173e-05
+          ],
+          [
+            9.876325751528862e-05,
+            0.0003090139902912959
+          ]
+        ],
+        "bootstrap_ci95": [
+          [
+            [
+              0.9312634473425727,
+              -0.0025526606516273276
+            ],
+            [
+              0.0007490252412405665,
+              0.9317411546731774
+            ]
+          ],
+          [
+            [
+              0.9324457199435571,
+              -0.0022170455916413097
+            ],
+            [
+              0.001128240091855312,
+              0.9329392889147096
+            ]
+          ]
+        ]
+      },
+      "joint_m_percent": {
+        "value": [
+          1.2476227894593572,
+          3.0320181149296355
+        ],
+        "jackknife_se": [
+          0.19020660939912412,
+          0.18360129696725272
+        ],
+        "bootstrap_ci95": [
+          [
+            0.8759439189827906,
+            2.6796748947138305
+          ],
+          [
+            1.6281312289490029,
+            3.3743273335948114
+          ]
+        ]
+      },
+      "latest_m_percent": {
+        "value": [
+          1.0819970876340346,
+          0.7983935061729897
+        ],
+        "jackknife_se": [
+          0.19105580229858052,
+          0.18318213855136167
+        ],
+        "bootstrap_ci95": [
+          [
+            0.7106405388358644,
+            0.44861588023452137
+          ],
+          [
+            1.463406463632913,
+            1.141277003483872
+          ]
+        ]
+      },
+      "joint_minus_latest_pp": {
+        "value": [
+          0.16562570182532266,
+          2.233624608756646
+        ],
+        "jackknife_se": [
+          0.010008909172674102,
+          0.011359627659184544
+        ],
+        "bootstrap_ci95": [
+          [
+            0.14644973566873498,
+            2.210931525168675
+          ],
+          [
+            0.18496539394147082,
+            2.2548040136144674
+          ]
+        ]
+      },
+      "joint_mean_m_percent": {
+        "value": 2.1398204521944963,
+        "jackknife_se": 0.13626877776355947,
+        "bootstrap_ci95": [
+          1.879875847965553,
+          2.4048739581737153
+        ]
+      },
+      "joint_m1_minus_m2_pp": {
+        "value": -1.7843953254702782,
+        "jackknife_se": 0.2559282357256408,
+        "bootstrap_ci95": [
+          -2.2731509611120035,
+          -1.2854231752489198
+        ]
+      },
+      "joint_half_bank_difference_pp": {
+        "value": [
+          -0.0006219443567045957,
+          -0.0377440508888105
+        ],
+        "jackknife_se": [
+          0.012384473444379126,
+          0.012152344707231056
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.02497741139823373,
+            -0.06155559230285268
+          ],
+          [
+            0.023016377593852996,
+            -0.014767044154130885
+          ]
+        ]
+      }
+    }
+  },
+  "joint_nine_cut_rms_percent": {
+    "joint": {
+      "value": 1.8034499977011744,
+      "jackknife_se": 0.10882925870163343,
+      "bootstrap_ci95": [
+        1.5972980504278647,
+        2.010639774969594
+      ]
+    },
+    "latest": {
+      "value": 0.6345722375760954,
+      "jackknife_se": 0.11008079806884263,
+      "bootstrap_ci95": [
+        0.44633468462281084,
+        0.8559576888161115
+      ]
+    },
+    "joint_minus_latest_pp": {
+      "value": 1.168877760125079,
+      "jackknife_se": 0.06961303658136338,
+      "bootstrap_ci95": [
+        1.0151554472022704,
+        1.2851211582046664
+      ]
+    }
+  },
+  "per_axis_nine_cut_rms_percent": {
+    "joint": {
+      "value": [
+        0.78635133473534,
+        2.4262142046358317
+      ],
+      "jackknife_se": [
+        0.10483645808599035,
+        0.15378555083088086
+      ],
+      "bootstrap_ci95": [
+        [
+          0.6079326252920922,
+          2.1325275328962885
+        ],
+        [
+          1.01283545244721,
+          2.710203813013808
+        ]
+      ]
+    },
+    "latest": {
+      "value": [
+        0.7539363669215913,
+        0.48676873773665513
+      ],
+      "jackknife_se": [
+        0.13816722618816527,
+        0.1498825368911359
+      ],
+      "bootstrap_ci95": [
+        [
+          0.4873988782647352,
+          0.2437770665718116
+        ],
+        [
+          1.029413756252277,
+          0.7763967735533337
+        ]
+      ]
+    }
+  },
+  "radius_contrasts": {
+    "mag24.9_radius_gt0.64 minus mag24.9_radius_gt0.60": {
+      "joint_delta_m_pp": {
+        "value": [
+          0.42125440149998195,
+          0.2328120782373988
+        ],
+        "jackknife_se": [
+          0.12930713084142803,
+          0.10050766821263508
+        ],
+        "bootstrap_ci95": [
+          [
+            0.1737316539903011,
+            0.034113178669094024
+          ],
+          [
+            0.680036916417755,
+            0.42351906182258525
+          ]
+        ]
+      },
+      "latest_delta_m_pp": {
+        "value": [
+          0.3702133167537758,
+          0.4362158651606718
+        ],
+        "jackknife_se": [
+          0.13138371472711494,
+          0.09832343949415054
+        ],
+        "bootstrap_ci95": [
+          [
+            0.12114278976886106,
+            0.24069546928561114
+          ],
+          [
+            0.631661422825132,
+            0.621983033417603
+          ]
+        ]
+      },
+      "joint_minus_latest_delta_pp": {
+        "value": [
+          0.05104108474620617,
+          -0.203403786923273
+        ],
+        "jackknife_se": [
+          0.01106351171410132,
+          0.014892101383321114
+        ],
+        "bootstrap_ci95": [
+          [
+            0.028974947394628248,
+            -0.2314469154600035
+          ],
+          [
+            0.07202812123507096,
+            -0.17436478890943577
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.64 minus mag25_radius_gt0.60": {
+      "joint_delta_m_pp": {
+        "value": [
+          0.4067469986051897,
+          0.2808643959614443
+        ],
+        "jackknife_se": [
+          0.12794414063463166,
+          0.09530408821277288
+        ],
+        "bootstrap_ci95": [
+          [
+            0.16595438096540627,
+            0.09359551665652055
+          ],
+          [
+            0.6624466939250749,
+            0.46331701223098265
+          ]
+        ]
+      },
+      "latest_delta_m_pp": {
+        "value": [
+          0.3699891246604192,
+          0.5180737225232601
+        ],
+        "jackknife_se": [
+          0.12962138019815203,
+          0.09305796334293996
+        ],
+        "bootstrap_ci95": [
+          [
+            0.12484528939693207,
+            0.3354440027950223
+          ],
+          [
+            0.6285620885540876,
+            0.6958787168666147
+          ]
+        ]
+      },
+      "joint_minus_latest_delta_pp": {
+        "value": [
+          0.03675787394477048,
+          -0.23720932656181581
+        ],
+        "jackknife_se": [
+          0.011220987028437055,
+          0.014393786235505596
+        ],
+        "bootstrap_ci95": [
+          [
+            0.014695113439479601,
+            -0.26421007068736235
+          ],
+          [
+            0.05810285624798516,
+            -0.2091425401613928
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.64 minus mag25.1_radius_gt0.60": {
+      "joint_delta_m_pp": {
+        "value": [
+          0.3789498008374803,
+          0.23678542635336974
+        ],
+        "jackknife_se": [
+          0.134472129072612,
+          0.09710319358443206
+        ],
+        "bootstrap_ci95": [
+          [
+            0.1204134443705307,
+            0.046845327969436426
+          ],
+          [
+            0.648615486094975,
+            0.4232675086379461
+          ]
+        ]
+      },
+      "latest_delta_m_pp": {
+        "value": [
+          0.3571376020981898,
+          0.5100653475551997
+        ],
+        "jackknife_se": [
+          0.13636132729740988,
+          0.09554890335384773
+        ],
+        "bootstrap_ci95": [
+          [
+            0.0977681361654481,
+            0.32231253666271886
+          ],
+          [
+            0.6294773235577837,
+            0.6924271600717669
+          ]
+        ]
+      },
+      "joint_minus_latest_delta_pp": {
+        "value": [
+          0.021812198739290523,
+          -0.27327992120183
+        ],
+        "jackknife_se": [
+          0.010922673348713727,
+          0.014350229637746846
+        ],
+        "bootstrap_ci95": [
+          [
+            0.00040964008130473005,
+            -0.3001696435448731
+          ],
+          [
+            0.04252339324362031,
+            -0.24547175420041756
+          ]
+        ]
+      }
+    }
+  },
+  "central_g1_stream_comparison": {
+    "historical_cuda_m1_percent": {
+      "value": 0.6514436691031467,
+      "jackknife_se": 0.132843716856714,
+      "bootstrap_ci95": [
+        0.39480445398064057,
+        0.9123669889126139
+      ]
+    },
+    "portable_m1_percent": {
+      "value": 0.6552815721831085,
+      "jackknife_se": 0.13285812526696691,
+      "bootstrap_ci95": [
+        0.39519925489476304,
+        0.9174788123602251
+      ]
+    },
+    "portable_minus_historical_pp": {
+      "value": 0.003837903079961791,
+      "jackknife_se": 0.007154210215439093,
+      "bootstrap_ci95": [
+        -0.00992105717523284,
+        0.01761037249287556
+      ]
+    }
+  },
+  "case_sums_sha256": "0609e18106c3361cdc2327858db29f847bfc6778ec7615b4ec7e4cdec7f501f0"
+}

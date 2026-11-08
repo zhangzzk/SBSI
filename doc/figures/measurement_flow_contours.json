@@ -1,0 +1,470 @@
+{
+  "model": "v3.9-like",
+  "flow_checkpoint": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/joint/joint_probability_refinement_full/selected.pt",
+  "flow_sha256": "bd51dbbbeeb72763f6982a958cb8f3a0b2d3906d4f78935d9d959fa85a17797e",
+  "case": 40,
+  "shear": "0.02",
+  "draws": 8192,
+  "random_seed": 12345,
+  "sources": {
+    "input_catalogue": "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case40_0.02/real0/catalogues/input/gals_info_tile180.0_-0.5.feather",
+    "cross_match": "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case40_0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather",
+    "shape_catalogue": "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case40_0.02/real0/catalogues/Shapes/shape_catalogue_detect_position_all_tile180.0_-0.5.feather",
+    "image": "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case40_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits"
+  },
+  "selected": [
+    {
+      "representative": "Bright",
+      "index_input": 438829.0,
+      "id_detec": 105310.0,
+      "r_input": 22.46820068359375,
+      "Re_input": 0.8415902652689715
+    },
+    {
+      "representative": "Typical",
+      "index_input": 244115.0,
+      "id_detec": 84801.0,
+      "r_input": 24.408287048339844,
+      "Re_input": 0.6715633909812785
+    },
+    {
+      "representative": "Faint",
+      "index_input": 136443.0,
+      "id_detec": 1109.0,
+      "r_input": 25.36389923095703,
+      "Re_input": 0.6208685440483515
+    }
+  ],
+  "feature_names": [
+    "e1_input_p",
+    "e2_input_p",
+    "sersic_n_input_p",
+    "r_input_p",
+    "circularized_Re_input_p",
+    "nbr_close_050",
+    "nbr_close_100",
+    "nbr_close_200"
+  ],
+  "flow_inputs": [
+    {
+      "e1_input_p": 0.17245652877009793,
+      "e2_input_p": -0.20960524960397406,
+      "sersic_n_input_p": 1.3992768583064747,
+      "r_input_p": 22.46820068359375,
+      "circularized_Re_input_p": 0.6449019640044069,
+      "nbr_close_050": 4.053951176717081e-06,
+      "nbr_close_100": 0.0018876271138095532,
+      "nbr_close_200": 0.030390793036375093
+    },
+    {
+      "e1_input_p": 0.05481182119517591,
+      "e2_input_p": -0.37122280774805716,
+      "sersic_n_input_p": 1.088667968513269,
+      "r_input_p": 24.408287048339844,
+      "circularized_Re_input_p": 0.45368998915376363,
+      "nbr_close_050": 6.262702803804486e-08,
+      "nbr_close_100": 0.004189805200156527,
+      "nbr_close_200": 0.08391209265879523
+    },
+    {
+      "e1_input_p": 0.40938190117695406,
+      "e2_input_p": -0.04340852027658785,
+      "sersic_n_input_p": 1.1738102755647521,
+      "r_input_p": 25.36389923095703,
+      "circularized_Re_input_p": 0.40886102498465393,
+      "nbr_close_050": 5.041291429640668e-13,
+      "nbr_close_100": 0.00028026780638038033,
+      "nbr_close_200": 0.10219171692398177
+    }
+  ],
+  "psf_radius_check": {
+    "sampling_arcsec": [
+      0.05,
+      0.025
+    ],
+    "radii_arcsec": [
+      [
+        0.97082439194738,
+        0.9727565921252883
+      ],
+      [
+        0.8077747210701756,
+        0.8112490369793977
+      ],
+      [
+        0.7826237921249265,
+        0.7846177413237608
+      ]
+    ],
+    "psf_fwhm_arcsec": 0.73,
+    "moffat_beta": 2.22406805360007,
+    "psf_truncation_fwhm": 4.5,
+    "includes_pixel": true
+  },
+  "neighbours": [
+    [
+      {
+        "index_input": 177240,
+        "x": 28.821904707372596,
+        "y": 7.199906897461915,
+        "width": 10.97199860285895,
+        "height": 10.588288798396631,
+        "angle": -37.08359221120968,
+        "recognized": true
+      },
+      {
+        "index_input": 184965,
+        "x": 11.43305698261247,
+        "y": 56.48347901819943,
+        "width": 23.313734619844166,
+        "height": 11.624215520224565,
+        "angle": 47.317566563851685,
+        "recognized": true
+      },
+      {
+        "index_input": 208596,
+        "x": 59.83776548329115,
+        "y": 36.95386612718903,
+        "width": 10.516626762239953,
+        "height": 10.502631888965992,
+        "angle": 77.9250795186115,
+        "recognized": false
+      },
+      {
+        "index_input": 218412,
+        "x": 4.499727181335402,
+        "y": 20.99552072530605,
+        "width": 10.426894235567534,
+        "height": 10.41632162066115,
+        "angle": -62.56989478596461,
+        "recognized": false
+      },
+      {
+        "index_input": 629505,
+        "x": 25.872811091805488,
+        "y": 49.10449592774603,
+        "width": 17.405219006100104,
+        "height": 13.002995616131413,
+        "angle": 44.086542083848734,
+        "recognized": false
+      },
+      {
+        "index_input": 641618,
+        "x": 47.21443099215321,
+        "y": 62.648014683456495,
+        "width": 11.76676909264728,
+        "height": 10.83497292019635,
+        "angle": -39.48113349515571,
+        "recognized": true
+      },
+      {
+        "index_input": 672184,
+        "x": 38.613005214589066,
+        "y": 26.59001446894581,
+        "width": 12.142954163371803,
+        "height": 10.441821677905853,
+        "angle": -24.467528076591,
+        "recognized": false
+      },
+      {
+        "index_input": 674967,
+        "x": 29.687620684062495,
+        "y": 48.99256287080243,
+        "width": 18.583479484729445,
+        "height": 10.895630270466933,
+        "angle": -60.58434335077212,
+        "recognized": false
+      }
+    ],
+    [
+      {
+        "index_input": 78224,
+        "x": 44.406036820450936,
+        "y": 47.21264471820177,
+        "width": 14.458518656699741,
+        "height": 10.931770675968954,
+        "angle": -46.86446355648759,
+        "recognized": true
+      },
+      {
+        "index_input": 226942,
+        "x": 60.56440741256938,
+        "y": 27.501479082049627,
+        "width": 10.957308251006083,
+        "height": 10.569205526326854,
+        "angle": -77.85960765121881,
+        "recognized": false
+      },
+      {
+        "index_input": 299677,
+        "x": 9.23560015167368,
+        "y": 56.95955230305481,
+        "width": 11.786879240599806,
+        "height": 10.94050067897737,
+        "angle": 78.54466579223661,
+        "recognized": true
+      },
+      {
+        "index_input": 471811,
+        "x": 55.93999420545697,
+        "y": 0.7164014663303533,
+        "width": 10.668338073348826,
+        "height": 10.500199820453844,
+        "angle": 15.043775497945443,
+        "recognized": false
+      },
+      {
+        "index_input": 484485,
+        "x": 29.38375287661438,
+        "y": 9.101224779036784,
+        "width": 11.724995283379073,
+        "height": 10.845310910764386,
+        "angle": -62.005772373634436,
+        "recognized": true
+      },
+      {
+        "index_input": 534803,
+        "x": 25.1551238621214,
+        "y": 54.05362704554045,
+        "width": 11.621961475075592,
+        "height": 10.499994582522133,
+        "angle": -18.830999632462728,
+        "recognized": false
+      },
+      {
+        "index_input": 578563,
+        "x": 58.89645421381465,
+        "y": 64.79603709533785,
+        "width": 10.468469323909781,
+        "height": 10.426352970624004,
+        "angle": -31.924397186242647,
+        "recognized": true
+      },
+      {
+        "index_input": 612953,
+        "x": 55.64259420158942,
+        "y": 66.10768768331036,
+        "width": 11.716437613116085,
+        "height": 10.711988778970367,
+        "angle": 62.29857123065571,
+        "recognized": false
+      },
+      {
+        "index_input": 644506,
+        "x": 6.067361555351454,
+        "y": 19.341824456304494,
+        "width": 13.485883809417356,
+        "height": 11.048437409175271,
+        "angle": 84.92396097359898,
+        "recognized": true
+      },
+      {
+        "index_input": 680613,
+        "x": 60.9127069789638,
+        "y": 12.31803736810707,
+        "width": 10.935606979212418,
+        "height": 10.707716649194547,
+        "angle": -71.50777260831894,
+        "recognized": true
+      },
+      {
+        "index_input": 684435,
+        "x": 28.96612200877098,
+        "y": 68.7841690250898,
+        "width": 13.026952278911853,
+        "height": 11.792050003995968,
+        "angle": -16.938394209223052,
+        "recognized": true
+      }
+    ],
+    [
+      {
+        "index_input": 166157,
+        "x": 70.60448891859232,
+        "y": 7.043577795717283,
+        "width": 11.989562271613865,
+        "height": 10.680257551248307,
+        "angle": -27.585360613122756,
+        "recognized": false
+      },
+      {
+        "index_input": 183985,
+        "x": 7.001914675583976,
+        "y": 12.630402379549196,
+        "width": 10.7864992834002,
+        "height": 10.443795598227478,
+        "angle": 78.2546571089356,
+        "recognized": false
+      },
+      {
+        "index_input": 209316,
+        "x": 60.16314757267173,
+        "y": 26.947764947868563,
+        "width": 10.887306140295662,
+        "height": 10.56345123705177,
+        "angle": -60.00000669503035,
+        "recognized": false
+      },
+      {
+        "index_input": 345924,
+        "x": 11.234298551768006,
+        "y": 33.067685691126826,
+        "width": 11.219880869321184,
+        "height": 10.715859367461881,
+        "angle": -32.28074906239531,
+        "recognized": true
+      },
+      {
+        "index_input": 399024,
+        "x": 63.51734542015947,
+        "y": 1.7715392688842257,
+        "width": 11.432368267838742,
+        "height": 11.348009803147109,
+        "angle": -65.74252769499378,
+        "recognized": true
+      },
+      {
+        "index_input": 402262,
+        "x": 16.992489911319353,
+        "y": 35.458072987024934,
+        "width": 10.505865249496297,
+        "height": 10.488709327099771,
+        "angle": -27.668062401043834,
+        "recognized": false
+      },
+      {
+        "index_input": 511459,
+        "x": 5.388679971551028,
+        "y": 6.331334912360035,
+        "width": 10.59761115307205,
+        "height": 10.521163504283374,
+        "angle": -27.468771750622558,
+        "recognized": false
+      },
+      {
+        "index_input": 608835,
+        "x": 70.68673472569208,
+        "y": 18.640756368020448,
+        "width": 12.246702603259491,
+        "height": 10.765023305194738,
+        "angle": -46.066480839070245,
+        "recognized": false
+      },
+      {
+        "index_input": 668989,
+        "x": 12.098065663136367,
+        "y": 51.72276065685037,
+        "width": 10.537354433835079,
+        "height": 10.479995924565229,
+        "angle": -0.35513120510199775,
+        "recognized": false
+      },
+      {
+        "index_input": 692907,
+        "x": 29.870878375364555,
+        "y": 2.97257799032559,
+        "width": 14.657767162644834,
+        "height": 10.750768649411304,
+        "angle": -75.0992785561952,
+        "recognized": false
+      }
+    ]
+  ],
+  "displayed_neighbours": [
+    [
+      {
+        "index_input": 177240,
+        "x": 28.821904707372596,
+        "y": 7.199906897461915,
+        "width": 10.97199860285895,
+        "height": 10.588288798396631,
+        "angle": -37.08359221120968,
+        "recognized": true
+      },
+      {
+        "index_input": 184965,
+        "x": 11.43305698261247,
+        "y": 56.48347901819943,
+        "width": 23.313734619844166,
+        "height": 11.624215520224565,
+        "angle": 47.317566563851685,
+        "recognized": true
+      },
+      {
+        "index_input": 208596,
+        "x": 59.83776548329115,
+        "y": 36.95386612718903,
+        "width": 10.516626762239953,
+        "height": 10.502631888965992,
+        "angle": 77.9250795186115,
+        "recognized": false
+      },
+      {
+        "index_input": 218412,
+        "x": 4.499727181335402,
+        "y": 20.99552072530605,
+        "width": 10.426894235567534,
+        "height": 10.41632162066115,
+        "angle": -62.56989478596461,
+        "recognized": false
+      },
+      {
+        "index_input": 629505,
+        "x": 25.872811091805488,
+        "y": 49.10449592774603,
+        "width": 17.405219006100104,
+        "height": 13.002995616131413,
+        "angle": 44.086542083848734,
+        "recognized": false
+      },
+      {
+        "index_input": 641618,
+        "x": 47.21443099215321,
+        "y": 62.648014683456495,
+        "width": 11.76676909264728,
+        "height": 10.83497292019635,
+        "angle": -39.48113349515571,
+        "recognized": true
+      },
+      {
+        "index_input": 672184,
+        "x": 38.613005214589066,
+        "y": 26.59001446894581,
+        "width": 12.142954163371803,
+        "height": 10.441821677905853,
+        "angle": -24.467528076591,
+        "recognized": false
+      },
+      {
+        "index_input": 674967,
+        "x": 29.687620684062495,
+        "y": 48.99256287080243,
+        "width": 18.583479484729445,
+        "height": 10.895630270466933,
+        "angle": -60.58434335077212,
+        "recognized": false
+      }
+    ],
+    [],
+    []
+  ],
+  "blend_callouts": [
+    {
+      "index_input": 184965,
+      "recognized": true,
+      "label": "Recognized\nblending"
+    },
+    {
+      "index_input": 629505,
+      "recognized": false,
+      "label": "Unrecognized\nblending"
+    }
+  ],
+  "contours_probability": [
+    0.393,
+    0.865
+  ],
+  "scope": "conditional F8 flow only; no C8 selection factor or disk-response transport",
+  "ellipse_definition": "2x PSF-broadened half-light guides; all neighbours in first stamp only",
+  "recognition": "truth identity has its own one-to-one detection crossmatch"
+}

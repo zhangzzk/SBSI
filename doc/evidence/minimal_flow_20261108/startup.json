@@ -1,0 +1,248 @@
+{
+  "no_score": {
+    "latest_progress": "PROGRESS no_score {'step': 448, 'transport': 0.016215198342397145, 'response': 0.18275952036916127, 'gradient_norm': 2.4832072257995605} seconds 88.9",
+    "restart_exists": true,
+    "startup": {
+      "arm": {
+        "name": "no_score",
+        "depth": 5,
+        "score": false
+      },
+      "config": {
+        "activation": "silu",
+        "context_dim": 16,
+        "disk_coordinate_means": [
+          6.954200483972342e-05,
+          7.782952490125879e-05
+        ],
+        "disk_coordinate_scales": [
+          0.45804567329187235,
+          0.46840216453313543
+        ],
+        "disk_map": "radial_tanh",
+        "disk_shape_means": [
+          6.080508566640609e-05,
+          -1.0973008581051203e-05
+        ],
+        "disk_shape_scales": [
+          0.3255185205074768,
+          0.32767743047089903
+        ],
+        "flow_type": "physical_disk_affine",
+        "hidden_dim": 256,
+        "mean_hidden": 0,
+        "n_flows": 10,
+        "n_layers": 3,
+        "num_bins": 8,
+        "physical_coordinate_means": [
+          2.8810985051207374,
+          -4.311298878175641
+        ],
+        "physical_coordinate_scales": [
+          1.0374631553958398,
+          1.7129817382817107
+        ],
+        "physical_map": "softplus",
+        "physical_means": [
+          3.3857862891144124,
+          791.8790777619596
+        ],
+        "physical_scales": [
+          1.14624544212879,
+          11662.411349181728
+        ],
+        "physical_units": [
+          1.14624544212879,
+          11662.411349181728
+        ],
+        "scale_limit": 3.0,
+        "tail_bound": 5.0,
+        "target_dim": 4
+      },
+      "counts": {
+        "teacher": 1379880,
+        "student": 1377320
+      },
+      "checks": {
+        "shear_numpy_replay": true,
+        "inverse_max_abs": 1.996755599975586e-05,
+        "physical_support": true,
+        "uneven_chunk_gradient_relative_error": 2.1658932011927208e-05
+      },
+      "gpu": "NVIDIA A40-16Q",
+      "provenance": {
+        "manifest": "b1c3082d81fdc917ebc0116193dd63db13f4d32470b47f3fe8e4f81ef7a09193",
+        "sources": "5a77cf69a7b89b9dc01ffac3699a8e57df1b57e2d240ed979d104c384c77f6b6",
+        "arm": {
+          "name": "no_score",
+          "depth": 5,
+          "score": false
+        }
+      }
+    }
+  },
+  "shallow": {
+    "latest_progress": "PROGRESS shallow {'step': 512, 'transport': 0.04009527151797278, 'response': 0.860447220319398, 'gradient_norm': 4.17725133895874} seconds 79.4",
+    "restart_exists": true,
+    "startup": {
+      "arm": {
+        "name": "shallow",
+        "depth": 3,
+        "score": true
+      },
+      "config": {
+        "activation": "silu",
+        "context_dim": 16,
+        "disk_coordinate_means": [
+          6.954200483972342e-05,
+          7.782952490125879e-05
+        ],
+        "disk_coordinate_scales": [
+          0.45804567329187235,
+          0.46840216453313543
+        ],
+        "disk_map": "radial_tanh",
+        "disk_shape_means": [
+          6.080508566640609e-05,
+          -1.0973008581051203e-05
+        ],
+        "disk_shape_scales": [
+          0.3255185205074768,
+          0.32767743047089903
+        ],
+        "flow_type": "physical_disk_affine",
+        "hidden_dim": 256,
+        "mean_hidden": 0,
+        "n_flows": 10,
+        "n_layers": 3,
+        "num_bins": 8,
+        "physical_coordinate_means": [
+          2.8810985051207374,
+          -4.311298878175641
+        ],
+        "physical_coordinate_scales": [
+          1.0374631553958398,
+          1.7129817382817107
+        ],
+        "physical_map": "softplus",
+        "physical_means": [
+          3.3857862891144124,
+          791.8790777619596
+        ],
+        "physical_scales": [
+          1.14624544212879,
+          11662.411349181728
+        ],
+        "physical_units": [
+          1.14624544212879,
+          11662.411349181728
+        ],
+        "scale_limit": 3.0,
+        "tail_bound": 5.0,
+        "target_dim": 4
+      },
+      "counts": {
+        "teacher": 1379880,
+        "student": 827928
+      },
+      "checks": {
+        "shear_numpy_replay": true,
+        "inverse_max_abs": 9.5367431640625e-06,
+        "physical_support": true,
+        "uneven_chunk_gradient_relative_error": 1.7304259762980838e-06
+      },
+      "gpu": "NVIDIA A40-16Q",
+      "provenance": {
+        "manifest": "b1c3082d81fdc917ebc0116193dd63db13f4d32470b47f3fe8e4f81ef7a09193",
+        "sources": "5a77cf69a7b89b9dc01ffac3699a8e57df1b57e2d240ed979d104c384c77f6b6",
+        "arm": {
+          "name": "shallow",
+          "depth": 3,
+          "score": true
+        }
+      }
+    }
+  },
+  "shallow_no_score": {
+    "latest_progress": "PROGRESS shallow_no_score {'step': 544, 'transport': 0.07860857659331034, 'response': 0.9922574736842882, 'gradient_norm': 2.043930768966675} seconds 76.3",
+    "restart_exists": true,
+    "startup": {
+      "arm": {
+        "name": "shallow_no_score",
+        "depth": 3,
+        "score": false
+      },
+      "config": {
+        "activation": "silu",
+        "context_dim": 16,
+        "disk_coordinate_means": [
+          6.954200483972342e-05,
+          7.782952490125879e-05
+        ],
+        "disk_coordinate_scales": [
+          0.45804567329187235,
+          0.46840216453313543
+        ],
+        "disk_map": "radial_tanh",
+        "disk_shape_means": [
+          6.080508566640609e-05,
+          -1.0973008581051203e-05
+        ],
+        "disk_shape_scales": [
+          0.3255185205074768,
+          0.32767743047089903
+        ],
+        "flow_type": "physical_disk_affine",
+        "hidden_dim": 256,
+        "mean_hidden": 0,
+        "n_flows": 10,
+        "n_layers": 3,
+        "num_bins": 8,
+        "physical_coordinate_means": [
+          2.8810985051207374,
+          -4.311298878175641
+        ],
+        "physical_coordinate_scales": [
+          1.0374631553958398,
+          1.7129817382817107
+        ],
+        "physical_map": "softplus",
+        "physical_means": [
+          3.3857862891144124,
+          791.8790777619596
+        ],
+        "physical_scales": [
+          1.14624544212879,
+          11662.411349181728
+        ],
+        "physical_units": [
+          1.14624544212879,
+          11662.411349181728
+        ],
+        "scale_limit": 3.0,
+        "tail_bound": 5.0,
+        "target_dim": 4
+      },
+      "counts": {
+        "teacher": 1379880,
+        "student": 826392
+      },
+      "checks": {
+        "shear_numpy_replay": true,
+        "inverse_max_abs": 4.76837158203125e-06,
+        "physical_support": true,
+        "uneven_chunk_gradient_relative_error": 1.6180319117037046e-06
+      },
+      "gpu": "NVIDIA A40-16Q",
+      "provenance": {
+        "manifest": "b1c3082d81fdc917ebc0116193dd63db13f4d32470b47f3fe8e4f81ef7a09193",
+        "sources": "5a77cf69a7b89b9dc01ffac3699a8e57df1b57e2d240ed979d104c384c77f6b6",
+        "arm": {
+          "name": "shallow_no_score",
+          "depth": 3,
+          "score": false
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "protocol": "minimal-rblend-fresh-acceptance-v1",
+  "status": "production_block0_running_on_training_compatible_measurement_stack",
+  "objective": "Test, without response tuning, whether the frozen no-|e| candidate has absolute multiplicative shear bias below 0.3% on both axes at two amplitudes.",
+  "candidate": {
+    "likelihood_config": "configs/likelihood_minimal_rblend_candidate.json",
+    "likelihood_config_sha256": "e981c0d0516647aa4b5d0a02b60cde36ec61cece6909253e344af525393577c0",
+    "inference_config": "configs/inference_v1_2.json",
+    "inference_config_sha256": "a985a6dde7b898be49a5935a4b8567ac3904fba674b5c85d6277ae5237c38203",
+    "detector_aggregation": "arithmetic_mean_probability",
+    "forbidden_changes": [
+      "feature additions or removals",
+      "checkpoint or seed selection",
+      "ensemble reweighting",
+      "probability temperature or offset",
+      "R_blend rescaling",
+      "population-cut tuning",
+      "response-selected stopping or correction"
+    ]
+  },
+  "simulation": {
+    "owner": "BlendEMU",
+    "source_commit": "46107b86fafe0700b288d23c454d9de236979c0c",
+    "source_worktree": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/blendemu_source_46107b86",
+    "source_files_sha256": {
+      "blendemu/catalog.py": "89ccab6e84a664ba14fc35e9582c27d28b2181817c753765d11c7e4dbffb4df1",
+      "configs/base_sim_config.ini": "9fd714c14f2aa2235f3666f77ef2dfedde16403f6f69779e385deb1ced049077",
+      "scripts/run_pipeline.py": "07b57c37d6e4895a4f5da2418323f01cf21985ab875898ee2bb67abe3d9046ed",
+      "scripts/run_sim.py": "4a87683ad2677a149c140d3d45db0124576cbcb4dc653babd0fe821b5dca1dad"
+    },
+    "case_first": 1001,
+    "case_last": 1760,
+    "case_count": 760,
+    "case_seed_rule": "case + 123 for galaxy identities, intrinsic properties, and positions",
+    "image_noise_seed_rule": "realization index 0; MultiBand_ImSim adds 54 times the sum of digits in tile label 180.0_-0.5, giving one fixed seed 9990 for every case and shear leg",
+    "image_noise_scope": "Cases independently resample scenes and positions but condition on one 18181-by-18181 white-noise field. The case bootstrap is therefore conditional on that frozen field; its 330,548,761 pixels make empirical Gaussian mean/variance error negligible for planning, but no independent image-noise-seed robustness claim is made.",
+    "independent_unit": "simulation case, conditional on the frozen pixel-noise field",
+    "renderer_provenance": {
+      "cancelled_job16470674_observed_checkout": "/home/z/Zekang.Zhang/MultiBand_ImSim",
+      "cancelled_job16470674_observed_at": "2026-09-13T14:13:27+02:00",
+      "cancelled_job16470674_repository_head": "1266a745be8672d426b44ef896328651510edb40",
+      "cancelled_job16470674_observed_dirty_paths": [
+        "config/kids_sims.sex",
+        "modules/ImSimObject-gen.py",
+        "modules/ImSimObject-old.py (deleted)"
+      ],
+      "cancelled_job16470674_dirty_path_relevance": "config/kids_sims.sex was active. The simple renderer imports modules/ImSimObject.py, so ImSimObject-gen.py and deleted ImSimObject-old.py were not on this execution path.",
+      "training_extraction_config_evidence": "The active config/kids_sims.sex has SHA256 5e77b565...bcdf2 and both mtime and ctime 2025-06-16, before the 2026-07-09 training catalogue production. A retained case40 producer log reports background RMS 0.336189 and threshold 0.504284, whose ratio is 1.5000015 and therefore independently matches the overlay DETECT_THRESH=1.5 rather than the committed default 1.2. The historical run did not retain a copy or hash of the complete config, so the remaining dirty-overlay parameters are date-grounded but not independently byte-recovered.",
+      "effective_files_sha256": {
+        "config/default.conv": "61375ab5728536c9e33f418fafa61fde00f48bc030cbc2888d09a704be006b46",
+        "config/default.nnw": "f216bbc66cd4ff5aab7737ae78a232f14318a9e67efa80144c25fa6d18c8d2a4",
+        "config/kids_sims.sex": "5e77b565033c4af79a4b55baf2c4fd347003099b020aed771740d587a5cbcdf2",
+        "config/sex_image.param": "65c8f76404b47981ca56bfa483ef47e90920956201795b0a4135db1443ce8a24",
+        "modules/ImSim.py": "0022e17ec1ff25007a122929a42fd2197a2df20d490dca1bb94749477250dcd7",
+        "modules/ImSimNoiseBackground.py": "86c86086dd138a1cde537e41e1bc578e3a1d11835dea1a15787d59a5b00383f6",
+        "modules/ImSimObject.py": "e768c5b2e40c4bfeb5cd29a336b05baf603f77f5b31ae491c6f4debb4eb5571a",
+        "modules/ImSimPSF.py": "104c73f29226d74f3a10de9707adbe711430c40a72eb4c974e5824f7fe800770",
+        "modules/ImSimSkySimple.py": "bf6a4a5ca9539a0156a15a44bccb9537647f0c417014f9d2757133d716803705",
+        "modules/LoadCata.py": "4cb298ebf1c421451071b1e61c7818ffe797f08356c0086813ce287289dd898f",
+        "modules/Run.py": "969c9e439854de84e12883221897d19465348ee4ef198a98b20481df0e3e674b",
+        "modules/RunConfigFile.py": "f5cc6a88ad7cf44de6f079a6b2678c6f05bbaf079ccfdddecd845b7c439a99db"
+      },
+      "frozen_snapshot_for_production": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/multiband_imsim_1266a745_snapshot",
+        "base_commit": "1266a745be8672d426b44ef896328651510edb40",
+        "overlay": "exact active config/kids_sims.sex bytes used by block 0",
+        "relative_file_manifest_sha256": "9348313dddb7e44bb0adb1dbbb73c9ea0bb286e914bd44e1cc1afb571353d5bb",
+        "manifest_definition": "SHA256 of sorted relative-path sha256sum lines for every regular file",
+        "base_config": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/base_sim_config_multiband_snapshot.ini",
+        "base_config_sha256": "9a33527b80e571d7af07b1d947c89418104320bab0161ff58e1c58d5b7bb41a2",
+        "base_config_change": "Only config_dir changes from the mutable checkout to this snapshot's byte-identical config directory.",
+        "filesystem_mode": "recursively read-only",
+        "status": "active for the restarted block 0 and every later production block"
+      }
+    },
+    "measurement_stack": {
+      "sextractor_module": "sextractor/RoyBranch-gcc-9.5.0",
+      "sextractor_version": "2.29.0 (2026-05-12 build)",
+      "sextractor_binary": "/software/opt/el_9/x86_64/sextractor/RoyBranch-gcc-9.5.0/bin/sex",
+      "sextractor_binary_sha256": "a926c9a53402b672d993a0d07c12d07b76f906eb70d0f77564ecf7a79c5f0d54",
+      "training_producer_evidence": "The retained source-catalogue SExtractor logs for cases 40, 100, and 119 each record SExtractor 2.29.0 on 2026-07-09. The non-v2 RoyBranch binary reports build date 2026-05-12; the x86-64-v2 build reports 2026-08-27 and therefore postdates those catalogues.",
+      "training_producer_logs_sha256": {
+        "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case40_0.02/real0/running_log/SExtractor/tile180.0_-0.5_bandr_rot0.sex.err.log": "e6d9de3d11e63a8d03b913ea0d70b0b44e1150afc30b82ba3432a9110ded71fb",
+        "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case100_0.02/real0/running_log/SExtractor/tile180.0_-0.5_bandr_rot0.sex.err.log": "29183d30da9fd0d26e4e6f56d37e4e20572156592de3ebd58d9e4821cef8d77f",
+        "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case119_0.02/real0/running_log/SExtractor/tile180.0_-0.5_bandr_rot0.sex.err.log": "82247293d9c65f3e434679fd83be310655d90fcb40afeacecaaf18dfe10f2bbe"
+      },
+      "training_binary_identity_limitation": "Historical logs retain version and execution date but not executable path or SHA256. Selecting the surviving May-12 non-v2 build as training-compatible is a date-grounded inference, not a recovered historical binary hash.",
+      "python_binary": "/project/ls-gruen/users/zekang.zhang/envs/sims1/bin/python",
+      "python_binary_sha256": "36d04094dbbe1db70cc8466833ca0ce5641854ddd8e0f356842cceae2c6f7451",
+      "required_package_versions": {
+        "galsim": "2.6.0",
+        "mpi4py": "4.0.1",
+        "ngmix": "2.3.1",
+        "numpy": "1.26.4",
+        "pandas": "2.2.3",
+        "pyarrow": "17.0.0"
+      },
+      "wrapper_preflight": "Hash the Python and SExtractor binaries, load the explicit pre-training 2.29.0 RoyBranch module, resolve command -v sex to the pinned path, and assert all required package versions before creating a block directory."
+    },
+    "fully_targeted": true,
+    "common_scene_and_noise_across_legs": true,
+    "legs": [
+      {"name": "g0", "g1": 0.0, "g2": 0.0, "constant_shear": 0.0, "constant_shear_angle_rad": 0.0},
+      {"name": "g1_m02", "g1": -0.02, "g2": 0.0, "constant_shear": -0.02, "constant_shear_angle_rad": 0.0},
+      {"name": "g1_p02", "g1": 0.02, "g2": 0.0, "constant_shear": 0.02, "constant_shear_angle_rad": 0.0},
+      {"name": "g1_m04", "g1": -0.04, "g2": 0.0, "constant_shear": -0.04, "constant_shear_angle_rad": 0.0},
+      {"name": "g1_p04", "g1": 0.04, "g2": 0.0, "constant_shear": 0.04, "constant_shear_angle_rad": 0.0},
+      {"name": "g2_m02", "g1": 0.0, "g2": -0.02, "constant_shear": -0.02, "constant_shear_angle_rad": 0.7853981633974483},
+      {"name": "g2_p02", "g1": 0.0, "g2": 0.02, "constant_shear": 0.02, "constant_shear_angle_rad": 0.7853981633974483},
+      {"name": "g2_m04", "g1": 0.0, "g2": -0.04, "constant_shear": -0.04, "constant_shear_angle_rad": 0.7853981633974483},
+      {"name": "g2_p04", "g1": 0.0, "g2": 0.04, "constant_shear": 0.04, "constant_shear_angle_rad": 0.7853981633974483}
+    ],
+    "block_cases": 20,
+    "block_count": 38,
+    "storage_rule": "Retain hashed truth, cross-match, shape catalogues, R_blend/crowding tables, receipts, and sufficient statistics. Remove only newly generated raw image scratch after its block has passed count/hash checks.",
+    "prelaunch_requirements": [
+      "blockwise scratch paths with exact-target deletion guards: implemented and unit-tested in scripts/validate_minimal_rblend_acceptance_block.py",
+      "one-case nine-leg smoke with matching truth IDs and noise metadata: passed in Slurm job 16470276",
+      "read-only MultiBand_ImSim snapshot plus explicit pre-training SExtractor 2.29.0 RoyBranch and Python-package preflight: implemented and hash-tested after tracing the retained training-producer logs"
+    ],
+    "case_overlap_audit": "No case1760 directory, top-level four-digit run range in 1741--1760, or case-valued key in recent registered manifest/protocol/submission/completed metadata under sbsi_caches was found on 2026-09-13. An earlier bounded audit found no case1740 hit. Production excludes smoke case 1000."
+  },
+  "smoke_validation": {
+    "status": "passed",
+    "slurm_job_id": 16470276,
+    "elapsed": "00:18:49",
+    "exit_code": "0:0",
+    "case": 1000,
+    "truth_rows_per_leg": 5000,
+    "leg_count": 9,
+    "fixed_truth_columns_identical": true,
+    "common_noise_metadata": true,
+    "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/smoke_validation.json",
+    "receipt_sha256": "39d733d820ec214f90f158a73758df0e1d0433590bf5a393fb3d5c070e307065",
+    "job_script_sha256": "ab676b43d110f9bfa67e1187435e3b332126581867566bdf65a0effec49ec366",
+    "note": "This validates generation, g1/g2 orientation, common scene/noise pairing, and expected files only; its one-case response summaries are not calibration evidence."
+  },
+  "production_execution": {
+    "status": "block0_running_on_training_compatible_measurement_stack",
+    "block0_slurm_job_id": 16471110,
+    "block0_started_at": "2026-09-13T14:34:07+02:00",
+    "block0_cases": [1001, 1020],
+    "root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/production",
+    "block_job": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/job_production_block.sh",
+    "block_job_sha256": "0646feefe3308020853e6b6300c1de72841976f8883a31fd83c39c8f5f8fa345",
+    "validator": "scripts/validate_minimal_rblend_acceptance_block.py",
+    "validator_sha256": "a5f3de96099630b27488599869269a7aaff2494540625e4446f311518208f293",
+    "rblend_emulator": {
+      "model": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/physical_circularized_grid_free_shape_radius_lambda10_v2/constgold50_trial9_v1/trial9_base.json",
+      "model_sha256": "9723589880234fa6825ae242d9b978120a6385faf5ccc9942d1993696952e46d",
+      "metadata": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/plain_complete_flow_response_re037_v1/physical_circularized_grid_free_shape_radius_lambda10_v2/constgold50_trial9_v1/metadata.json",
+      "metadata_sha256": "48908a9cebc7475be83eef767c95175694531d78b1dd789c512fc49c0699f2b4",
+      "regression_primary_support": {
+        "r_input_p_open_interval": [18.0, 25.8],
+        "Re_input_p_open_interval_arcsec": [0.37, 1.5]
+      },
+      "training_alignment_audit": "Case40 legacy reconstructed values and trial9 lookup have 97254/97254 exact ordered IDs and maximum absolute R_blend difference 4.44e-16."
+    },
+    "cancelled_attempts": [
+      {
+        "slurm_job_id": 16470471,
+        "state": "cancelled_before_R_blend_or_response",
+        "elapsed": "01:00:55",
+        "reason": "The wrapper mistakenly pinned v22 R_blend support Re in (0.5,1.5), inconsistent with the detector-training and declared Re in (0.37,1.5) support.",
+        "preserved_partial_output": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/failed_runs/wrong_rblend_v22_job16470471/block_00"
+      },
+      {
+        "slurm_job_id": 16470674,
+        "state": "cancelled_before_R_blend_or_response",
+        "elapsed": "01:23:15",
+        "reason": "The generic module load resolved to the x86-64-v2 SExtractor 2.29.0 build dated 2026-08-27, after the July training catalogues. The retained training logs establish version 2.29.0 but not that later binary build.",
+        "block_job_sha256": "87112b79df67f665135445f89ac34a2af54b0c9020a660bb771b2d416273de37",
+        "validator_sha256": "d4b3e77bff7a8bee6efd932c4e4b8af2c5b04f683999c918c74bd2e6460cd2a3",
+        "preserved_partial_output": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/failed_runs/sextractor_v229_job16470674/block_00"
+      },
+      {
+        "slurm_job_id": 16471078,
+        "state": "cancelled_before_shape_measurement_R_blend_or_response",
+        "elapsed": "00:06:44",
+        "reason": "It pinned SExtractor 2.28.0 based on a stale inspection note. Retained source-catalogue logs for training cases 40, 100, and 119 directly establish SExtractor 2.29.0; the correction was stopped during g0 image simulation.",
+        "block_job_sha256": "58648149c37a8a65d0e01618ff97f920b698100cbfff97b680a449845ff3ac9f",
+        "validator_sha256": "a5f3de96099630b27488599869269a7aaff2494540625e4446f311518208f293",
+        "preserved_partial_output": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/minimal_rblend_fresh_acceptance_v1/failed_runs/sextractor_v228_planned_job16471078/block_00"
+      }
+    ],
+    "simulation_steps": [1, 2, 3],
+    "omitted_step": "BlendEMU step 4 combined catalogues are redundant because acceptance reads the retained per-case truth, shape, and cross-match catalogues directly.",
+    "production_config_sha256": {
+      "g0.yaml": "81b715e99cc7b8c04dd320c1595559b97e16372de7a3b2796105a675b1a47c6b",
+      "g1_h002.yaml": "e796525826cb74f89275ec6a936c8fda06701f7960e2d5099ee040f19d74b041",
+      "g1_h004.yaml": "108cc64951cd56ce8ca4181241d1af08b4c0b89b9f89f922c83b03e5a9268ba9",
+      "g2_h002.yaml": "423939b4849cdadb2353a0f8b2e99ed72e6d7f035a39efe23280d01740726602",
+      "g2_h004.yaml": "a79282775ffe14a85985de68e7d2dc000a5a487ab19391c70cbd94a53be34ce0"
+    },
+    "launch_sequence": "Submit block 0 alone as a full-density capacity check. Submit blocks 1--37 only after block 0 has a validated_and_pruned receipt; do not inspect a response statistic between stages.",
+    "array_safety": "The job script has no default array directive and accepts only explicit indices 0..37. Block 0 is submitted alone before any 1--37 array.",
+    "restart_rule": "Restart block 0 from an empty production path with the exact trial9 artifact, immutable renderer/config snapshot, explicit pre-training SExtractor 2.29.0 RoyBranch binary, pinned Python environment versions, and the corrected 38-block validator."
+  },
+  "population": {
+    "truth_support": {
+      "r_input_p_open_interval": [18.0, 25.8],
+      "Re_input_p_open_interval_arcsec": [0.37, 1.5]
+    },
+    "measured_selection": {
+      "measured_mag_auto_max_exclusive": 25.8,
+      "measured_radius_min_inclusive_arcsec": 0.75,
+      "measured_ellipticity_cut": null
+    },
+    "order": "truth support, per-leg detection/usable status, then per-leg measured magnitude and radius cuts"
+  },
+  "response_evaluation": {
+    "implementation": "scripts/evaluate_constgold_complete_forward_response.py",
+    "implementation_sha256": "99cc133d3c4d88bf599c72b57e5908370b9328e738b0dcfb74a15cb9ce79fb6e",
+    "direct_source_files_sha256": {
+      "sbsi/catalogue_likelihood.py": "be53879078164546056dbb8336b22226563cab17e5ca2bfa7e414d3007ba1686",
+      "sbsi/coordinates.py": "0186af211f194471ab9fd1ebcf3ef5d9eaebd1a5ba4126b2440ebfbda2b91e37",
+      "sbsi/flow_size_condition.py": "8534830d0c738ab91f14c791061f4d71cf32a913baed2a5c47cb432d7261c6ba",
+      "sbsi/measurement_model.py": "d154b06d20c3bb092eab998ca8e67d9149865c042f73d16b42c62dcf82bc894c",
+      "sbsi/models.py": "dd01c7594b14f2dd598415cbb9c258438aacc0eaf91286d026d770f261d850d2",
+      "sbsi/scene_prior.py": "7a440bf91c8bd6cbff52d3dd3b2646b6e489ce865561d4d4ef9229a594f45b7f",
+      "sbsi/selection_model.py": "4f77ad81cbb7ed4749fe10884a696f43262d38bc8ba545c548e9c269267980bb",
+      "sbsi/shear_map.py": "bc5b635de48768a297050820a71ac03fa26f5b18c3aea7c7fb05238156c0d9ca"
+    },
+    "block_aggregation_implementation": "scripts/aggregate_minimal_rblend_response_blocks.py",
+    "block_aggregation_implementation_sha256": "6da906e59d9693f6e703b6b5c493ba1740e29a377e1dc3d41a8614daa3753387",
+    "block_aggregation_contract": "Reconstruct the pooled estimator and one case-cluster bootstrap from every per-case, per-model, per-QMC sufficient statistic; reject missing, duplicate, or identity-inconsistent blocks.",
+    "decision_summary_implementation": "scripts/summarize_minimal_rblend_response_acceptance.py",
+    "decision_summary_implementation_sha256": "98340c5319d0639d2fc550f968bcceaa92976e3b926117ab02fded0e3d149cbb",
+    "decision_summary_contract": "Verify the four endpoint/protocol identities, stored numerical/equivalence decisions, and central component-robustness gate, then emit one compact pass-to-full-inference or reject-candidate decision without accepting thresholds or recalculating response statistics.",
+    "crowding_source": "derive the three shear-invariant crowding inputs from the truth scene already loaded by the evaluator; no separate lookup is required",
+    "draws_per_qmc_group": 64,
+    "qmc_seeds": [7301, 7302, 7303, 7304],
+    "qmc_numerical_gate": {
+      "maximum_standard_error_percent": 0.005,
+      "student_t_95_multiplier": 3.182446305284263,
+      "acceptance_rule": "Estimate the QMC standard error of m across the four frozen seeds. It must not exceed 0.005 percentage points; expand both case-bootstrap interval endpoints by the two-sided 95% Student-t half-width with 3 degrees of freedom before applying the equivalence band."
+    },
+    "component_robustness_gate": {
+      "maximum_absolute_central_contribution_percent": 0.3,
+      "acceptance_rule": "The central truth-population and conditional measurement-residual contributions to m must each lie strictly inside [-0.3,+0.3] percentage points. This rejects a net pass obtained by cancelling an individually out-of-band component; it is not a separate component equivalence-interval claim."
+    },
+    "common_random_numbers_between_antithetic_legs": true,
+    "bootstrap_unit": "simulation case with every leg kept in the same resample cluster",
+    "bootstrap_replicates": 10000,
+    "bootstrap_seed": 20260913,
+    "endpoints": ["R11 at |g1|=0.02", "R11 at |g1|=0.04", "R22 at |g2|=0.02", "R22 at |g2|=0.04"],
+    "m_definition": "100 * (R_measured / R_model - 1)",
+    "gate": "For every endpoint, the marginal case-bootstrap 95% interval for m_percent, expanded by the frozen QMC 95% half-width, must be strictly inside [-0.3, +0.3], QMC SE must be at most 0.005 percentage points, and both central truth-population and measurement-residual m contributions must be strictly inside [-0.3,+0.3]. All four must pass.",
+    "secondary_checks": [
+      "report R21 and R12 cross-response without tuning",
+      "report truth-shape and measurement-residual response components to expose cancellation",
+      "report every unmatched, unusable, nonfinite, and out-of-support row"
+    ]
+  },
+  "response_execution": {
+    "status": "worker_prepared_not_submitted",
+    "block_job": "jobs/job_evaluate_minimal_rblend_response_blocks.sh",
+    "block_job_sha256": "3afc451af8d19378fa1f63f35968b74cad3c535deccf49e01680300e0d988ab1",
+    "task_mapping": "task = 4 * simulation_block + endpoint, for 38 blocks and endpoint order [g1_h002, g1_h004, g2_h002, g2_h004]",
+    "explicit_array": "0-151 with maximum concurrency 4; there is no default array directive",
+    "launch_condition": "Every one of the 38 simulation block receipts must say validated_and_pruned before any response task starts.",
+    "selected_block_integrity": "Each task rehashes its R_blend lookup and both retained shear-leg truth/noise/shape/cross-match catalogues against the simulation receipt.",
+    "per_block_bootstrap_replicates": 2,
+    "per_block_bootstrap_note": "Only schema-valid sufficient statistics are retained per block; the sole inferential 10000-replicate case bootstrap is run after all 38 blocks are pooled."
+  },
+  "full_inference": {
+    "status": "response_gated_design_not_prepared",
+    "implementation": "scripts/run_inference.py",
+    "implementation_sha256": "4c6f6b2aa5b6e8952f041a91eb52aae478dd8009cdd167ad6b2c2ccc2a4d3ace",
+    "run_condition": "Run only after all four response endpoints pass; a response failure ends the candidate without retuning.",
+    "gate": "Using the same frozen candidate and case-clustered legs, the marginal 95% interval for inferred multiplicative bias must be strictly inside [-0.3, +0.3]% for both axes and both amplitudes.",
+    "g0_check": "Report both inferred additive components and their 95% intervals with no empirical subtraction.",
+    "note": "The 760-case assurance calculation is anchored to response-closure variance; it does not guarantee the full-inference interval width.",
+    "readiness_limitation": "No frozen 38-block, case-clustered, multi-axis full-inference worker/reducer exists yet. The generic image adapter resolves one flat simulation root and the generic inference summary is not a case-clustered finite-difference acceptance reducer. Design and resource-size this stage only if all four response gates pass."
+  },
+  "assurance": {
+    "planning_model": "m_hat ~ Normal(m_true, 0.126 * sqrt(100/N) percentage points), with the case interval additively expanded by t_0.975,3 * 0.00629111449503968 * sqrt(50/N) percentage points for four-seed QMC error",
+    "assumed_absolute_true_m_percent": 0.129,
+    "minimum_cases_for_95_percent_marginal_assurance": 751,
+    "marginal_endpoint_pass_probability_at_760": 0.9524475427,
+    "guaranteed_minimum_four_endpoint_joint_probability_at_760": 0.8097901709,
+    "method": "union bound using four marginal failure probabilities",
+    "qmc_basis": {
+      "selection_localization_cases40_89_results_sha256": "6277b285f4b597b381389147190505d6011630b08d82475d32840972009f77da",
+      "selection_replication_cases90_139_results_sha256": "c32d290cf7585d473041f031b0013abc02991fe94709dd4b198251dcfb76ae1d",
+      "historical_no_e_16_seed_m_standard_error_at_50_cases_percent": [0.0013154181580056418, 0.0020030980741450846],
+      "frozen_four_seed_m_standard_error_at_50_cases_percent": [0.0021226515346749455, 0.00629111449503968],
+      "pooled_no_e_16_seed_m_standard_error_at_100_cases_percent": 0.0010222561755113754,
+      "pooled_frozen_four_seed_m_standard_error_at_100_cases_percent": 0.003041477321601216,
+      "conservative_frozen_four_seed_m_standard_error_at_50_cases_percent": 0.00629111449503968,
+      "projected_four_seed_m_standard_error_at_760_cases_percent": 0.001613636820599959,
+      "projected_four_seed_t95_half_width_at_760_cases_percent": 0.005135312537788985
+    },
+    "limitation": "Conditional design assurance, not a candidate performance claim. The conservative QMC term is the worse actual SEM of the already frozen four seeds, not an estimate inferred from all 16 historical seeds; variance transfer, QMC 1/sqrt(N) scaling, and normal approximations may still fail. The fresh QMC numerical gate is mandatory."
+  }
+}

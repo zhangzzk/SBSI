@@ -1,0 +1,1522 @@
+[
+  {
+    "case": 1000,
+    "sha256": "4073c3157d8c669299719d3b74e0be39562c81fb259c54129eb8d05e6c41be75",
+    "changed_per_leg": [
+      30,
+      29,
+      27,
+      25
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "af6f71b56b9262c7fa31b80c1a2d02422ccff6ce907cc5a35e10dc545451e0e9"
+      },
+      {
+        "axis": 2,
+        "sha256": "ec7640e9a9ca8f555becf5792bc2696417d4e7af263bbca5924f2b890106819c"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1562
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1596
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1566
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1551
+      }
+    ]
+  },
+  {
+    "case": 1040,
+    "sha256": "9d51bca654c793fd81589e06fa7ff1d25bd25971514cb762d028b027d94028c3",
+    "changed_per_leg": [
+      44,
+      38,
+      33,
+      42
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "fcf6b3d1f886cbfec07bc440274b44ec7fc4fc6d61b84edc7cd0ae4e12d512de"
+      },
+      {
+        "axis": 2,
+        "sha256": "df03807302d43d2ac790cc185a872211613b5779c0d25ab3fabe4978eb44e178"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1166
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1223
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1199
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1169
+      }
+    ]
+  },
+  {
+    "case": 1080,
+    "sha256": "d75e9b45bd3fee22517bd4a999a06bc7ee74b98893c8f848f9fdfb8012666d62",
+    "changed_per_leg": [
+      45,
+      42,
+      57,
+      43
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "9438454eb5b0dc02251fa3ed676dec6502eb764a3d3f806b06d78b085703151a"
+      },
+      {
+        "axis": 2,
+        "sha256": "e4c48842ca74b97d2541cc4ff118036a116f178369845e5b576baa4a6c40cb62"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1191
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1210
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1171
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1223
+      }
+    ]
+  },
+  {
+    "case": 1120,
+    "sha256": "f3d6f87ee5c3e58a268002e1bbe35089a7be9318f2a6eda91661e440697e1f2f",
+    "changed_per_leg": [
+      38,
+      32,
+      26,
+      39
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "5ad5430dae248699d482920e488c4e07830915ba8539313077135b6f990b5547"
+      },
+      {
+        "axis": 2,
+        "sha256": "7d0b07cc4bccba29b450f2fa1a9dd3396843d5b50057439117660cf0d818ee93"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1562
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1624
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1605
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1562
+      }
+    ]
+  },
+  {
+    "case": 1001,
+    "sha256": "87d26577cee6b4f0fd8393ec57cbfd7ba39538b0ccfb041a52246760183b7f89",
+    "changed_per_leg": [
+      39,
+      40,
+      33,
+      44
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "1e90c1e8ce524f888a6090ff63ca73ae700554d4a3dbbf85b42b9bc86f1748bc"
+      },
+      {
+        "axis": 2,
+        "sha256": "d5e1804611ae2273c19bbe65033ee91e3cd6c53942e461dadd8257bfd557b72b"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1508
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1486
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1487
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1491
+      }
+    ]
+  },
+  {
+    "case": 1041,
+    "sha256": "49f2210235743c9fd847c224a7fd272c246f6a0201486c9d3f9761719e64a0f6",
+    "changed_per_leg": [
+      40,
+      33,
+      29,
+      27
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "73f305f0f3d320cfb01cb0d7745698de7ab18adb8c80314df7fe7eb2b6b573b6"
+      },
+      {
+        "axis": 2,
+        "sha256": "a45a53172e4f79ad3c73abfcf85cc81f7ddd9879e913c89cab7e27f8fce495b6"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1347
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1379
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1369
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1361
+      }
+    ]
+  },
+  {
+    "case": 1081,
+    "sha256": "aa9505caf727df1d9dfbba7f3901725738ef762c30a04142f615d3805c8f4c86",
+    "changed_per_leg": [
+      44,
+      43,
+      48,
+      53
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "9444b0c9e80f880886d7af89129541b2475ced97fc3f096ec084810147627b70"
+      },
+      {
+        "axis": 2,
+        "sha256": "c85f4e5c64ebc5779909d850fcde8473b80fb9f670279c995c6b66c77b782d07"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1436
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1473
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1465
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1457
+      }
+    ]
+  },
+  {
+    "case": 1121,
+    "sha256": "5bef31441dc60b61da877de2a44bdc0f60d5b53d1b8f53259a334cd254f8b3da",
+    "changed_per_leg": [
+      40,
+      45,
+      38,
+      30
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "435ffb7c03917b828dc98615a18476583f8f13b988315434492be9eb199180d6"
+      },
+      {
+        "axis": 2,
+        "sha256": "23f6e4998236c5fd6f3e12b70194cd3ae84b9c20b7119fd7d62cfeeb724b5feb"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1386
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1383
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1378
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1370
+      }
+    ]
+  },
+  {
+    "case": 1002,
+    "sha256": "e05ab7657132f559a9791e0d199ab14148dea5bca848a50c5d56a0898a429b02",
+    "changed_per_leg": [
+      42,
+      28,
+      41,
+      26
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "4b48a429abbb0a454d2de9340cc9f83b8061679733ebac85ddad4259dc4bd513"
+      },
+      {
+        "axis": 2,
+        "sha256": "58af2e039686a53523fcd0ba9529d915a0ba6a468771d23d26755ef7c4833bc0"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1370
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1410
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1388
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1380
+      }
+    ]
+  },
+  {
+    "case": 1042,
+    "sha256": "693e335ed017f808c78b5d58f2eb2c1a6ccd157eb09596c63b1a700f544845ba",
+    "changed_per_leg": [
+      35,
+      38,
+      31,
+      45
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "eb99dfe5e3e98b0df54ce70d56a77e3781e54a9ef46bf48a18aae56bd31263ec"
+      },
+      {
+        "axis": 2,
+        "sha256": "83cdd3ccf30ef457fcf536944af888c32886f3e4b5829ac3874f34b5ac899ebd"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1712
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1745
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1746
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1742
+      }
+    ]
+  },
+  {
+    "case": 1082,
+    "sha256": "29a29a489ba3c34238ec5a2d680320ea8652cfa9ffd03e6dc42e444cc77a60d5",
+    "changed_per_leg": [
+      37,
+      39,
+      42,
+      30
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "0c953cca29594f609506f3fb12e317a64eb1955cbef9af0397f8b1d64671619f"
+      },
+      {
+        "axis": 2,
+        "sha256": "7b060e54467825c76c6e2f77a625cb5416e35c1541caab1f017f3742d4e3e5e2"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1301
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1351
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1326
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1378
+      }
+    ]
+  },
+  {
+    "case": 1122,
+    "sha256": "ef9b1aab310ca5b0a7e9cf5f15d3edd8bd2b9a3b7efbf0ae89de0d289c4008ea",
+    "changed_per_leg": [
+      29,
+      27,
+      33,
+      34
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "35e295b5e732027cb476860c1e79554906360ab440edad28e75a85a89e4979cd"
+      },
+      {
+        "axis": 2,
+        "sha256": "4e8ae02955d17b09c028501f183e44c149b55b1fcff6b4840b97d1a765e82a4c"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1527
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1571
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1553
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1557
+      }
+    ]
+  },
+  {
+    "case": 1003,
+    "sha256": "b10ca0c6cf7989656306ff5852345ee442921629b4d7d123bdde6922b48eab4c",
+    "changed_per_leg": [
+      40,
+      36,
+      38,
+      36
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "833df51271d44fa6f52d710da2d6d3ac16245b387e77bb300310251d5a8ddf50"
+      },
+      {
+        "axis": 2,
+        "sha256": "739edab9e221bdea635031b2b0712987df9a6c6033528bc6666fb5abeaac0bda"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1218
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1253
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1265
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1237
+      }
+    ]
+  },
+  {
+    "case": 1043,
+    "sha256": "093c68c65ea4f5c7f7f7002c385714fa51d54d3f357506e2e0393d26cbd0023c",
+    "changed_per_leg": [
+      35,
+      41,
+      45,
+      46
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "0469d48b7c6b01d3500f4d6b1605141e93a591c5ec9232cfdb37cc9bc98be97d"
+      },
+      {
+        "axis": 2,
+        "sha256": "9f5fa11e3ca5fc8ddb4b0f051fa81e14cf543c40b9f1f07bc6f20f319126af0f"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1651
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1686
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1654
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1688
+      }
+    ]
+  },
+  {
+    "case": 1083,
+    "sha256": "5f24e4295055dedfcaeac19906d1238f19598be4b7dd1d0c26c8aa4f8826fb59",
+    "changed_per_leg": [
+      41,
+      44,
+      36,
+      44
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "e9c3686899e0f4e558cf92964e713c0ab132ca082017389fbd8c41c2844a1c43"
+      },
+      {
+        "axis": 2,
+        "sha256": "a09e6800424c3f1a6fb3b28bf501456c963e331aafae4d54bd73f5ada7294393"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1621
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1636
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1652
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1620
+      }
+    ]
+  },
+  {
+    "case": 1123,
+    "sha256": "ae0bd52002ca9ebf425b060674859114e9618d5fc4ed4001c0530757be16f92e",
+    "changed_per_leg": [
+      29,
+      40,
+      37,
+      40
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "e0b310b5cb7a4fbe490800d3c8271684494a0dc9cf3f7d869e02d80d43d3bd9b"
+      },
+      {
+        "axis": 2,
+        "sha256": "18c4e448106bef62668eab2fc49b02f4470c214708c9e2cb9542af47e638c21f"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1446
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1460
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1469
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1488
+      }
+    ]
+  },
+  {
+    "case": 1004,
+    "sha256": "e7985acbe50a49c09d1aa0e70e312f54c32c73ea8c0d2b4a3945ebe025269632",
+    "changed_per_leg": [
+      36,
+      35,
+      42,
+      45
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "273e6368ccffb0f816191b16092e692b4ca7614e1d9129f0e132fe075160831b"
+      },
+      {
+        "axis": 2,
+        "sha256": "717f319d604cfdf37b6abeeaf605a523f2f2be5fdd02a6f7ca01a2b27ace3f8d"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1393
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1371
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1404
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1378
+      }
+    ]
+  },
+  {
+    "case": 1044,
+    "sha256": "5d010eab9384de222f6a22171cde8e271cf2b74dc5f32501e1783a75e3320a2f",
+    "changed_per_leg": [
+      46,
+      34,
+      47,
+      46
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "f943b9b2f70b93f278e19a1e6118d906fc2613fb5894e5131121e60d04634101"
+      },
+      {
+        "axis": 2,
+        "sha256": "46146137cc3109fc44c0cfa18b45fff4e5c181b12816b0a544d374adf32db3ad"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1268
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1271
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1258
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1247
+      }
+    ]
+  },
+  {
+    "case": 1084,
+    "sha256": "63f393e590a21d2331686317ad1ed66933d67b60a327a78bc0b084b3a192867a",
+    "changed_per_leg": [
+      42,
+      40,
+      34,
+      38
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "44b9b7dd7fdf3b408fa48767096989f4a28620375de23266effa2e7b129811e6"
+      },
+      {
+        "axis": 2,
+        "sha256": "275505c8ef681743074b74f98a2a1bd625fec5d6ddaf090c9af4dd58acf01530"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1131
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1191
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1141
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1168
+      }
+    ]
+  },
+  {
+    "case": 1124,
+    "sha256": "e6a75de0ac999e51034e49a9a4965a4651fc6abc2005a9af395e5a82cd753f5a",
+    "changed_per_leg": [
+      33,
+      34,
+      41,
+      40
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "c94c9f4840dfe324ef7cc8723d79183191ae63f77de92da1dcb21ab04e5933ac"
+      },
+      {
+        "axis": 2,
+        "sha256": "890ec100cb66e9917df4417d0d8b71113f0b24a0aa8727ded56cf1109a0d3adf"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 2025
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 2071
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 2010
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 2034
+      }
+    ]
+  },
+  {
+    "case": 1005,
+    "sha256": "4c3c1a99597d1a53d03b2d26a607c95519fc02eee3278578f818201539c33ee1",
+    "changed_per_leg": [
+      37,
+      42,
+      37,
+      34
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "5276846fdcc184d68ef2f01e565acf323c463a454f91f9539c253ef0f2f6be04"
+      },
+      {
+        "axis": 2,
+        "sha256": "3133ee1932956155d252a34f16f4e79fdcc5f03965629203f3c3c94a30845252"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1427
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1407
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1404
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1428
+      }
+    ]
+  },
+  {
+    "case": 1045,
+    "sha256": "4ee766dbf58f9fae599ecab7243378d6da78a078eeeebd5359ba4f115926559f",
+    "changed_per_leg": [
+      34,
+      37,
+      37,
+      43
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "4e09664de7617008a18a4bbca1024b91d554967c3311f59eee81b620a9bee52c"
+      },
+      {
+        "axis": 2,
+        "sha256": "c03eb9a274ef823f9c353158e6985eb2cefdc5b052647dd3d36cf884426b5f60"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1588
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1640
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1636
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1586
+      }
+    ]
+  },
+  {
+    "case": 1085,
+    "sha256": "4a3c6296fa48e0a4ac25bbc20120c437ca718e834d70b9253532c9c9bead9788",
+    "changed_per_leg": [
+      40,
+      44,
+      43,
+      44
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "a99e86da4c4255954d8e13187500578c18a9b0d75d5d0a74a118bea4b21b6677"
+      },
+      {
+        "axis": 2,
+        "sha256": "39e9996e5e6956babdc353b751132f0d7b03700e73f034065afbb6045ecbf87c"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1294
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1346
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1328
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1315
+      }
+    ]
+  },
+  {
+    "case": 1125,
+    "sha256": "0cd3098d340dac96b9500d20594fc5d10113e2732ddd92f67e15a26d52793d7b",
+    "changed_per_leg": [
+      42,
+      46,
+      49,
+      45
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "59534d200d7727336c488c0d3618a82cbfcd7d114843bd82d368a0c32e1f907d"
+      },
+      {
+        "axis": 2,
+        "sha256": "79b2e7bd795fa1ecb747798757ab7245f8311c146cf99faf1aab91cc6af13c69"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1342
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1337
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1348
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1373
+      }
+    ]
+  },
+  {
+    "case": 1006,
+    "sha256": "9515e03ba49e61de37ba71b0e632a1935a7bdeceb832bbbcb6f49d59b6c997bd",
+    "changed_per_leg": [
+      47,
+      37,
+      44,
+      30
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "1af73859a86e3bcd8191794cf606911ef39840acd37524ba9c99ccd44824c35f"
+      },
+      {
+        "axis": 2,
+        "sha256": "7722e197c0a16352e27db587c74c20e3beb9e8afe2b79fb8d9e1f66854a3048f"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1523
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1534
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1519
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1521
+      }
+    ]
+  },
+  {
+    "case": 1046,
+    "sha256": "a20aecf81e46607b461bb475d6a012aafedd92f723409c23f4fe8d5ae2e8e847",
+    "changed_per_leg": [
+      33,
+      42,
+      30,
+      42
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "6a4cba37c52361a15bfb399a97c39e1ccd092c45c9e720a6db604b3b15c5f8c9"
+      },
+      {
+        "axis": 2,
+        "sha256": "a22cc21d2e2b6ae509ee0d0ecdb6d4ea3f0303d080798fe7328f23471ad77235"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1393
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1410
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1426
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1407
+      }
+    ]
+  },
+  {
+    "case": 1086,
+    "sha256": "f7e6e50aea6ab62efb0495c42fa5a1676ff9655b89fcc12adc26cab85ce2eae0",
+    "changed_per_leg": [
+      43,
+      41,
+      38,
+      38
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "38644c75e2b30cda09da66782cf2b08503c9c1280b2eea6d32fa02ea23183420"
+      },
+      {
+        "axis": 2,
+        "sha256": "1fccc6918f274dea1d817f275c2da1bc4c3db986b4107de5910713fdd5fcd905"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1286
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1310
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1301
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1305
+      }
+    ]
+  },
+  {
+    "case": 1126,
+    "sha256": "8276e5ee6cdfa299f66e20e1d05073a1c84153acb13c1b0997006458a02de5ec",
+    "changed_per_leg": [
+      37,
+      38,
+      32,
+      38
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "6197a31d4b350cf84873b8c18cd5c93b54ce2d40c7e4d84e74c07446095a6e10"
+      },
+      {
+        "axis": 2,
+        "sha256": "64e9dd8ae0ad80926a774b606b4e1b9728cadfef11fef4c3463d41924198e541"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1351
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1383
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1363
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1365
+      }
+    ]
+  },
+  {
+    "case": 1007,
+    "sha256": "79e53cdd2dab16abc0835d26ce904e660bf9a91de0ebf1d8074243bf88bf51da",
+    "changed_per_leg": [
+      33,
+      37,
+      23,
+      39
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "cb0ee3e6b2ed3f49f3e4e2f7edde125df76d7295e3346b3fbc40ba2775f207b3"
+      },
+      {
+        "axis": 2,
+        "sha256": "bf88e05e00eef25fc25239734b0e85593f6b4c3d9d2eaa4a1f3d804d5f625e1b"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1186
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1197
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1170
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1207
+      }
+    ]
+  },
+  {
+    "case": 1047,
+    "sha256": "7a6479949e30391fc41bfb4d89fd946025e8680b55e9675bce7dc5bbcc372596",
+    "changed_per_leg": [
+      41,
+      53,
+      54,
+      42
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "167da7573290004b2b7776baedb43335e36c73d22f1b7d5d470006ea6112016b"
+      },
+      {
+        "axis": 2,
+        "sha256": "b679505ec58c0a849e5af6c656724d008b1fdae8d56f6b405f26431a757c80e7"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1416
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1405
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1394
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1426
+      }
+    ]
+  },
+  {
+    "case": 1087,
+    "sha256": "2a8ced9ca23582e87adb5ea544e5514a3122c8d9c802232f620e4593c8c10887",
+    "changed_per_leg": [
+      38,
+      44,
+      36,
+      44
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "754596c3380fd93b6341f741893b4f3ce1c1acfceb7308d1bf1260524a20f012"
+      },
+      {
+        "axis": 2,
+        "sha256": "f7b329dc18724be4aaf31d9887f144ec93e60558b525046f69b20ffbe807faa6"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1532
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1584
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1582
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1551
+      }
+    ]
+  },
+  {
+    "case": 1127,
+    "sha256": "18f04fe6ff9ed71c6fa1449b6462a93454e3c2306554a468acaadf0b5e6ec806",
+    "changed_per_leg": [
+      41,
+      38,
+      44,
+      32
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "ca91bc41f5fdc2510c7d8af464e841164a3c1599fafac7894222e431a10cbce8"
+      },
+      {
+        "axis": 2,
+        "sha256": "22ccdd0bed1f4cbfc6ef25a0ac0b359404ca3c58e5f487f3e265f3f129c8c4c3"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1237
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1271
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1281
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1223
+      }
+    ]
+  },
+  {
+    "case": 1008,
+    "sha256": "d1b4b2e07e2346549568346a2a7dcfc228ecc227944a4c4cf538b7815341f1c7",
+    "changed_per_leg": [
+      36,
+      46,
+      41,
+      32
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "82f4431a73bc5b4d6ac869f0b105768e5327d44830a386fc3a489fe0bcb20724"
+      },
+      {
+        "axis": 2,
+        "sha256": "f790d37245b76e7c6705e27de6cac8fb6aedec6f296faf39380bf73d3cf5928f"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1334
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1356
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1344
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1351
+      }
+    ]
+  },
+  {
+    "case": 1048,
+    "sha256": "50075ca631545fa5488caa22841f37d7426e7142717fc4886534e16277b38562",
+    "changed_per_leg": [
+      31,
+      42,
+      31,
+      23
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "6b8566fd896de751ab9195a68a6bbd91d37656babb925058f3940623f1779e2b"
+      },
+      {
+        "axis": 2,
+        "sha256": "4d98f8a87303cfb8815712c0443dec9c52f50aa85c57e1cc401bf0c2062934fa"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1446
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1502
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1460
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1457
+      }
+    ]
+  },
+  {
+    "case": 1088,
+    "sha256": "6eb2da58faa0d260c88bd58b83b9733fff608cccdd2d74afc48fe94792e48993",
+    "changed_per_leg": [
+      38,
+      49,
+      55,
+      50
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "9a91c98738998883e0a57758f1e5a46aed11fc98e284aea811c2e66a0098b2b7"
+      },
+      {
+        "axis": 2,
+        "sha256": "8fcda6f1baee0dd29e486ab3479c100ca3ff46f47f8ac517d0fded8bc923ec9c"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1202
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1207
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1208
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1208
+      }
+    ]
+  },
+  {
+    "case": 1128,
+    "sha256": "8aae572dcfb68374ed96bba8e93bd66be6ceafaf253a9696e58b625be0aa92b8",
+    "changed_per_leg": [
+      39,
+      49,
+      45,
+      46
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "a150b167b6fd16f30305541191ed456b7e039e77ae48e3f145fc294b2b2428a4"
+      },
+      {
+        "axis": 2,
+        "sha256": "3f397e61bf4b61ad652d2fa055acccacca1aa9a2370da6827b13708668da58b2"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1427
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1401
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1449
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1395
+      }
+    ]
+  },
+  {
+    "case": 1009,
+    "sha256": "aaf9d9c967c73de1e8a0570f42dac802eb79301ab5b7a4537a98d8e4e4ccb23f",
+    "changed_per_leg": [
+      38,
+      36,
+      31,
+      34
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "c491f6adf3d4f5630502ce59aabd2d30659326ebd395041a21a8cc8c0e027b1a"
+      },
+      {
+        "axis": 2,
+        "sha256": "7504807ae65a4a9817b0e0082f467e86d2abeb690a42159b7502a1ff6e6b4905"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1558
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1581
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1577
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1553
+      }
+    ]
+  },
+  {
+    "case": 1049,
+    "sha256": "436318a2383c3532cca63a62201cbb94e8c0e19d0ca542f4ac4d7db146a57a86",
+    "changed_per_leg": [
+      49,
+      39,
+      39,
+      40
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "15e4ac40deb99436f2552f65b916d230f43ba8749607ce2259d3424b74397e45"
+      },
+      {
+        "axis": 2,
+        "sha256": "d5e5710b8b9de10ea93bbd10f55430149fdc7829b71c6e451dd7b6ffffe25741"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1437
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1466
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1473
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1466
+      }
+    ]
+  },
+  {
+    "case": 1089,
+    "sha256": "9039e16632b0f95a1a26f7e76c428458a9b2ad830d0090e4c3e7a03aebf5df0b",
+    "changed_per_leg": [
+      44,
+      44,
+      43,
+      41
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "d186f2c1b4ff4e00b6d8f0de6f48f78878501601e68aa6103bbf063891a319a9"
+      },
+      {
+        "axis": 2,
+        "sha256": "74d1c307e5725efc19ddbd7c13f0d6e31139eaacf1000de74cf786cb24223023"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1533
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1641
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1610
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1618
+      }
+    ]
+  },
+  {
+    "case": 1129,
+    "sha256": "2f3844835da1489dba0ed1178041f60d089d0b33705f6771d3c0ef19bc67a47d",
+    "changed_per_leg": [
+      40,
+      39,
+      36,
+      35
+    ],
+    "old_oracle_receipts": [
+      {
+        "axis": 1,
+        "sha256": "72aeaa34684af31db2eacbbd21c9df27a88fd04bd0b98d533c4bbe5ccffc2bf8"
+      },
+      {
+        "axis": 2,
+        "sha256": "d64d28c844e59d03434bcf272a4b12b8b741d1ee4c65e7e62ec54e5a2e1f45cb"
+      }
+    ],
+    "matching": [
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1273
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1285
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1293
+      },
+      {
+        "cross_without_shape": 0,
+        "shape_without_cross": 1296
+      }
+    ]
+  }
+]

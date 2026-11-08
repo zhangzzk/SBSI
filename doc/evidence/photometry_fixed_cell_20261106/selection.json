@@ -1,0 +1,572 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "definition": "Reference scene coefficient at radius3.5/magnitude24.5, all modelled neighbours. Not a measured or calibrated R11.",
+  "source_sha256": "2d46e5c578fbfc13f6ddc66415091e4b4d8b76cf59f0ce0ff7f3f0d1cecfbf90",
+  "bootstrap_seed": 202611069301,
+  "generated_pass_rate": {
+    "value": 0.4762022127330863,
+    "case_se": 0.00031778863979391354,
+    "jackknife_se": 0.00037003357620482515,
+    "finite_bootstrap_replicates": 10000
+  },
+  "measured_pass_rate": {
+    "value": 0.47700164822632773,
+    "case_se": 0.0009077413893534504,
+    "jackknife_se": 0.0010439388441517451,
+    "finite_bootstrap_replicates": 10000
+  },
+  "selected_reference_coefficient_change": {
+    "value": 0.0035992484666715063,
+    "case_se": 7.780687008809583e-05,
+    "jackknife_se": 9.046635664345096e-05,
+    "finite_bootstrap_replicates": 10000
+  },
+  "bins": [
+    {
+      "bin": [
+        "-inf",
+        "0.0"
+      ],
+      "population_fraction": {
+        "value": 0.15276432945591317,
+        "case_se": 0.00027217544714389834,
+        "jackknife_se": 0.00031343737614594584,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_pass_rate": {
+        "value": 0.5864042076314159,
+        "case_se": 0.001328688230012921,
+        "jackknife_se": 0.0015337885846272404,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_pass_rate": {
+        "value": 0.5797833680770748,
+        "case_se": 0.0016963912723885388,
+        "jackknife_se": 0.0019419656667420805,
+        "finite_bootstrap_replicates": 10000
+      },
+      "pass_rate_error": {
+        "value": -0.006620839554341089,
+        "case_se": 0.0007101567966256263,
+        "jackknife_se": 0.000810646009795265,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_selected_fraction": {
+        "value": 0.188116819228537,
+        "case_se": 0.0005324108366922236,
+        "jackknife_se": 0.0006084268032427461,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_selected_fraction": {
+        "value": 0.18568115599458143,
+        "case_se": 0.0005087975378442404,
+        "jackknife_se": 0.0005822542962861027,
+        "finite_bootstrap_replicates": 10000
+      },
+      "selected_mean_coefficient_contribution_change": {
+        "value": 0.0005452403250391855,
+        "case_se": 8.913078871508158e-06,
+        "jackknife_se": 1.003350794116496e-05,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    {
+      "bin": [
+        "0.0",
+        "0.025"
+      ],
+      "population_fraction": {
+        "value": 0.25235334873973087,
+        "case_se": 0.0006309827485766799,
+        "jackknife_se": 0.0007187504592155648,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_pass_rate": {
+        "value": 0.4443149339354293,
+        "case_se": 0.0002712948438038049,
+        "jackknife_se": 0.0003079715942668784,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_pass_rate": {
+        "value": 0.44182770687385314,
+        "case_se": 0.0011823216127762374,
+        "jackknife_se": 0.0013569173999132226,
+        "finite_bootstrap_replicates": 10000
+      },
+      "pass_rate_error": {
+        "value": -0.0024872270615761364,
+        "case_se": 0.0010272499713884944,
+        "jackknife_se": 0.0011844200575688033,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_selected_fraction": {
+        "value": 0.23545535588790747,
+        "case_se": 0.0005126741148326841,
+        "jackknife_se": 0.0005872082496641658,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_selected_fraction": {
+        "value": 0.23374489754951558,
+        "case_se": 0.0004902905819261588,
+        "jackknife_se": 0.0005619625531388759,
+        "finite_bootstrap_replicates": 10000
+      },
+      "selected_mean_coefficient_contribution_change": {
+        "value": -2.205393131698985e-05,
+        "case_se": 4.049518185222855e-06,
+        "jackknife_se": 4.689877479272913e-06,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    {
+      "bin": [
+        "0.025",
+        "0.05"
+      ],
+      "population_fraction": {
+        "value": 0.14595883307297383,
+        "case_se": 0.0003067009874254398,
+        "jackknife_se": 0.00035212575710795126,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_pass_rate": {
+        "value": 0.4478922655130526,
+        "case_se": 0.0007937569846032641,
+        "jackknife_se": 0.0009092670640384566,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_pass_rate": {
+        "value": 0.4453527181380209,
+        "case_se": 0.0005047403021816899,
+        "jackknife_se": 0.0005851822163273847,
+        "finite_bootstrap_replicates": 10000
+      },
+      "pass_rate_error": {
+        "value": -0.0025395473750316954,
+        "case_se": 0.0004272254856077642,
+        "jackknife_se": 0.0004854406265768632,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_selected_fraction": {
+        "value": 0.13728166452963977,
+        "case_se": 0.00046124915679546886,
+        "jackknife_se": 0.000526616736523009,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_selected_fraction": {
+        "value": 0.13627450405466912,
+        "case_se": 0.000474379863612488,
+        "jackknife_se": 0.0005412954661550404,
+        "finite_bootstrap_replicates": 10000
+      },
+      "selected_mean_coefficient_contribution_change": {
+        "value": -3.832662814415473e-05,
+        "case_se": 5.378762298568955e-06,
+        "jackknife_se": 6.244728191791529e-06,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    {
+      "bin": [
+        "0.05",
+        "0.1"
+      ],
+      "population_fraction": {
+        "value": 0.12917274530814946,
+        "case_se": 0.00036785751229716977,
+        "jackknife_se": 0.0004192724798302529,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_pass_rate": {
+        "value": 0.435409292127532,
+        "case_se": 0.0009377138266512549,
+        "jackknife_se": 0.0010776072942045966,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_pass_rate": {
+        "value": 0.4342633928571429,
+        "case_se": 0.0012935897690737861,
+        "jackknife_se": 0.0014976080941018557,
+        "finite_bootstrap_replicates": 10000
+      },
+      "pass_rate_error": {
+        "value": -0.0011458992703891257,
+        "case_se": 0.0007020556039198902,
+        "jackknife_se": 0.0008093934711650063,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_selected_fraction": {
+        "value": 0.11810741759050965,
+        "case_se": 0.0003319266872251193,
+        "jackknife_se": 0.00038342729195410774,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_selected_fraction": {
+        "value": 0.1175991631282008,
+        "case_se": 0.0003345806902021858,
+        "jackknife_se": 0.00038678514620515085,
+        "finite_bootstrap_replicates": 10000
+      },
+      "selected_mean_coefficient_contribution_change": {
+        "value": -3.3764862599571996e-05,
+        "case_se": 4.561733462936601e-06,
+        "jackknife_se": 5.238890408156852e-06,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    {
+      "bin": [
+        "0.1",
+        "0.2"
+      ],
+      "population_fraction": {
+        "value": 0.10336573840969829,
+        "case_se": 0.00033897221694626504,
+        "jackknife_se": 0.0003912294841228574,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_pass_rate": {
+        "value": 0.45606828339411803,
+        "case_se": 0.0004952910312381431,
+        "jackknife_se": 0.0005724491184700155,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_pass_rate": {
+        "value": 0.4608521516120437,
+        "case_se": 0.0007464257124867035,
+        "jackknife_se": 0.0008587176340679418,
+        "finite_bootstrap_replicates": 10000
+      },
+      "pass_rate_error": {
+        "value": 0.0047838682179256594,
+        "case_se": 0.0010969719747585952,
+        "jackknife_se": 0.0012651420832898175,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_selected_fraction": {
+        "value": 0.09899541333021857,
+        "case_se": 0.0002106811473339555,
+        "jackknife_se": 0.00024142310927342386,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_selected_fraction": {
+        "value": 0.09986616005669365,
+        "case_se": 0.0002964734655593906,
+        "jackknife_se": 0.0003422558387066597,
+        "finite_bootstrap_replicates": 10000
+      },
+      "selected_mean_coefficient_contribution_change": {
+        "value": 0.00013761868636561793,
+        "case_se": 1.7109191700959853e-05,
+        "jackknife_se": 1.9839666453167183e-05,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    {
+      "bin": [
+        "0.2",
+        "0.4"
+      ],
+      "population_fraction": {
+        "value": 0.08239754530470669,
+        "case_se": 0.00015238927807689932,
+        "jackknife_se": 0.0001754434278715463,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_pass_rate": {
+        "value": 0.44912327059874235,
+        "case_se": 0.0005977523351426515,
+        "jackknife_se": 0.000681933436276402,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_pass_rate": {
+        "value": 0.46144525455950863,
+        "case_se": 0.0015184682566226752,
+        "jackknife_se": 0.0017471209766863145,
+        "finite_bootstrap_replicates": 10000
+      },
+      "pass_rate_error": {
+        "value": 0.01232198396076629,
+        "case_se": 0.001895256916891451,
+        "jackknife_se": 0.0021684203668688785,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_selected_fraction": {
+        "value": 0.07771206022786864,
+        "case_se": 0.00010691838431014227,
+        "jackknife_se": 0.0001240398947721634,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_selected_fraction": {
+        "value": 0.07971032471185167,
+        "case_se": 0.00025632054968394055,
+        "jackknife_se": 0.00029509648853439253,
+        "finite_bootstrap_replicates": 10000
+      },
+      "selected_mean_coefficient_contribution_change": {
+        "value": 0.0006007798393950353,
+        "case_se": 7.32828329308679e-05,
+        "jackknife_se": 8.418353398062491e-05,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    {
+      "bin": [
+        "0.4",
+        "0.8"
+      ],
+      "population_fraction": {
+        "value": 0.07157003240507637,
+        "case_se": 0.0001883343399742195,
+        "jackknife_se": 0.0002180310252689647,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_pass_rate": {
+        "value": 0.48263190510979626,
+        "case_se": 0.0010797796392156853,
+        "jackknife_se": 0.0012517476484957507,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_pass_rate": {
+        "value": 0.49603145970127716,
+        "case_se": 0.0015161531741324445,
+        "jackknife_se": 0.0017277083573436984,
+        "finite_bootstrap_replicates": 10000
+      },
+      "pass_rate_error": {
+        "value": 0.013399554591480867,
+        "case_se": 0.0013171888897389288,
+        "jackknife_se": 0.0015174536549325923,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_selected_fraction": {
+        "value": 0.07253637250063097,
+        "case_se": 0.00013054601352168634,
+        "jackknife_se": 0.0001515457738248046,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_selected_fraction": {
+        "value": 0.07442529344869943,
+        "case_se": 0.00016946505039722482,
+        "jackknife_se": 0.0001972465125280582,
+        "finite_bootstrap_replicates": 10000
+      },
+      "selected_mean_coefficient_contribution_change": {
+        "value": 0.0011104776506204173,
+        "case_se": 6.293352039647517e-05,
+        "jackknife_se": 7.30805765312739e-05,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    {
+      "bin": [
+        "0.8",
+        "inf"
+      ],
+      "population_fraction": {
+        "value": 0.06241742730375133,
+        "case_se": 0.00016351311306223788,
+        "jackknife_se": 0.00018758562159850472,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_pass_rate": {
+        "value": 0.5477458804467733,
+        "case_se": 0.0010801555076823677,
+        "jackknife_se": 0.0012439095534554064,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_pass_rate": {
+        "value": 0.5555708769994484,
+        "case_se": 0.0012100945708052398,
+        "jackknife_se": 0.0013957220888617446,
+        "finite_bootstrap_replicates": 10000
+      },
+      "pass_rate_error": {
+        "value": 0.007824996552675123,
+        "case_se": 0.0008177514670948338,
+        "jackknife_se": 0.0009508879531939097,
+        "finite_bootstrap_replicates": 10000
+      },
+      "generated_selected_fraction": {
+        "value": 0.07179489670468789,
+        "case_se": 0.00022041198823153697,
+        "jackknife_se": 0.0002554448370963811,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured_selected_fraction": {
+        "value": 0.07269850105578829,
+        "case_se": 0.00024557473531527604,
+        "jackknife_se": 0.0002849060862210597,
+        "finite_bootstrap_replicates": 10000
+      },
+      "selected_mean_coefficient_contribution_change": {
+        "value": 0.0012992773873119479,
+        "case_se": 0.0001255056480878958,
+        "jackknife_se": 0.00014382814236718993,
+        "finite_bootstrap_replicates": 10000
+      }
+    }
+  ],
+  "controls": {
+    "reference_coefficient_bins": {
+      "generated": {
+        "value": 0.14984128264725852,
+        "case_se": 0.00015710647015619282,
+        "jackknife_se": 0.0001823168020883991,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured": {
+        "value": 0.15344053111393,
+        "case_se": 0.00012973114643450147,
+        "jackknife_se": 0.0001501713496644009,
+        "finite_bootstrap_replicates": 10000
+      },
+      "diagonal_change": {
+        "value": 0.0035992484666714786,
+        "case_se": 7.780687008810011e-05,
+        "jackknife_se": 9.046635664344882e-05,
+        "finite_bootstrap_replicates": 10000
+      },
+      "distribution": {
+        "value": 0.0030602712216826833,
+        "case_se": 0.00010714534822279472,
+        "jackknife_se": 0.00012466352254980007,
+        "finite_bootstrap_replicates": 10000
+      },
+      "within_bin": {
+        "value": 0.0005389772449887879,
+        "case_se": 4.5607862672028714e-05,
+        "jackknife_se": 5.288026549886427e-05,
+        "finite_bootstrap_replicates": 10000
+      },
+      "exclusive": {
+        "value": 0.0,
+        "case_se": 0.0,
+        "jackknife_se": 0.0,
+        "finite_bootstrap_replicates": 10000
+      },
+      "shared_generated_mass": {
+        "value": 1.0,
+        "case_se": 2.858832494629084e-17,
+        "jackknife_se": 0.0,
+        "finite_bootstrap_replicates": 10000
+      },
+      "shared_measured_mass": {
+        "value": 0.9999999999999999,
+        "case_se": 3.705736550247632e-17,
+        "jackknife_se": 0.0,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    "intrinsic_cells": {
+      "generated": {
+        "value": 0.14984128264725838,
+        "case_se": 0.00015710647015612132,
+        "jackknife_se": 0.0001823168020883357,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured": {
+        "value": 0.15344053111393016,
+        "case_se": 0.0001297311464344485,
+        "jackknife_se": 0.00015017134966434625,
+        "finite_bootstrap_replicates": 10000
+      },
+      "diagonal_change": {
+        "value": 0.003599248466671784,
+        "case_se": 7.780687008782395e-05,
+        "jackknife_se": 9.046635664311967e-05,
+        "finite_bootstrap_replicates": 10000
+      },
+      "distribution": {
+        "value": 0.00019509084422037978,
+        "case_se": 0.0003051363229545061,
+        "jackknife_se": 0.0003493747864017018,
+        "finite_bootstrap_replicates": 10000
+      },
+      "within_bin": {
+        "value": 0.0034041576224514256,
+        "case_se": 0.0003248854912474572,
+        "jackknife_se": 0.00037158897290886166,
+        "finite_bootstrap_replicates": 10000
+      },
+      "exclusive": {
+        "value": 0.0,
+        "case_se": 4.843184803992464e-07,
+        "jackknife_se": 5.009906555590869e-07,
+        "finite_bootstrap_replicates": 10000
+      },
+      "shared_generated_mass": {
+        "value": 1.0,
+        "case_se": 1.229141984959332e-06,
+        "jackknife_se": 1.0413252374032095e-06,
+        "finite_bootstrap_replicates": 10000
+      },
+      "shared_measured_mass": {
+        "value": 0.9999999999999999,
+        "case_se": 5.813874742546052e-17,
+        "jackknife_se": 0.0,
+        "finite_bootstrap_replicates": 10000
+      }
+    },
+    "intrinsic_and_close050_cells": {
+      "generated": {
+        "value": 0.1498412826472583,
+        "case_se": 0.0001571064701561248,
+        "jackknife_se": 0.0001823168020883178,
+        "finite_bootstrap_replicates": 10000
+      },
+      "measured": {
+        "value": 0.15344053111393013,
+        "case_se": 0.00012973114643435245,
+        "jackknife_se": 0.0001501713496642202,
+        "finite_bootstrap_replicates": 10000
+      },
+      "diagonal_change": {
+        "value": 0.0035992484666718394,
+        "case_se": 7.780687008783101e-05,
+        "jackknife_se": 9.046635664316537e-05,
+        "finite_bootstrap_replicates": 10000
+      },
+      "distribution": {
+        "value": 0.00019914072656703543,
+        "case_se": 0.0003018208418380772,
+        "jackknife_se": 0.0003465826128613113,
+        "finite_bootstrap_replicates": 10000
+      },
+      "within_bin": {
+        "value": 0.0034011983148905757,
+        "case_se": 0.000322483577300755,
+        "jackknife_se": 0.00037080273885262534,
+        "finite_bootstrap_replicates": 10000
+      },
+      "exclusive": {
+        "value": -1.0905747858137195e-06,
+        "case_se": 3.493057944727978e-06,
+        "jackknife_se": 2.1379255954355648e-06,
+        "finite_bootstrap_replicates": 10000
+      },
+      "shared_generated_mass": {
+        "value": 0.9999976277744906,
+        "case_se": 6.3101492410242134e-06,
+        "jackknife_se": 2.4090200115015083e-06,
+        "finite_bootstrap_replicates": 10000
+      },
+      "shared_measured_mass": {
+        "value": 1.0,
+        "case_se": 3.46684362979522e-17,
+        "jackknife_se": 0.0,
+        "finite_bootstrap_replicates": 10000
+      }
+    }
+  },
+  "limitations": [
+    "Common-all-four actual usability; this does not test the usability classifier.",
+    "Coarse intrinsic/crowding cells do not hold every flow input exactly fixed.",
+    "No conditional-density or omitted-feature causal conclusion follows from association alone."
+  ]
+}

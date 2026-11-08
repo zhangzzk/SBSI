@@ -1,0 +1,770 @@
+{
+  "definition": "Hard-cut response-error contribution with shared global baseline/normal; fixed truth cells; training-family 40 validation cases",
+  "groups": {
+    "all": {
+      "baseline_mass_fraction": 1.0,
+      "R11": {
+        "simulation": {
+          "value": 0.7222333960416464,
+          "se": 0.0034267501165460732
+        },
+        "model_generated_selection": {
+          "value": 0.7146018443422208,
+          "se": 0.0005655552493224437
+        },
+        "error_generated_selection": {
+          "value": 0.007631551699425532,
+          "se": 0.0034100153091893054
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.7331989310919851,
+          "se": 0.003973846511317749
+        },
+        "model_generated_selection": {
+          "value": 0.7248557340392368,
+          "se": 0.0005837577416235965
+        },
+        "error_generated_selection": {
+          "value": 0.00834319705274833,
+          "se": 0.0038684545050524655
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.7277161635668157,
+          "se": 0.002735080399528425
+        },
+        "model_generated_selection": {
+          "value": 0.7197287891907288,
+          "se": 0.000467902651689342
+        },
+        "error_generated_selection": {
+          "value": 0.007987374376086875,
+          "se": 0.002743721952996937
+        }
+      }
+    },
+    "size_015_04_crowd_lt01": {
+      "baseline_mass_fraction": 0.48207092914293953,
+      "R11": {
+        "simulation": {
+          "value": 0.4755244095446795,
+          "se": 0.003112619725958246
+        },
+        "model_generated_selection": {
+          "value": 0.4592994233653517,
+          "se": 0.0005412237021177833
+        },
+        "error_generated_selection": {
+          "value": 0.016224986179327827,
+          "se": 0.003109299424560498
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.47877093596655756,
+          "se": 0.0034659028534146153
+        },
+        "model_generated_selection": {
+          "value": 0.466839393781689,
+          "se": 0.0005759596707095113
+        },
+        "error_generated_selection": {
+          "value": 0.011931542184868582,
+          "se": 0.0032568990953363453
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.47714767275561853,
+          "se": 0.0023082452910736
+        },
+        "model_generated_selection": {
+          "value": 0.4630694085735203,
+          "se": 0.0004665062917005236
+        },
+        "error_generated_selection": {
+          "value": 0.014078264182098232,
+          "se": 0.0022013627112875663
+        }
+      }
+    },
+    "size_015_04": {
+      "baseline_mass_fraction": 0.7583024580119657,
+      "R11": {
+        "simulation": {
+          "value": 0.5429711010568709,
+          "se": 0.0035935703920891675
+        },
+        "model_generated_selection": {
+          "value": 0.5323991393796272,
+          "se": 0.0005620168785677226
+        },
+        "error_generated_selection": {
+          "value": 0.010571961677243613,
+          "se": 0.0036209416653081162
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.5510533184596917,
+          "se": 0.0035984364133179714
+        },
+        "model_generated_selection": {
+          "value": 0.5358515579627874,
+          "se": 0.000572588164183997
+        },
+        "error_generated_selection": {
+          "value": 0.01520176049690436,
+          "se": 0.0034443636075435166
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.5470122097582812,
+          "se": 0.00251365497169686
+        },
+        "model_generated_selection": {
+          "value": 0.5341253486712073,
+          "se": 0.0004838453742360928
+        },
+        "error_generated_selection": {
+          "value": 0.01288686108707393,
+          "se": 0.0024639647870471127
+        }
+      }
+    },
+    "size_lt015": {
+      "baseline_mass_fraction": 0.06715706768543213,
+      "R11": {
+        "simulation": {
+          "value": 0.00928438397502923,
+          "se": 0.0009710053317068448
+        },
+        "model_generated_selection": {
+          "value": 0.009223610878810825,
+          "se": 7.993752702425887e-05
+        },
+        "error_generated_selection": {
+          "value": 6.077309621840485e-05,
+          "se": 0.0009646723610095141
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.01280946164920432,
+          "se": 0.0013252528867713955
+        },
+        "model_generated_selection": {
+          "value": 0.01019639974022959,
+          "se": 6.591560947675237e-05
+        },
+        "error_generated_selection": {
+          "value": 0.0026130619089747304,
+          "se": 0.0013235007215250329
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.011046922812116774,
+          "se": 0.00075340274191589
+        },
+        "model_generated_selection": {
+          "value": 0.009710005309520207,
+          "se": 5.800601545748054e-05
+        },
+        "error_generated_selection": {
+          "value": 0.0013369175025965668,
+          "se": 0.0007441135186216554
+        }
+      }
+    },
+    "size_015_025": {
+      "baseline_mass_fraction": 0.3535453759100411,
+      "R11": {
+        "simulation": {
+          "value": 0.16293803689265327,
+          "se": 0.0025855253634066455
+        },
+        "model_generated_selection": {
+          "value": 0.15656078607500998,
+          "se": 0.00030495588044160193
+        },
+        "error_generated_selection": {
+          "value": 0.006377250817643287,
+          "se": 0.0025971741574309423
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.16445675636262835,
+          "se": 0.002676732312771291
+        },
+        "model_generated_selection": {
+          "value": 0.15691577998301154,
+          "se": 0.00029688502042630446
+        },
+        "error_generated_selection": {
+          "value": 0.007540976379616815,
+          "se": 0.002605154778337387
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.16369739662764082,
+          "se": 0.001903662037783743
+        },
+        "model_generated_selection": {
+          "value": 0.15673828302901077,
+          "se": 0.0002519490476518634
+        },
+        "error_generated_selection": {
+          "value": 0.006959113598630051,
+          "se": 0.0018808689576739447
+        }
+      }
+    },
+    "size_025_04": {
+      "baseline_mass_fraction": 0.4047570821019246,
+      "R11": {
+        "simulation": {
+          "value": 0.38003306416421745,
+          "se": 0.002133133047634119
+        },
+        "model_generated_selection": {
+          "value": 0.3758383533046172,
+          "se": 0.000489312951777984
+        },
+        "error_generated_selection": {
+          "value": 0.00419471085960027,
+          "se": 0.002058841679433101
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.3865965620970633,
+          "se": 0.0022266756704517883
+        },
+        "model_generated_selection": {
+          "value": 0.3789357779797761,
+          "se": 0.0004903385690512112
+        },
+        "error_generated_selection": {
+          "value": 0.007660784117287156,
+          "se": 0.0021199183533913515
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.38331481313064036,
+          "se": 0.0015791926009924497
+        },
+        "model_generated_selection": {
+          "value": 0.37738706564219665,
+          "se": 0.0004142761615291331
+        },
+        "error_generated_selection": {
+          "value": 0.005927747488443713,
+          "se": 0.0014399361406794787
+        }
+      }
+    },
+    "size_04_07": {
+      "baseline_mass_fraction": 0.1446125567649391,
+      "R11": {
+        "simulation": {
+          "value": 0.1437265643216869,
+          "se": 0.0007696257247035121
+        },
+        "model_generated_selection": {
+          "value": 0.14578512941511412,
+          "se": 0.00029831998348556004
+        },
+        "error_generated_selection": {
+          "value": -0.0020585650934272226,
+          "se": 0.000659302700514571
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.14329237704418799,
+          "se": 0.0008503046088075365
+        },
+        "model_generated_selection": {
+          "value": 0.15134217058340155,
+          "se": 0.0003147033899317014
+        },
+        "error_generated_selection": {
+          "value": -0.008049793539213562,
+          "se": 0.0006982269835654538
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.14350947068293746,
+          "se": 0.0005070256600980022
+        },
+        "model_generated_selection": {
+          "value": 0.14856364999925784,
+          "se": 0.00025008576697544956
+        },
+        "error_generated_selection": {
+          "value": -0.0050541793163203785,
+          "se": 0.00042237200068676836
+        }
+      }
+    },
+    "size_ge07": {
+      "baseline_mass_fraction": 0.029927917537663086,
+      "R11": {
+        "simulation": {
+          "value": 0.02625134668805952,
+          "se": 0.00024946483186774637
+        },
+        "model_generated_selection": {
+          "value": 0.027193964668668785,
+          "se": 0.00011947219107321646
+        },
+        "error_generated_selection": {
+          "value": -0.0009426179806092637,
+          "se": 0.00021613505878546738
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.026043773938901064,
+          "se": 0.00016787167121478977
+        },
+        "model_generated_selection": {
+          "value": 0.027465605752818013,
+          "se": 8.997317645235942e-05
+        },
+        "error_generated_selection": {
+          "value": -0.0014218318139169496,
+          "se": 0.00017095138181969709
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.02614756031348029,
+          "se": 0.00018271065736116045
+        },
+        "model_generated_selection": {
+          "value": 0.027329785210743397,
+          "se": 9.254697464683049e-05
+        },
+        "error_generated_selection": {
+          "value": -0.0011822248972631066,
+          "se": 0.00016412765796636943
+        }
+      }
+    },
+    "crowd_lt01": {
+      "baseline_mass_fraction": 0.6577661644921791,
+      "R11": {
+        "simulation": {
+          "value": 0.642670088705038,
+          "se": 0.0030793505816116727
+        },
+        "model_generated_selection": {
+          "value": 0.6287159470424949,
+          "se": 0.0005411241314617355
+        },
+        "error_generated_selection": {
+          "value": 0.013954141662543051,
+          "se": 0.0029952094227472604
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.6468950700550895,
+          "se": 0.0037518735065404716
+        },
+        "model_generated_selection": {
+          "value": 0.6421114794169431,
+          "se": 0.0005944843291509699
+        },
+        "error_generated_selection": {
+          "value": 0.004783590638146373,
+          "se": 0.0036176198155161558
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.6447825793800637,
+          "se": 0.002507048195512729
+        },
+        "model_generated_selection": {
+          "value": 0.6354137132297191,
+          "se": 0.0004490363139920906
+        },
+        "error_generated_selection": {
+          "value": 0.009368866150344601,
+          "se": 0.0024467829469425623
+        }
+      }
+    },
+    "crowd_01_03": {
+      "baseline_mass_fraction": 0.20320802998630433,
+      "R11": {
+        "simulation": {
+          "value": 0.06405264006941142,
+          "se": 0.0012442065768924885
+        },
+        "model_generated_selection": {
+          "value": 0.07314234746792433,
+          "se": 0.00016264139540040964
+        },
+        "error_generated_selection": {
+          "value": -0.00908970739851292,
+          "se": 0.0012631162145826979
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.06756745719650618,
+          "se": 0.0012973352454319774
+        },
+        "model_generated_selection": {
+          "value": 0.06951331293768413,
+          "se": 0.00014799891419921073
+        },
+        "error_generated_selection": {
+          "value": -0.0019458557411779487,
+          "se": 0.0013096472792136508
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.0658100486329588,
+          "se": 0.0008175250158039645
+        },
+        "model_generated_selection": {
+          "value": 0.07132783020280423,
+          "se": 0.00013316059739542266
+        },
+        "error_generated_selection": {
+          "value": -0.00551778156984542,
+          "se": 0.0008388598530047664
+        }
+      }
+    },
+    "crowd_03_1": {
+      "baseline_mass_fraction": 0.12928602321055288,
+      "R11": {
+        "simulation": {
+          "value": 0.014756289147513126,
+          "se": 0.0011398818732973025
+        },
+        "model_generated_selection": {
+          "value": 0.01271563712839314,
+          "se": 6.49836161156101e-05
+        },
+        "error_generated_selection": {
+          "value": 0.0020406520191199855,
+          "se": 0.0011382552220926777
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.01789552639861053,
+          "se": 0.0008332879858478201
+        },
+        "model_generated_selection": {
+          "value": 0.01303281165449219,
+          "se": 6.360941564616077e-05
+        },
+        "error_generated_selection": {
+          "value": 0.004862714744118339,
+          "se": 0.0008246248595270029
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.016325907773061827,
+          "se": 0.0007701627987782937
+        },
+        "model_generated_selection": {
+          "value": 0.012874224391442665,
+          "se": 4.966140955794634e-05
+        },
+        "error_generated_selection": {
+          "value": 0.003451683381619162,
+          "se": 0.0007662064274082919
+        }
+      }
+    },
+    "crowd_1_3": {
+      "baseline_mass_fraction": 0.008980033157932676,
+      "R11": {
+        "simulation": {
+          "value": 0.0006798128593634132,
+          "se": 0.00034679842693898937
+        },
+        "model_generated_selection": {
+          "value": 7.480550407641637e-07,
+          "se": 1.1300540166648913e-05
+        },
+        "error_generated_selection": {
+          "value": 0.0006790648043226491,
+          "se": 0.00034505963932214133
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.0008445248084157248,
+          "se": 0.00042593134958956855
+        },
+        "model_generated_selection": {
+          "value": 0.00019225834338525808,
+          "se": 1.077204364494292e-05
+        },
+        "error_generated_selection": {
+          "value": 0.0006522664650304667,
+          "se": 0.0004240279399735049
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.0007621688338895691,
+          "se": 0.0002928982590076311
+        },
+        "model_generated_selection": {
+          "value": 9.650319921301113e-05,
+          "se": 7.574026892857503e-06
+        },
+        "error_generated_selection": {
+          "value": 0.0006656656346765579,
+          "se": 0.00029199739531132285
+        }
+      }
+    },
+    "crowd_ge3": {
+      "baseline_mass_fraction": 0.0007597491530310675,
+      "R11": {
+        "simulation": {
+          "value": 7.456526032055513e-05,
+          "se": 9.187596614445746e-05
+        },
+        "model_generated_selection": {
+          "value": 2.7164648367852672e-05,
+          "se": 9.753391367687327e-07
+        },
+        "error_generated_selection": {
+          "value": 4.7400611952702454e-05,
+          "se": 9.18289243448991e-05
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": -3.647366636876134e-06,
+          "se": 6.817930678593376e-05
+        },
+        "model_generated_selection": {
+          "value": 5.8716867319891145e-06,
+          "se": 1.2445297372787076e-06
+        },
+        "error_generated_selection": {
+          "value": -9.519053368865249e-06,
+          "se": 6.824742109708077e-05
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 3.5458946841839496e-05,
+          "se": 5.587813340362968e-05
+        },
+        "model_generated_selection": {
+          "value": 1.6518167549920895e-05,
+          "se": 7.83561089453215e-07
+        },
+        "error_generated_selection": {
+          "value": 1.89407792919186e-05,
+          "se": 5.5783802579470504e-05
+        }
+      }
+    },
+    "mag_lt24": {
+      "baseline_mass_fraction": 0.4319797448280833,
+      "R11": {
+        "simulation": {
+          "value": 0.4929754194663129,
+          "se": 0.0030009743058735765
+        },
+        "model_generated_selection": {
+          "value": 0.49187469869263795,
+          "se": 0.00046957371177745597
+        },
+        "error_generated_selection": {
+          "value": 0.001100720773674957,
+          "se": 0.002939884059062783
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.49575392023636083,
+          "se": 0.0029628808363180666
+        },
+        "model_generated_selection": {
+          "value": 0.5006137328711688,
+          "se": 0.0005815258540408154
+        },
+        "error_generated_selection": {
+          "value": -0.004859812634808003,
+          "se": 0.0028876757767230606
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.49436466985133687,
+          "se": 0.002322608800624248
+        },
+        "model_generated_selection": {
+          "value": 0.49624421578190336,
+          "se": 0.0004186795732573806
+        },
+        "error_generated_selection": {
+          "value": -0.0018795459305664952,
+          "se": 0.002269439641353063
+        }
+      }
+    },
+    "mag_24_255": {
+      "baseline_mass_fraction": 0.5250724428746486,
+      "R11": {
+        "simulation": {
+          "value": 0.22667717055998185,
+          "se": 0.0024540821702953154
+        },
+        "model_generated_selection": {
+          "value": 0.2220530186269082,
+          "se": 0.00029714795145959437
+        },
+        "error_generated_selection": {
+          "value": 0.004624151933073639,
+          "se": 0.0024115705668991214
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.23529033708531585,
+          "se": 0.0019520730564483537
+        },
+        "model_generated_selection": {
+          "value": 0.2221111098924962,
+          "se": 0.00025611782630744574
+        },
+        "error_generated_selection": {
+          "value": 0.013179227192819665,
+          "se": 0.0019434177526918449
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.23098375382264885,
+          "se": 0.0014196984047561661
+        },
+        "model_generated_selection": {
+          "value": 0.2220820642597022,
+          "se": 0.0002430447392833688
+        },
+        "error_generated_selection": {
+          "value": 0.008901689562946652,
+          "se": 0.0013972875240931856
+        }
+      }
+    },
+    "mag_255_275": {
+      "baseline_mass_fraction": 0.04211021408491314,
+      "R11": {
+        "simulation": {
+          "value": 0.00269960117873865,
+          "se": 0.0008383683684196341
+        },
+        "model_generated_selection": {
+          "value": 0.0006528375340679745,
+          "se": 2.9050502021655967e-05
+        },
+        "error_generated_selection": {
+          "value": 0.0020467636446706754,
+          "se": 0.0008334225309922176
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.0020463447917615555,
+          "se": 0.000738903820412112
+        },
+        "model_generated_selection": {
+          "value": 0.002119428757341106,
+          "se": 3.4791095228354254e-05
+        },
+        "error_generated_selection": {
+          "value": -7.30839655795506e-05,
+          "se": 0.000742522516251061
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": 0.002372972985250103,
+          "se": 0.0006049838107316283
+        },
+        "model_generated_selection": {
+          "value": 0.0013861331457045403,
+          "se": 2.0695192700785478e-05
+        },
+        "error_generated_selection": {
+          "value": 0.0009868398395455626,
+          "se": 0.0006030141911369329
+        }
+      }
+    },
+    "mag_ge275": {
+      "baseline_mass_fraction": 0.000837598212354934,
+      "R11": {
+        "simulation": {
+          "value": -0.00011879516338700387,
+          "se": 9.83271909224362e-05
+        },
+        "model_generated_selection": {
+          "value": 2.128948860669076e-05,
+          "se": 3.076207196715136e-06
+        },
+        "error_generated_selection": {
+          "value": -0.00014008465199369464,
+          "se": 9.827453753715911e-05
+        }
+      },
+      "R22": {
+        "simulation": {
+          "value": 0.00010832897854679767,
+          "se": 9.255998016640506e-05
+        },
+        "model_generated_selection": {
+          "value": 1.1462518230624974e-05,
+          "se": 2.6593700722944233e-06
+        },
+        "error_generated_selection": {
+          "value": 9.686646031617269e-05,
+          "se": 9.245572468932982e-05
+        }
+      },
+      "halftrace": {
+        "simulation": {
+          "value": -5.233092420103101e-06,
+          "se": 5.711898187909703e-05
+        },
+        "model_generated_selection": {
+          "value": 1.6376003418657868e-05,
+          "se": 2.081700796892505e-06
+        },
+        "error_generated_selection": {
+          "value": -2.160909583876097e-05,
+          "se": 5.7228025141958226e-05
+        }
+      }
+    }
+  }
+}

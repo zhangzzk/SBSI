@@ -1,0 +1,61 @@
+{
+  "provenance": {
+    "manifest": "068f9ef4bf64c3dbed9e6f059a96da6dfcd6233f578fd33f6c8f6862143af8c8",
+    "train": "98d4825b074fb5d0c273c0421ac7fe5dc7d9e88897c0ed3624c8cb5faa2b97ac",
+    "probability": "d9bac243f437b05bc287f763f0ca35573a4acc05148c3bf6d50d3851574ebefa",
+    "source_pins": "1b5b8dedd18a2e7b2d60e1dd330adbf35e15dadfc07a69c7ba43b2eb2fb9eb7b",
+    "targets": "32217b95fe6fafc7fca4edc693bbb6a02b4e5412eca839bbab58392eb9aff232",
+    "initial": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+      "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+    }
+  },
+  "weight": 66.86637128720929,
+  "samples": [
+    {
+      "batch": 0,
+      "nll": -3.891147454943945,
+      "guard": 6.639837107476793,
+      "probability_score": 0.05083778270143477,
+      "base_norm": 20.050755322157105,
+      "extra_norm": 0.0749241017443608,
+      "cosine": 0.15371242824985237
+    },
+    {
+      "batch": 1,
+      "nll": -3.921569835491341,
+      "guard": 0.1839054677008908,
+      "probability_score": 0.05219921297391455,
+      "base_norm": 12.646379664668316,
+      "extra_norm": 0.041253627154878056,
+      "cosine": 0.08708129307996566
+    },
+    {
+      "batch": 2,
+      "nll": -3.920004997004516,
+      "guard": 0.31948951996468644,
+      "probability_score": 0.052873170063227934,
+      "base_norm": 18.23366211679895,
+      "extra_norm": 0.060892838798578645,
+      "cosine": 0.0008154219849180272
+    },
+    {
+      "batch": 3,
+      "nll": -3.9104806205215232,
+      "guard": 0.9941246421530555,
+      "probability_score": 0.05070581918117393,
+      "base_norm": 10.441792786789565,
+      "extra_norm": 0.054805005262322466,
+      "cosine": 0.2548694309767181
+    }
+  ],
+  "gradient_check": {
+    "relative_gradient_error": 6.551195120822635e-08,
+    "loss": 0.03349964628334416,
+    "same_rows_both_banks": true,
+    "uneven_final_chunk": true,
+    "conditional_shape_gradients_absent": true
+  },
+  "training_only": true,
+  "parameter_updates": 0
+}

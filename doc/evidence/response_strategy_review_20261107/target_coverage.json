@@ -1,0 +1,96 @@
+{
+  "sources": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/prepared/completed.json": "b3190579df654023872304b7e7be589c0b2bf1eb20f50667090d292b9061e549",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain/manifest.json": "9f6305e81595fe7098eaad0cb788ca2267a40e990b7072d8d43c614e810f0a6b",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/sbsi/flow_guard_response.py": "edcb307c01e613526a1cffc5c15299eb667a6deb8a448b977c62c6d7d787c7d6",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/scripts/train_fixed_g0_flow.py": "429abe77f014d24a514cf8fa5d566beb905aa31c31de2f7f88dfb03800da2fde"
+  },
+  "prepared_domain_and_guard_hashes_match": true,
+  "training_validation_cases_disjoint": true,
+  "splits": {
+    "train": {
+      "cases": 160,
+      "nll_rows": 46833127,
+      "response_pairs": 23279984,
+      "probe_pairs": 262144,
+      "matching_totals": {
+        "left_rows": 23421091,
+        "right_rows": 23412036,
+        "matched_rows": 23279984,
+        "left_unmatched": 141107,
+        "right_unmatched": 132052,
+        "response_pairs": 23279984,
+        "excluded_zero_shear_pairs": 0
+      }
+    },
+    "validation": {
+      "cases": 40,
+      "nll_rows": 11703585,
+      "response_pairs": 5817708,
+      "probe_pairs": 262144,
+      "matching_totals": {
+        "left_rows": 5853061,
+        "right_rows": 5850524,
+        "matched_rows": 5817708,
+        "left_unmatched": 35353,
+        "right_unmatched": 32816,
+        "response_pairs": 5817708,
+        "excluded_zero_shear_pairs": 0
+      }
+    }
+  },
+  "target_contract": {
+    "domain": {
+      "name": "galsbi_resim_full_valid_measurement_domain_true_mag_lt30_centred65_v1",
+      "anchor_leg": null,
+      "predicate": null,
+      "measured_selection_cut": null,
+      "sheared_leg_recut": null,
+      "independent_per_leg_validity": true,
+      "inherited_parent_support_only": false,
+      "truth_analysis_cut": {
+        "column": "r_input_p",
+        "operator": "<",
+        "value": 30.0
+      }
+    },
+    "features": [
+      "e1_input_p",
+      "e2_input_p",
+      "sersic_n_input_p",
+      "r_input_p",
+      "circularized_Re_input_p",
+      "nbr_close_050",
+      "nbr_close_100",
+      "nbr_close_200"
+    ],
+    "measured_targets": [
+      "measured_ngmix_g1",
+      "measured_ngmix_g2",
+      "measured_flux_radius",
+      "measured_flux_from_mag_auto"
+    ],
+    "leg_counts": {
+      "g0": {
+        "truth_parent_rows": 88468382,
+        "usable_rows": 29274152,
+        "detected_rows": 29277943,
+        "invalid_rows_after_truth_cut": 59194230
+      },
+      "g05": {
+        "truth_parent_rows": 88468382,
+        "usable_rows": 29262560,
+        "detected_rows": 29266361,
+        "invalid_rows_after_truth_cut": 59205822
+      }
+    },
+    "per_leg_usable_labels_exist_in_domain": true,
+    "current_flow_response_uses_usable_intersection": true,
+    "current_guard_uses_fixed_measured_g0_normalization": true,
+    "current_guard_includes_classifier": false,
+    "current_guard_includes_disk_emulator": false,
+    "dedicated_neighbour_only_response_target_in_current_guard": false,
+    "coherent_antithetic_training_target_in_current_guard": false,
+    "scope": "Inspected current prepared target and executed source; no assertion that all other possible datasets are absent."
+  }
+}

@@ -180,6 +180,29 @@ class SpinZeroDetector:
         return 1.0 / (1.0 + np.exp(frame["r_input_p_scaled"].to_numpy(float)))
 
 
+class MinimalRBlendDetector:
+    feature_names = [
+        "e1_input_p",
+        "e2_input_p",
+        "sersic_n_input_p",
+        "r_input_p",
+        "circularized_Re_input_p",
+        "nbr_flux_near",
+        "nbr_flux_far",
+        "nbr_flux_max",
+        "R_blend",
+    ]
+
+    def __init__(self):
+        self.preprocessor = SimpleNamespace(feature_names=self.feature_names)
+        self.calls = []
+
+    def predict_proba(self, frame):
+        self.calls.append(frame.loc[:, self.feature_names].copy())
+        logit = frame["e1_input_p"].to_numpy(float) + frame["R_blend"].to_numpy(float)
+        return 1.0 / (1.0 + np.exp(-logit))
+
+
 def _likelihood():
     prior = ScenePrior.from_catalogue(_catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight")
     cache = CatalogueModelCache(
@@ -568,6 +591,80 @@ def test_shape_only_compact_cache_stores_spin0_conditions_once(tmp_path):
         restored.get(0.005, 0.0).flow["e1_input_p"],
         shifted.flow["e1_input_p"],
     )
+
+
+def test_minimal_rblend_detector_gets_aligned_invariant_and_sheared_features(tmp_path, monkeypatch):
+    prior = ScenePrior.from_catalogue(
+        _catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight"
+    )
+    detector = MinimalRBlendDetector()
+    response = CatalogueBlendResponse(
+        np.array([0.1, 0.2, 0.3, 0.4]), metadata={"test": True}, report={}
+    )
+    flow_features = tuple(detector.feature_names[:-1])
+    cache = CatalogueModelCache(
+        prior,
+        detector=detector,
+        conditions=CONDITIONS,
+        detection_radius_arcsec=3.0,
+        flow_neighbour_radius_arcsec=7.0,
+        crowding_radii_arcsec=(3.0, 7.0),
+        blend_response=response,
+        flow_features=flow_features,
+    )
+
+    zero = cache.get(0.0, 0.0)
+    cache.save(tmp_path / "coherent")
+    restored = CatalogueModelCache.load(tmp_path / "coherent", prior=prior, blend_response=response)
+    restored.attach_detector(MinimalRBlendDetector())
+    # A fresh full-scene view is the oracle. The restored compact cache must
+    # agree without consulting a graph at any nonzero shear.
+    reference = CatalogueModelCache(
+        prior, detector=MinimalRBlendDetector(), conditions=CONDITIONS,
+        detection_radius_arcsec=3.0, flow_neighbour_radius_arcsec=7.0,
+        crowding_radii_arcsec=(3.0, 7.0), blend_response=response,
+    ).get(0.01, 0.0)
+    def no_graph(*args, **kwargs):
+        raise AssertionError("compact view unexpectedly used the neighbour graph")
+    monkeypatch.setattr(ScenePrior, "shear", no_graph)
+    shifted = cache.get(0.01, 0.0)
+    recovered = restored.get(0.01, 0.0)
+    np.testing.assert_allclose(recovered.detection, reference.detection, rtol=0, atol=1e-14)
+    np.testing.assert_allclose(recovered.detection_probability, reference.detection_probability)
+    np.testing.assert_allclose(recovered.blend_shift, reference.blend_shift, rtol=0, atol=1e-14)
+    expected_radius = _catalogue()["Re"].to_numpy() * np.sqrt(
+        _catalogue()["axis_ratio"].to_numpy()
+    )
+
+    assert tuple(zero.detection.columns) == tuple(detector.feature_names)
+    np.testing.assert_allclose(zero.flow["circularized_Re_input_p"], expected_radius)
+    np.testing.assert_array_equal(
+        zero.flow["circularized_Re_input_p"],
+        shifted.flow["circularized_Re_input_p"],
+    )
+    np.testing.assert_array_equal(zero.detection["R_blend"], response.values)
+    np.testing.assert_array_equal(shifted.detection["R_blend"], response.values)
+    for name in ("nbr_flux_near", "nbr_flux_far", "nbr_flux_max"):
+        np.testing.assert_array_equal(zero.detection[name], zero.flow[name])
+    assert not np.array_equal(zero.detection["e1_input_p"], shifted.detection["e1_input_p"])
+    assert not np.array_equal(zero.detection_probability, shifted.detection_probability)
+    assert len(detector.calls) == 2
+
+
+def test_minimal_rblend_detector_requires_blend_response():
+    prior = ScenePrior.from_catalogue(
+        _catalogue(), guard_radius_arcsec=8.0, weight_column="prior_weight"
+    )
+    cache = CatalogueModelCache(
+        prior,
+        detector=MinimalRBlendDetector(),
+        conditions=CONDITIONS,
+        detection_radius_arcsec=3.0,
+        flow_neighbour_radius_arcsec=7.0,
+        crowding_radii_arcsec=(3.0, 7.0),
+    )
+    with pytest.raises(KeyError, match="R_blend requires"):
+        cache.get(0.0, 0.0)
 
 
 def test_detection_neighbour_rule_is_applied_and_persisted(tmp_path):

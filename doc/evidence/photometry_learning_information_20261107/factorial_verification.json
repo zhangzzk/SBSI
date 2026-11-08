@@ -1,0 +1,6 @@
+{
+  "four_way_contrasts_exact": true,
+  "input_off_weights_frozen": true,
+  "shape_parameters_frozen": true,
+  "unequal_case_reducer_interaction_exact": true
+}

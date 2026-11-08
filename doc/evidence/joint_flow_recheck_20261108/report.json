@@ -1,0 +1,457 @@
+{
+  "definition": "Same40 scenes, central radius>3 pixels/magnitude<25, predicted usability/generated selection, first shear component only. m=100*(Rmeasured/Rmodel-1), paired whole-scene jackknife. Old cached predictions reused; no axis2/nine-target-cut acceptance claim.",
+  "latest_m1_percent": {
+    "value": 0.5557647064006188,
+    "jackknife_se": 0.13142707492984995
+  },
+  "arms": {
+    "joint_cartesian": {
+      "checkpoint": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_trajectory_20261105/galsbi_fs2rate/selected.pt",
+        "sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd"
+      },
+      "old_m1_percent": {
+        "value": 0.9040140768604932,
+        "jackknife_se": 0.3075500125453617
+      },
+      "new_m1_percent": {
+        "value": 0.6514436691031467,
+        "jackknife_se": 0.13284371685671328
+      },
+      "new_minus_latest_pp": {
+        "value": 0.09567896270252785,
+        "jackknife_se": 0.010040924626449281
+      },
+      "model_R11": {
+        "value": 0.8990105763770118,
+        "jackknife_se": 0.0002744833065187155
+      },
+      "receipts": [
+        {
+          "case": 1000,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1000.npz",
+          "current_sha256": "bc12aef49319f02e670c23bbfa9ca17f6f51224bada0be58b4340e4d4f32a9b7"
+        },
+        {
+          "case": 1040,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1040.npz",
+          "current_sha256": "49acff60697082a7afd5319f61a2691e75540e0fd50156da757c23cf6db49e46"
+        },
+        {
+          "case": 1080,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1080.npz",
+          "current_sha256": "0ef3d8a03ba0e85525ab3a4176f8fc10608e182a3c3cd056e86c0641aa553409"
+        },
+        {
+          "case": 1120,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1120.npz",
+          "current_sha256": "4d711cc39420cadf723eee8f695800b428b982e53cd9477e488c4ac51ce00346"
+        },
+        {
+          "case": 1001,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1001.npz",
+          "current_sha256": "59f9bca4f275ad031eb88d78dbbd8b863ab5a3c5c6c605bd1e0c4c8cd926d5a2"
+        },
+        {
+          "case": 1041,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1041.npz",
+          "current_sha256": "522d24556342e594ccf3cef7f7921fc73a3ab1719e048c8142dba7fcc9ed4c87"
+        },
+        {
+          "case": 1081,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1081.npz",
+          "current_sha256": "46bf0c8fcf8d4aa2565864536767eb9dd59a79c93438cb20d99ba6131ca3cb84"
+        },
+        {
+          "case": 1121,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1121.npz",
+          "current_sha256": "88c3d78cafac13f16d4db8b0c27c734f9f52f9af235c0dde25da85b20acddce2"
+        },
+        {
+          "case": 1002,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1002.npz",
+          "current_sha256": "344d2aa92d70c75f56cb228924fbdf8f5d1989d033a458cd68e14193c78fd6ff"
+        },
+        {
+          "case": 1042,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1042.npz",
+          "current_sha256": "16ed271d3c4b2bd51a54840d932aa3a83c060d6b77b62a3c24b6c4c1ed7dc417"
+        },
+        {
+          "case": 1082,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1082.npz",
+          "current_sha256": "4d1de1b09343df8e578342a854dd80fad443b161dbea8644c23c924731b5da5f"
+        },
+        {
+          "case": 1122,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1122.npz",
+          "current_sha256": "6b567004132e6a5208288570dd020b0610bbc3a5cc93d8ea7b27de4ac03f748f"
+        },
+        {
+          "case": 1003,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1003.npz",
+          "current_sha256": "86ffbca452a04d23fb8ec794c17e5fc987b2d182edd5e74b8f7aab7d2494d8f8"
+        },
+        {
+          "case": 1043,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1043.npz",
+          "current_sha256": "de872e9ab7af25d72d814b56ac4797d2fc31a4d65953138e16e49d81f7ec7275"
+        },
+        {
+          "case": 1083,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1083.npz",
+          "current_sha256": "33ffa198a2a0d48630627c9167ed3a895545b2b9923889854fb2000d42cb3939"
+        },
+        {
+          "case": 1123,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1123.npz",
+          "current_sha256": "e29fa8fd597a2a95c65e0d56aa2d5e3b40d66bd33743b8fba08e260dc00dfd91"
+        },
+        {
+          "case": 1004,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1004.npz",
+          "current_sha256": "9c288ee903e69419ba090486f77e7ed0427d57bdd07d7c25cbf7d44c2408f6f2"
+        },
+        {
+          "case": 1044,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1044.npz",
+          "current_sha256": "7da27709db819e219fee5bc25753aaba9e83ebf08cff3552b5573ac866ef43de"
+        },
+        {
+          "case": 1084,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1084.npz",
+          "current_sha256": "a548300ede56d9e90edb2cac9e9b6d8d2dc9639c6aed9cc5d4f8fcd7c5db127a"
+        },
+        {
+          "case": 1124,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1124.npz",
+          "current_sha256": "aea41aac5690ac9a45429d44c7b7efeb6bf972dd1c7657ad8a48d97ae9478c94"
+        },
+        {
+          "case": 1005,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1005.npz",
+          "current_sha256": "b0e09de8c1ce23770066b602a47a851de4e472b542f5348efe2a06946e9a8dee"
+        },
+        {
+          "case": 1045,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1045.npz",
+          "current_sha256": "584fdd5084a9c20184b286864ad9c6949ca189f2626508e44cfc6d9bc66bd50c"
+        },
+        {
+          "case": 1085,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1085.npz",
+          "current_sha256": "54411cf78c4892bc6899467bf038efd80099655b29f3ce4713db7499945fd7b5"
+        },
+        {
+          "case": 1125,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1125.npz",
+          "current_sha256": "1c45aa2d81ad57d066b174b469b27a8d9691e2e3cfd159af8fe2d99693201918"
+        },
+        {
+          "case": 1006,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1006.npz",
+          "current_sha256": "b690d839a4b412affe2c236d9b376bac92925c936287da2bf07ae6e5a13b2fc9"
+        },
+        {
+          "case": 1046,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1046.npz",
+          "current_sha256": "2a9976fd88cb7dd7535525c0f28d855704719473c53f8607292e356c0e431daf"
+        },
+        {
+          "case": 1086,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1086.npz",
+          "current_sha256": "685c70874644d0efeb02056a574bdc750b0979a4e6576219d53b2d03a98be0f4"
+        },
+        {
+          "case": 1126,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1126.npz",
+          "current_sha256": "e60d0d2150c8e9ed075aae75b80d778c39cebbcb706afb72e5f9bd9ea2fc297c"
+        },
+        {
+          "case": 1007,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1007.npz",
+          "current_sha256": "b98726e2e82cf65ad3b998766f89d7e2b43791a0099035ddbbbb2761ecfcb1e3"
+        },
+        {
+          "case": 1047,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1047.npz",
+          "current_sha256": "92911cbed5afcb08f26039a59bd964e475b9539accaad353963254a9d2638b3d"
+        },
+        {
+          "case": 1087,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1087.npz",
+          "current_sha256": "8fe929aa1401830472c0fd212132961c530f53de17b4e5bb345379ee26f76d82"
+        },
+        {
+          "case": 1127,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1127.npz",
+          "current_sha256": "5f5a6bbf3dbe4ad517ff4db8ed5a5f12f082a6228e01c7a156c96683c72863c8"
+        },
+        {
+          "case": 1008,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1008.npz",
+          "current_sha256": "f77a03031e9ace8b5c1f1994ef9b492aca35b45db01191444e48c351a2bfadf1"
+        },
+        {
+          "case": 1048,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1048.npz",
+          "current_sha256": "c52cd137eee735baba44dcf728c4b78728aa3e43160917446da01cf2e79b4eba"
+        },
+        {
+          "case": 1088,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1088.npz",
+          "current_sha256": "92dd59f9de8acfcca0bd5d83b11e3a3719367bf64246da6f5137a6348c1524f6"
+        },
+        {
+          "case": 1128,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1128.npz",
+          "current_sha256": "524b98d3ad2243e78ba22c4f568f8dea7a2e93887ab3ac8f320bbe2b703822c8"
+        },
+        {
+          "case": 1009,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1009.npz",
+          "current_sha256": "8728663a9379d60bc97e2ea8d1145b108bc8f6ad4c6cd356022b0f43e0907eb9"
+        },
+        {
+          "case": 1049,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1049.npz",
+          "current_sha256": "2776dfb35b08d5b20dc69bef73aa17ea5a1b0f2ddd248432e05a7fbdf427d63c"
+        },
+        {
+          "case": 1089,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1089.npz",
+          "current_sha256": "14027d0da7d762867b8898d53ec791db1e2246113e56fd0b2b76d7cd9addb567"
+        },
+        {
+          "case": 1129,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_cartesian/case1129.npz",
+          "current_sha256": "b0e09634769db9cf4581e2185aa87e0eac84149dc95378d991624bff00c0c002"
+        }
+      ]
+    },
+    "joint_frame": {
+      "checkpoint": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_frame_full_20261105/frame/selected.pt",
+        "sha256": "738f4d9b83f35c180107f94e0ed852c42a4537924aee1fbe91da5eaec3d49398"
+      },
+      "old_m1_percent": {
+        "value": -0.705287484454431,
+        "jackknife_se": 0.3054362525879996
+      },
+      "new_m1_percent": {
+        "value": -0.95382968822737,
+        "jackknife_se": 0.1290220808420674
+      },
+      "new_minus_latest_pp": {
+        "value": -1.5095943946279888,
+        "jackknife_se": 0.015471382819452751
+      },
+      "model_R11": {
+        "value": 0.9135811319237196,
+        "jackknife_se": 0.0003213848496525185
+      },
+      "receipts": [
+        {
+          "case": 1000,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1000.npz",
+          "current_sha256": "9f8f46c9ca17b005b433742bfc032a9edfccd5b4dd4d15724b594e33fd6f07ec"
+        },
+        {
+          "case": 1040,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1040.npz",
+          "current_sha256": "0164fc48e7d4be3a1081c9182dd2f122cf56f7aa18f1367db263255c2b5d9f21"
+        },
+        {
+          "case": 1080,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1080.npz",
+          "current_sha256": "a94adb1712ddcd9bfd4640dd39a16637377d14552737a999c87f2e7429d5713f"
+        },
+        {
+          "case": 1120,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1120.npz",
+          "current_sha256": "964e0884f84f3e9285833e7d7a9362fed034081491197cee34262c0d50d2d4e1"
+        },
+        {
+          "case": 1001,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1001.npz",
+          "current_sha256": "d2832b439758cb1f550283f1724402f378e5b6558373e8c46eb653b1d2968a73"
+        },
+        {
+          "case": 1041,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1041.npz",
+          "current_sha256": "0fcf6b002f9da105a815a09d25d1bf2e98aeef828b665f8e07cb0210d1abc5aa"
+        },
+        {
+          "case": 1081,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1081.npz",
+          "current_sha256": "3b532686f07387028531b1cdfb0c438a4aa7aa33dcea67b930cab1db31ae7bfe"
+        },
+        {
+          "case": 1121,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1121.npz",
+          "current_sha256": "af6d8375b55a087af37d664c5cccdce825425b2e2a5a3518fea6d86daeaf91b6"
+        },
+        {
+          "case": 1002,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1002.npz",
+          "current_sha256": "b81df3443d971a43b58874c7474efffb403c1e2edd57f46fb99c655bac92ef32"
+        },
+        {
+          "case": 1042,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1042.npz",
+          "current_sha256": "2d4a9127b3c4f8c72f5348e79bfd2c1182d1f4fa3a111cf1784b5d90f20c23af"
+        },
+        {
+          "case": 1082,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1082.npz",
+          "current_sha256": "31ab66804a8109cbb43a365d79c7570dedfc66b5b7f93ddf46bb75c2d7cb58a3"
+        },
+        {
+          "case": 1122,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1122.npz",
+          "current_sha256": "63d0b993e2fd10886a6bc40ea682c3942dee1dc639ed063503ef071850f49610"
+        },
+        {
+          "case": 1003,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1003.npz",
+          "current_sha256": "2832088ba0bfebde43f5fcd36644a95a75e493d4b30fedb14e5078f46d5143b0"
+        },
+        {
+          "case": 1043,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1043.npz",
+          "current_sha256": "f244dc0187f9dd1dfb7245ef4518d2ea5e87fa052447191624e33387378ae681"
+        },
+        {
+          "case": 1083,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1083.npz",
+          "current_sha256": "c42ab709c5714082fe063c1c63c98590d2effd895fef9dd9cb54aafe8568f27e"
+        },
+        {
+          "case": 1123,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1123.npz",
+          "current_sha256": "a9df4bca860087768a8fb81fe9505c6abdb219801ad53fd5fc067b502cc5e743"
+        },
+        {
+          "case": 1004,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1004.npz",
+          "current_sha256": "d650118fe26ec9e7e9f47f543e22943297690fadf6e3c5a2b8a96cde63b7bad2"
+        },
+        {
+          "case": 1044,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1044.npz",
+          "current_sha256": "df85d3ef757af940a36d2faf4d80e40d39178846f27324b83455e80f64d29db2"
+        },
+        {
+          "case": 1084,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1084.npz",
+          "current_sha256": "0e37b707c4f638e1fab208a006ee2ca502519eadb7f8fe8a8f9f255dbf573679"
+        },
+        {
+          "case": 1124,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1124.npz",
+          "current_sha256": "28ba56e1540857ca2bf5b024663fbd9c686c91f67ed72537785c5b4fa09cbbb9"
+        },
+        {
+          "case": 1005,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1005.npz",
+          "current_sha256": "93bd738360a193bc0d2aaea2773d3b20eeaa9534b003b89903d7e249c9b65a55"
+        },
+        {
+          "case": 1045,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1045.npz",
+          "current_sha256": "4bc61a941a6bc977c081da834bc79f89f156df0c15ddb7eb2086030cca3930e1"
+        },
+        {
+          "case": 1085,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1085.npz",
+          "current_sha256": "96447404c1c438a0ad7493f566cdb6fcaf536ee56b3201c3dc038bb0b578adb0"
+        },
+        {
+          "case": 1125,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1125.npz",
+          "current_sha256": "4b853f96690fe50a07cb4872bac2ccad1b7bb34b460e85b3740ca41917f3d683"
+        },
+        {
+          "case": 1006,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1006.npz",
+          "current_sha256": "8a66c0fe89dc691c65678762bd6057d911510ba54b6e4280b60cfde8ed427e02"
+        },
+        {
+          "case": 1046,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1046.npz",
+          "current_sha256": "0455bd379638f464665927ddfd0ee76533da56e07dd26f5219ac2d7713eccedb"
+        },
+        {
+          "case": 1086,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1086.npz",
+          "current_sha256": "10694c9321acd2e562aae04609e2b8d521910f026738fd1711b235001679f751"
+        },
+        {
+          "case": 1126,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1126.npz",
+          "current_sha256": "6a783c7917e09bb6e8dfeca14a8a468a934fc6719674436401dda30764e34fdf"
+        },
+        {
+          "case": 1007,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1007.npz",
+          "current_sha256": "b766e04f5b8f5e4a25dd214b8cc4b82dc8c5dfac68e38d0af29a79fa46e19722"
+        },
+        {
+          "case": 1047,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1047.npz",
+          "current_sha256": "be03f7ec4268177a2d77ad41a4fe27476e1574a49650e11fe9408887dec55cc6"
+        },
+        {
+          "case": 1087,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1087.npz",
+          "current_sha256": "226f74c9a06fbf108adc3d9847a440090e386cd66ce8e4026feb0636f0560386"
+        },
+        {
+          "case": 1127,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1127.npz",
+          "current_sha256": "56ecc88d7681b6cf31048963ef36848e9aa47493b1bffac977ce9491825c8717"
+        },
+        {
+          "case": 1008,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1008.npz",
+          "current_sha256": "4f63981013f3d2808cd05b42c04ecf966893afd854e97aba25a55ddf7442806f"
+        },
+        {
+          "case": 1048,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1048.npz",
+          "current_sha256": "a18df0da74a14cba0045396f32570da0641a202291cc311cdf8e6bf84ab385f4"
+        },
+        {
+          "case": 1088,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1088.npz",
+          "current_sha256": "d07c73b92b03b6fab3d34c0c38a264ef9c2cf7650c8ad0b0836b5adc81cf01a5"
+        },
+        {
+          "case": 1128,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1128.npz",
+          "current_sha256": "88c0d47e8d1eb31fcc6dfd0ad23e1da517770300b4026003a570a2818c0533c0"
+        },
+        {
+          "case": 1009,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1009.npz",
+          "current_sha256": "a02b930ccbf95a2cf25a197b81c0368cc38e665d277fd2a1a5cdfd8744a42a42"
+        },
+        {
+          "case": 1049,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1049.npz",
+          "current_sha256": "a0e43c84b08c4d3ce7934f04995b166c648d45bf362ed0a825e26754f851c877"
+        },
+        {
+          "case": 1089,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1089.npz",
+          "current_sha256": "23e2d2b3bf89b364a0d6feab8afd5ad0186cff241a03d7da0614207997279315"
+        },
+        {
+          "case": 1129,
+          "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_matched_constant_20261105/joint_frame/case1129.npz",
+          "current_sha256": "82e54bfed867cf19e5da2bb3b1648a91089d1612cc93f5cc159723e162e866c0"
+        }
+      ]
+    }
+  }
+}

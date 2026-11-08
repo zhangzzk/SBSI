@@ -1,0 +1,11 @@
+{
+  "frozen_source_hashes": {
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/sbsi/flow_physical_disk.py": "0a8931300727e5faa7190f4cc9b1ef6d121ddd029cdeacceea15a44e694b13e5",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/sbsi/flow_disk.py": "501ec538e89e5476881c6ca883aa4c973e7c8feae6d9fb1c9a40bec5cf990b8c",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/sbsi/measurement_model.py": "a5245997c1dc58bb06ed7b18e7d322e34b8a32a1dd83cb0e5b155b868ad6b2bf",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/sbsi/selection_model.py": "14394d1c0550534d9210f915e714c7efcc4c99366004705d4c3e532b1868c4ce",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/sbsi/flow_guard_response.py": "edcb307c01e613526a1cffc5c15299eb667a6deb8a448b977c62c6d7d787c7d6",
+    "/project/ls-gruen/users/zekang.zhang/sbsi_flow_f8_20260924/scripts/train_full_domain_guard_flow.py": "2c9724d2b8932d8080e46a690225589d0b490106289089dc8fae5f65e6ebdb59"
+  },
+  "scope": "Read-only frozen model investigation. Shape-frame rotation is a density diagnostic, not a changed inference model."
+}

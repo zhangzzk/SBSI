@@ -1,0 +1,41 @@
+{
+  "external_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_frame_20261105",
+  "jobs": {
+    "training": "17756866",
+    "evaluation": "17757916",
+    "reduction": "17757938",
+    "moffat_images": "17757925",
+    "gaussian_images": "17758019",
+    "three_component_psf": "17758135",
+    "scheduled_check": "17757962"
+  },
+  "gpu_limit": 2,
+  "dependencies": {
+    "17757916": "afterok:17756866",
+    "17757938": "afterok:17757916"
+  },
+  "presets_modified": false,
+  "sources": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/plot_images.py": "9aed7348a1a0adebbcd602a03fa97949ffaf239041f3564257f488e1cd07751f",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/check.py": "77c6c9e42955f61f3ae1993cb5d395ddda3c2fa7463e7f84436d8098a5318554",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/evaluate.py": "d9444b84a0cb4023106beecce3efe1a93499994bee5a7401c5f20f86cdc1cba5",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/compare_psf_components.py": "ad4f0ec6ad59c611438e8d4343d27d896539bcfcd95f1575e872e7ef93a2d28b",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/plot_comparison.py": "1def06f02203352b442564962f494e3b3f1451431d08cfa842e6c41a71e32146",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/verify.py": "271ec3665f4e822d9cacf0255bfd4c32fb5fd66a70cffa4400c227d46da85ca4",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/reduce.py": "cc6767d37ded297f37a7a7145014efbb2ada086dbc4cd6115f117a8f0c86f1fd",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/plot_psf_components.py": "84db3b61311c3dbab4d795048a1c61cda4a1fd43d442da6811d256ed25fc9413",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/reduce_images.py": "51f13bfefcd37b7238acfc8c8f92e9314ebab6be25ed27c9b48919633ccfbd2d",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/train.py": "1f350743507d7eeae41e8ad2a6bb2b6ff79f2ef13753bb8750e378e64df65f91",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/frame_model.py": "ee834c08bcde3d8377070166534ba1e061a2530a189625ef2c3f5c86f6821cb9",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/run_reduce.sh": "6b70b2b6d23cbb2015d50171f8ea7b7c47d9f72f0e6e67a60805e18d3daf0c05",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/run_train.sh": "3846e47851170df7a85aaa0fc90d37fd21115acafd5dea9cde81f9d000137fa2",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/run_moffat3g.sh": "2f2b56f08aa659695888eeaf20d6e631fadfa75a0daccd4b7ec8a5bab2b474cd",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/run_evaluate.sh": "5647a82a88abeb0380d3678c59dd56d423bfc17b7e40b82ab83f4d7fdf8ca1fa",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/run_images.sh": "dc9f229adcf5d213cb9634818dc2d5e03f0d9e18e33fc05919f787b359452ada",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/run_gaussian.sh": "3a0a8faa0909bcc4ecda927a43065f109b650767535aa88648e86f5c161fc4f8",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_frame_20261105/run_check.sh": "903a1f6032d75e3bdbc207c0e3e27d39a6a59fc198eeadd53328fd381ccd6708",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/audit_identical_galaxy_conditions.py": "1d55fd0115a4390a923ad9e4f9cc5894e6be753dbd7abcda5b0ac6ae6f9deb50"
+  },
+  "status": "all science stages completed; scheduled check cancelled after immediate final check",
+  "source_hash_scope": "current sources at final review; individual execution receipts retain runtime source hashes"
+}

@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "event_assignment": true,
+  "per_draw_identity": true,
+  "arm_swap_antisymmetry": true,
+  "unequal_normalization": true,
+  "no_change_zero": true
+}

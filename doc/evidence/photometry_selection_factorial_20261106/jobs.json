@@ -1,0 +1,15 @@
+{
+  "pilot": "17806179",
+  "superseded_pilot": "17806171",
+  "pilot_report": "17806215",
+  "remaining_a40": "17806261",
+  "remaining_v100": "17806262",
+  "remaining_rtx": "17806263",
+  "broad_array_held": "17788286",
+  "combined_gpu_ceiling": 6,
+  "max_factorial_workers": 3,
+  "earlier_baseline_worker": "17805335_4",
+  "report": "17806280",
+  "check": "17806329",
+  "enhanced_pilot_report": "17806542"
+}

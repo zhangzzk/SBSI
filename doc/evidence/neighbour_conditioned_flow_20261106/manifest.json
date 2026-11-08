@@ -1,0 +1,303 @@
+{
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "mag24.9_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.1
+    ],
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ]
+  ],
+  "target_cuts": [
+    "mag24.9_radius_gt0.56",
+    "mag25_radius_gt0.56",
+    "mag25.1_radius_gt0.56",
+    "mag24.9_radius_gt0.60",
+    "mag25_radius_gt0.60",
+    "mag25.1_radius_gt0.60",
+    "mag24.9_radius_gt0.64",
+    "mag25_radius_gt0.64",
+    "mag25.1_radius_gt0.64"
+  ],
+  "sim_roots": {
+    "1": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+    "2": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims"
+  },
+  "intrinsic_size_edges_arcsec": [
+    0.15,
+    0.25,
+    0.4,
+    0.7
+  ],
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "arms": [
+    "control_nll",
+    "neighbour_nll",
+    "control_nine",
+    "neighbour_nine"
+  ],
+  "tasks": [
+    {
+      "arm": "control_nll",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "neighbour_nll",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "control_nine",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "neighbour_nine",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "control_nll",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "neighbour_nll",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "control_nine",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "neighbour_nine",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "control_nll",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "neighbour_nll",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "control_nine",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "neighbour_nine",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "control_nll",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "neighbour_nll",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "control_nine",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "neighbour_nine",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "control_nll",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "neighbour_nll",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "control_nine",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "neighbour_nine",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "control_nll",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "neighbour_nll",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "control_nine",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "neighbour_nine",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "control_nll",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "neighbour_nll",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "control_nine",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "neighbour_nine",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "control_nll",
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "arm": "neighbour_nll",
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "arm": "control_nine",
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "arm": "neighbour_nine",
+      "case": 1120,
+      "axis": 2
+    }
+  ]
+}

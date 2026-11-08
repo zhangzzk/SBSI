@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "name": "fs2_prior_cases20000_20199_v1",
+  "kind": "sharded_scene_prior",
+  "manifest": "/project/ls-gruen/users/zekang.zhang/sbsi/catalogue_prior/fs2_prior_cases20000_20199_v1/default_prior_manifest.json",
+  "manifest_sha256": "9d3568495c194c7efc3d05b7b6e783640f6ea860304d4af8d0cb4eed6fcf6090"
+}

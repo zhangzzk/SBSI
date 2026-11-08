@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "checks": [
+    "Known distribution/conditional-mean split",
+    "Exclusive-support conservation",
+    "Coarsening preserves all moments",
+    "AST parse"
+  ]
+}

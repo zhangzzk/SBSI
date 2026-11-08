@@ -1,0 +1,5 @@
+{
+  "nonsymmetric_matrix_axes_and_unequal_masses_passed": true,
+  "independent_leg_cuts_passed": true,
+  "old_invalid_new_valid_recovery_passed": true
+}

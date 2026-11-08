@@ -1,0 +1,37 @@
+# Packaging for the SBSI shear-calibration library (`sbsi`).
+#
+# Install the checkout editable into the environment used by scripts and notebooks.
+# This is the primary import contract; code must not depend on the shell or kernel's
+# current working directory:
+#
+#     python -m pip install -e .
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sbsi"
+version = "3.0.0"
+description = "Finite-prior likelihood and simulation-based shear inference."
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pandas",
+    "pyarrow",
+    "scipy",
+    "torch",
+]
+
+[project.scripts]
+sbsi = "sbsi.cli:main"
+
+[tool.setuptools]
+packages = ["sbsi"]
+
+[tool.ruff]
+line-length = 110
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["archive"]

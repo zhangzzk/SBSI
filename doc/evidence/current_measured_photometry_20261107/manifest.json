@@ -1,0 +1,609 @@
+{
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "mag24.9_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.1
+    ],
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ]
+  ],
+  "target_cuts": [
+    "mag24.9_radius_gt0.56",
+    "mag25_radius_gt0.56",
+    "mag25.1_radius_gt0.56",
+    "mag24.9_radius_gt0.60",
+    "mag25_radius_gt0.60",
+    "mag25.1_radius_gt0.60",
+    "mag24.9_radius_gt0.64",
+    "mag25_radius_gt0.64",
+    "mag25.1_radius_gt0.64"
+  ],
+  "sim_roots": {
+    "1": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+    "2": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims"
+  },
+  "intrinsic_size_edges_arcsec": [
+    0.15,
+    0.25,
+    0.4,
+    0.7
+  ],
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084,
+    1124,
+    1005,
+    1045,
+    1085,
+    1125,
+    1006,
+    1046,
+    1086,
+    1126,
+    1007,
+    1047,
+    1087,
+    1127,
+    1008,
+    1048,
+    1088,
+    1128,
+    1009,
+    1049,
+    1089,
+    1129
+  ],
+  "pilot_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "bootstrap_seed": 202611061020,
+  "checkpoints": {
+    "control": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/control/final.pt",
+      "sha256": "5cc126e14355626098bf6b5775b54ed18c3b115504ed1612e1c50b1b8945b5db"
+    },
+    "weighted": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/weighted/final.pt",
+      "sha256": "43673e5db42e90d976d45dc7de1e54682adb0fd18bea74c6602e8dd4630c8cbd"
+    }
+  },
+  "original_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107",
+  "reference_model": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+    "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+  },
+  "tasks": [
+    {
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "case": 1001,
+      "axis": 1
+    },
+    {
+      "case": 1001,
+      "axis": 2
+    },
+    {
+      "case": 1041,
+      "axis": 1
+    },
+    {
+      "case": 1041,
+      "axis": 2
+    },
+    {
+      "case": 1081,
+      "axis": 1
+    },
+    {
+      "case": 1081,
+      "axis": 2
+    },
+    {
+      "case": 1121,
+      "axis": 1
+    },
+    {
+      "case": 1121,
+      "axis": 2
+    },
+    {
+      "case": 1002,
+      "axis": 1
+    },
+    {
+      "case": 1002,
+      "axis": 2
+    },
+    {
+      "case": 1042,
+      "axis": 1
+    },
+    {
+      "case": 1042,
+      "axis": 2
+    },
+    {
+      "case": 1082,
+      "axis": 1
+    },
+    {
+      "case": 1082,
+      "axis": 2
+    },
+    {
+      "case": 1122,
+      "axis": 1
+    },
+    {
+      "case": 1122,
+      "axis": 2
+    },
+    {
+      "case": 1003,
+      "axis": 1
+    },
+    {
+      "case": 1003,
+      "axis": 2
+    },
+    {
+      "case": 1043,
+      "axis": 1
+    },
+    {
+      "case": 1043,
+      "axis": 2
+    },
+    {
+      "case": 1083,
+      "axis": 1
+    },
+    {
+      "case": 1083,
+      "axis": 2
+    },
+    {
+      "case": 1123,
+      "axis": 1
+    },
+    {
+      "case": 1123,
+      "axis": 2
+    },
+    {
+      "case": 1004,
+      "axis": 1
+    },
+    {
+      "case": 1004,
+      "axis": 2
+    },
+    {
+      "case": 1044,
+      "axis": 1
+    },
+    {
+      "case": 1044,
+      "axis": 2
+    },
+    {
+      "case": 1084,
+      "axis": 1
+    },
+    {
+      "case": 1084,
+      "axis": 2
+    },
+    {
+      "case": 1124,
+      "axis": 1
+    },
+    {
+      "case": 1124,
+      "axis": 2
+    },
+    {
+      "case": 1005,
+      "axis": 1
+    },
+    {
+      "case": 1005,
+      "axis": 2
+    },
+    {
+      "case": 1045,
+      "axis": 1
+    },
+    {
+      "case": 1045,
+      "axis": 2
+    },
+    {
+      "case": 1085,
+      "axis": 1
+    },
+    {
+      "case": 1085,
+      "axis": 2
+    },
+    {
+      "case": 1125,
+      "axis": 1
+    },
+    {
+      "case": 1125,
+      "axis": 2
+    },
+    {
+      "case": 1006,
+      "axis": 1
+    },
+    {
+      "case": 1006,
+      "axis": 2
+    },
+    {
+      "case": 1046,
+      "axis": 1
+    },
+    {
+      "case": 1046,
+      "axis": 2
+    },
+    {
+      "case": 1086,
+      "axis": 1
+    },
+    {
+      "case": 1086,
+      "axis": 2
+    },
+    {
+      "case": 1126,
+      "axis": 1
+    },
+    {
+      "case": 1126,
+      "axis": 2
+    },
+    {
+      "case": 1007,
+      "axis": 1
+    },
+    {
+      "case": 1007,
+      "axis": 2
+    },
+    {
+      "case": 1047,
+      "axis": 1
+    },
+    {
+      "case": 1047,
+      "axis": 2
+    },
+    {
+      "case": 1087,
+      "axis": 1
+    },
+    {
+      "case": 1087,
+      "axis": 2
+    },
+    {
+      "case": 1127,
+      "axis": 1
+    },
+    {
+      "case": 1127,
+      "axis": 2
+    },
+    {
+      "case": 1008,
+      "axis": 1
+    },
+    {
+      "case": 1008,
+      "axis": 2
+    },
+    {
+      "case": 1048,
+      "axis": 1
+    },
+    {
+      "case": 1048,
+      "axis": 2
+    },
+    {
+      "case": 1088,
+      "axis": 1
+    },
+    {
+      "case": 1088,
+      "axis": 2
+    },
+    {
+      "case": 1128,
+      "axis": 1
+    },
+    {
+      "case": 1128,
+      "axis": 2
+    },
+    {
+      "case": 1009,
+      "axis": 1
+    },
+    {
+      "case": 1009,
+      "axis": 2
+    },
+    {
+      "case": 1049,
+      "axis": 1
+    },
+    {
+      "case": 1049,
+      "axis": 2
+    },
+    {
+      "case": 1089,
+      "axis": 1
+    },
+    {
+      "case": 1089,
+      "axis": 2
+    },
+    {
+      "case": 1129,
+      "axis": 1
+    },
+    {
+      "case": 1129,
+      "axis": 2
+    }
+  ],
+  "worker_tasks": [
+    [
+      1,
+      7,
+      13,
+      19,
+      25,
+      31,
+      37,
+      43,
+      49,
+      55,
+      61,
+      67,
+      73,
+      79
+    ],
+    [
+      2,
+      8,
+      14,
+      20,
+      26,
+      32,
+      38,
+      44,
+      50,
+      56,
+      62,
+      68,
+      74
+    ],
+    [
+      3,
+      9,
+      15,
+      21,
+      27,
+      33,
+      39,
+      45,
+      51,
+      57,
+      63,
+      69,
+      75
+    ],
+    [
+      4,
+      10,
+      16,
+      22,
+      28,
+      34,
+      40,
+      46,
+      52,
+      58,
+      64,
+      70,
+      76
+    ],
+    [
+      5,
+      11,
+      17,
+      23,
+      29,
+      35,
+      41,
+      47,
+      53,
+      59,
+      65,
+      71,
+      77
+    ],
+    [
+      6,
+      12,
+      18,
+      24,
+      30,
+      36,
+      42,
+      48,
+      54,
+      60,
+      66,
+      72,
+      78
+    ]
+  ],
+  "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43"
+}

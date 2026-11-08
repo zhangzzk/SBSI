@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "own-only response",
+    "opposite-only response",
+    "combined response",
+    "nonlinear exact coherent closure",
+    "selection-dependent denominator",
+    "core/complement additivity",
+    "reducer population-axis indexing",
+    "exact shape/selection product and ratio decomposition"
+  ]
+}

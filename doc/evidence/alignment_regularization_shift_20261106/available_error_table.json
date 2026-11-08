@@ -1,0 +1,51 @@
+{
+  "model": "Improved factorized Cartesian seed611, no response regularization; original classifier/emulator",
+  "selection": "radius>3pixels (0.6arcsec),MAG_AUTO<25",
+  "definition": "DeltaR=simulation-model. Flow and joint use R11; emulator retains its projected summed-pair diagnostic. Fixed-model case-bootstrap SEs. Different standalone/coherent data families; not additive component-error budget. Joint rows all use same preserved original40-case realization.",
+  "rows": [
+    {
+      "test": "flow_generated_selection",
+      "cases": 40,
+      "statistic": "R11",
+      "value": -0.015366427182145759,
+      "case_se": 0.0033470842864680196
+    },
+    {
+      "test": "flow_true_usability_measured_selection",
+      "cases": 40,
+      "statistic": "R11",
+      "value": null,
+      "case_se": null,
+      "status": "Not evaluated for improved Cartesian checkpoint; measured-reference normalization and measured-photometry conditioning are different diagnostics."
+    },
+    {
+      "test": "emulator_measured_baseline_selection",
+      "cases": 40,
+      "statistic": "projected pair response summed per represented primary",
+      "value": -0.002556338781071842,
+      "case_se": 0.0022934620465247858
+    },
+    {
+      "test": "joint_predicted_usability_generated_selection",
+      "cases": 40,
+      "statistic": "R11",
+      "value": -0.002491688836105843,
+      "case_se": 0.0027237597657765664
+    },
+    {
+      "test": "joint_true_usability_generated_selection",
+      "cases": 40,
+      "statistic": "R11",
+      "value": -0.000607070400861387,
+      "case_se": 0.002730335516716795
+    },
+    {
+      "test": "joint_true_usability_true_selection",
+      "cases": 40,
+      "statistic": "R11",
+      "value": 0.02738391171918031,
+      "case_se": 0.0027813094626102015
+    }
+  ],
+  "regularized_missing": "Standalone and joint measured-selection-mask rows not computed for the new continuations; held broad evaluations are not resumed."
+}

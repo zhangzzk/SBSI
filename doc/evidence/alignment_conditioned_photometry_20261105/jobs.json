@@ -1,0 +1,19 @@
+{
+  "evaluate": "17771721",
+  "report": "17771808",
+  "utc": "2026-11-05T22:08:33.794930+00:00",
+  "source_sha256": {
+    "evaluate.py": "8319919325e7e3fba8973e60a1ad81a02b2e50fcc0b73425e3c60731871fc44b",
+    "rule.md": "572887b68067a3d59b34b3dbf7c3f6f648b1729a0123fb4fe869e464740d948e",
+    "report.py": "0c273605349901a58c833c208760323bb30831497ab2be1fe394fb225e0d90a6",
+    "run_evaluate.sh": "7af4ed6f5fa83ee9a884e179859f9c9f41bfdaa877091e4e45d53f7b3bc7afe8",
+    "run_report.sh": "9e330648821e1ba14eb030aaa4c6551b62837640e0d6bf43cdaa75f016558a4d"
+  },
+  "first_attempt": {
+    "evaluate": "17771679",
+    "report": "17771681",
+    "reason": "Stopped by bitwise cross-sum assertion: GPU atomic floating accumulation differs by <=2.39e-15. Exact per-draw membership test added; aggregate tolerance1e-12. No science setting changed."
+  },
+  "first_report": "17771722",
+  "report_amendment": "Add paired-bootstrap diagonal/offdiagonal error combinations to assess orientation-dependent residual after measured-photometry intervention; no new sampling or science changes."
+}

@@ -1,0 +1,79 @@
+{
+  "cuts": [
+    {
+      "name": "mag24.9_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 25.1
+    },
+    {
+      "name": "mag24.9_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 25.1
+    },
+    {
+      "name": "mag24.9_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 25.1
+    }
+  ],
+  "mass": [
+    0.49538446827292837,
+    0.5246674052958816,
+    0.553620084377517,
+    0.44928284845326716,
+    0.47435497241231195,
+    0.4987818137411053,
+    0.38776201271453414,
+    0.4081440187258864,
+    0.42771189721403247
+  ],
+  "selected_score": [
+    0.14332496387767502,
+    0.14769950644874916,
+    0.1515197270041657,
+    0.15048731252543077,
+    0.15531304737172083,
+    0.15953901852681626,
+    0.16037451261123092,
+    0.16574973091178907,
+    0.1704339686530519
+  ],
+  "rows": 46833127,
+  "provenance": {
+    "manifest_sha256": "278022b91ff36da0a9a334406ca36845db415ce857f4875dbaec3dc8e855b341",
+    "source_sha256": "098451137d975c03eb73aea4caadea7f58e384d1efd00943e2aa540f6e57fb8a",
+    "prepared_sha256": "cbdd4e81e0f5fb93b05ffcb1a3e879708d1cd6f0060ccd9b3a3cbda55ee8ad58"
+  },
+  "input_score_alignment_exact": true,
+  "target_population": "all original training NLL rows, both usable legs, no new population cuts"
+}

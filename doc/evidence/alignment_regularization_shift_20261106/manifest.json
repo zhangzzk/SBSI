@@ -1,0 +1,160 @@
+{
+  "domain": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain",
+  "arms": {
+    "baseline": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb"
+    },
+    "nll_control": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nll_control/final.pt",
+      "sha256": "85a7ee5d93fedc0c300f57e6bfc448b55e26a397d0ec016601ba18744ffbe1ca"
+    },
+    "single_weak": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/single_weak/final.pt",
+      "sha256": "9fa3058ceb007feacfd5790e70e82790651ea4febbdea3da13fd647df9ad51ee"
+    },
+    "nine_weak": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+      "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+    },
+    "single_strong": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/single_strong/final.pt",
+      "sha256": "44e02c32bce6695c5552da3c6f7995f599531e1afd1f54b2edbc20c2375f757c"
+    },
+    "nine_strong": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_strong/final.pt",
+      "sha256": "81458232427964c3ed0abfd2e4a7603fc6610566e1b94fc9b40b047de56ca52c"
+    }
+  },
+  "constant_cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084
+  ],
+  "constant_cuts": [
+    [
+      "mag24.9_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.1
+    ],
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ]
+  ],
+  "seed": 202611068601,
+  "bootstrap": 10000,
+  "standalone_draws": 16,
+  "standalone_banks": 2,
+  "cases_policy": "All40 original flow validation cases; no checkpoint selection. Constant decomposition uses frozen19-case interim intersection."
+}

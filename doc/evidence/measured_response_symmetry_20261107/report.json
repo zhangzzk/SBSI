@@ -1,0 +1,4790 @@
+{
+  "source_sha256": "1df442e9cb88e574f47b81b4f707ba08abae27b52e276b47832607672ca80ce5",
+  "job": "17821487",
+  "files": [
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1000.npz",
+      "sha256": "af6f71b56b9262c7fa31b80c1a2d02422ccff6ce907cc5a35e10dc545451e0e9"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1000.npz",
+      "sha256": "ec7640e9a9ca8f555becf5792bc2696417d4e7af263bbca5924f2b890106819c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1040.npz",
+      "sha256": "fcf6b3d1f886cbfec07bc440274b44ec7fc4fc6d61b84edc7cd0ae4e12d512de"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1040.npz",
+      "sha256": "df03807302d43d2ac790cc185a872211613b5779c0d25ab3fabe4978eb44e178"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1080.npz",
+      "sha256": "9438454eb5b0dc02251fa3ed676dec6502eb764a3d3f806b06d78b085703151a"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1080.npz",
+      "sha256": "e4c48842ca74b97d2541cc4ff118036a116f178369845e5b576baa4a6c40cb62"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1120.npz",
+      "sha256": "5ad5430dae248699d482920e488c4e07830915ba8539313077135b6f990b5547"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1120.npz",
+      "sha256": "7d0b07cc4bccba29b450f2fa1a9dd3396843d5b50057439117660cf0d818ee93"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1001.npz",
+      "sha256": "1e90c1e8ce524f888a6090ff63ca73ae700554d4a3dbbf85b42b9bc86f1748bc"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1001.npz",
+      "sha256": "d5e1804611ae2273c19bbe65033ee91e3cd6c53942e461dadd8257bfd557b72b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1041.npz",
+      "sha256": "73f305f0f3d320cfb01cb0d7745698de7ab18adb8c80314df7fe7eb2b6b573b6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1041.npz",
+      "sha256": "a45a53172e4f79ad3c73abfcf85cc81f7ddd9879e913c89cab7e27f8fce495b6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1081.npz",
+      "sha256": "9444b0c9e80f880886d7af89129541b2475ced97fc3f096ec084810147627b70"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1081.npz",
+      "sha256": "c85f4e5c64ebc5779909d850fcde8473b80fb9f670279c995c6b66c77b782d07"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1121.npz",
+      "sha256": "435ffb7c03917b828dc98615a18476583f8f13b988315434492be9eb199180d6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1121.npz",
+      "sha256": "23f6e4998236c5fd6f3e12b70194cd3ae84b9c20b7119fd7d62cfeeb724b5feb"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1002.npz",
+      "sha256": "4b48a429abbb0a454d2de9340cc9f83b8061679733ebac85ddad4259dc4bd513"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1002.npz",
+      "sha256": "58af2e039686a53523fcd0ba9529d915a0ba6a468771d23d26755ef7c4833bc0"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1042.npz",
+      "sha256": "eb99dfe5e3e98b0df54ce70d56a77e3781e54a9ef46bf48a18aae56bd31263ec"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1042.npz",
+      "sha256": "83cdd3ccf30ef457fcf536944af888c32886f3e4b5829ac3874f34b5ac899ebd"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1082.npz",
+      "sha256": "0c953cca29594f609506f3fb12e317a64eb1955cbef9af0397f8b1d64671619f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1082.npz",
+      "sha256": "7b060e54467825c76c6e2f77a625cb5416e35c1541caab1f017f3742d4e3e5e2"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1122.npz",
+      "sha256": "35e295b5e732027cb476860c1e79554906360ab440edad28e75a85a89e4979cd"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1122.npz",
+      "sha256": "4e8ae02955d17b09c028501f183e44c149b55b1fcff6b4840b97d1a765e82a4c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1003.npz",
+      "sha256": "833df51271d44fa6f52d710da2d6d3ac16245b387e77bb300310251d5a8ddf50"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1003.npz",
+      "sha256": "739edab9e221bdea635031b2b0712987df9a6c6033528bc6666fb5abeaac0bda"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1043.npz",
+      "sha256": "0469d48b7c6b01d3500f4d6b1605141e93a591c5ec9232cfdb37cc9bc98be97d"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1043.npz",
+      "sha256": "9f5fa11e3ca5fc8ddb4b0f051fa81e14cf543c40b9f1f07bc6f20f319126af0f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1083.npz",
+      "sha256": "e9c3686899e0f4e558cf92964e713c0ab132ca082017389fbd8c41c2844a1c43"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1083.npz",
+      "sha256": "a09e6800424c3f1a6fb3b28bf501456c963e331aafae4d54bd73f5ada7294393"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1123.npz",
+      "sha256": "e0b310b5cb7a4fbe490800d3c8271684494a0dc9cf3f7d869e02d80d43d3bd9b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1123.npz",
+      "sha256": "18c4e448106bef62668eab2fc49b02f4470c214708c9e2cb9542af47e638c21f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1004.npz",
+      "sha256": "273e6368ccffb0f816191b16092e692b4ca7614e1d9129f0e132fe075160831b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1004.npz",
+      "sha256": "717f319d604cfdf37b6abeeaf605a523f2f2be5fdd02a6f7ca01a2b27ace3f8d"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1044.npz",
+      "sha256": "f943b9b2f70b93f278e19a1e6118d906fc2613fb5894e5131121e60d04634101"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1044.npz",
+      "sha256": "46146137cc3109fc44c0cfa18b45fff4e5c181b12816b0a544d374adf32db3ad"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1084.npz",
+      "sha256": "44b9b7dd7fdf3b408fa48767096989f4a28620375de23266effa2e7b129811e6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1084.npz",
+      "sha256": "275505c8ef681743074b74f98a2a1bd625fec5d6ddaf090c9af4dd58acf01530"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1124.npz",
+      "sha256": "c94c9f4840dfe324ef7cc8723d79183191ae63f77de92da1dcb21ab04e5933ac"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1124.npz",
+      "sha256": "890ec100cb66e9917df4417d0d8b71113f0b24a0aa8727ded56cf1109a0d3adf"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1005.npz",
+      "sha256": "5276846fdcc184d68ef2f01e565acf323c463a454f91f9539c253ef0f2f6be04"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1005.npz",
+      "sha256": "3133ee1932956155d252a34f16f4e79fdcc5f03965629203f3c3c94a30845252"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1045.npz",
+      "sha256": "4e09664de7617008a18a4bbca1024b91d554967c3311f59eee81b620a9bee52c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1045.npz",
+      "sha256": "c03eb9a274ef823f9c353158e6985eb2cefdc5b052647dd3d36cf884426b5f60"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1085.npz",
+      "sha256": "a99e86da4c4255954d8e13187500578c18a9b0d75d5d0a74a118bea4b21b6677"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1085.npz",
+      "sha256": "39e9996e5e6956babdc353b751132f0d7b03700e73f034065afbb6045ecbf87c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1125.npz",
+      "sha256": "59534d200d7727336c488c0d3618a82cbfcd7d114843bd82d368a0c32e1f907d"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1125.npz",
+      "sha256": "79b2e7bd795fa1ecb747798757ab7245f8311c146cf99faf1aab91cc6af13c69"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1006.npz",
+      "sha256": "1af73859a86e3bcd8191794cf606911ef39840acd37524ba9c99ccd44824c35f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1006.npz",
+      "sha256": "7722e197c0a16352e27db587c74c20e3beb9e8afe2b79fb8d9e1f66854a3048f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1046.npz",
+      "sha256": "6a4cba37c52361a15bfb399a97c39e1ccd092c45c9e720a6db604b3b15c5f8c9"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1046.npz",
+      "sha256": "a22cc21d2e2b6ae509ee0d0ecdb6d4ea3f0303d080798fe7328f23471ad77235"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1086.npz",
+      "sha256": "38644c75e2b30cda09da66782cf2b08503c9c1280b2eea6d32fa02ea23183420"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1086.npz",
+      "sha256": "1fccc6918f274dea1d817f275c2da1bc4c3db986b4107de5910713fdd5fcd905"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1126.npz",
+      "sha256": "6197a31d4b350cf84873b8c18cd5c93b54ce2d40c7e4d84e74c07446095a6e10"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1126.npz",
+      "sha256": "64e9dd8ae0ad80926a774b606b4e1b9728cadfef11fef4c3463d41924198e541"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1007.npz",
+      "sha256": "cb0ee3e6b2ed3f49f3e4e2f7edde125df76d7295e3346b3fbc40ba2775f207b3"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1007.npz",
+      "sha256": "bf88e05e00eef25fc25239734b0e85593f6b4c3d9d2eaa4a1f3d804d5f625e1b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1047.npz",
+      "sha256": "167da7573290004b2b7776baedb43335e36c73d22f1b7d5d470006ea6112016b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1047.npz",
+      "sha256": "b679505ec58c0a849e5af6c656724d008b1fdae8d56f6b405f26431a757c80e7"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1087.npz",
+      "sha256": "754596c3380fd93b6341f741893b4f3ce1c1acfceb7308d1bf1260524a20f012"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1087.npz",
+      "sha256": "f7b329dc18724be4aaf31d9887f144ec93e60558b525046f69b20ffbe807faa6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1127.npz",
+      "sha256": "ca91bc41f5fdc2510c7d8af464e841164a3c1599fafac7894222e431a10cbce8"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1127.npz",
+      "sha256": "22ccdd0bed1f4cbfc6ef25a0ac0b359404ca3c58e5f487f3e265f3f129c8c4c3"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1008.npz",
+      "sha256": "82f4431a73bc5b4d6ac869f0b105768e5327d44830a386fc3a489fe0bcb20724"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1008.npz",
+      "sha256": "f790d37245b76e7c6705e27de6cac8fb6aedec6f296faf39380bf73d3cf5928f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1048.npz",
+      "sha256": "6b8566fd896de751ab9195a68a6bbd91d37656babb925058f3940623f1779e2b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1048.npz",
+      "sha256": "4d98f8a87303cfb8815712c0443dec9c52f50aa85c57e1cc401bf0c2062934fa"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1088.npz",
+      "sha256": "9a91c98738998883e0a57758f1e5a46aed11fc98e284aea811c2e66a0098b2b7"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1088.npz",
+      "sha256": "8fcda6f1baee0dd29e486ab3479c100ca3ff46f47f8ac517d0fded8bc923ec9c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1128.npz",
+      "sha256": "a150b167b6fd16f30305541191ed456b7e039e77ae48e3f145fc294b2b2428a4"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1128.npz",
+      "sha256": "3f397e61bf4b61ad652d2fa055acccacca1aa9a2370da6827b13708668da58b2"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1009.npz",
+      "sha256": "c491f6adf3d4f5630502ce59aabd2d30659326ebd395041a21a8cc8c0e027b1a"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1009.npz",
+      "sha256": "7504807ae65a4a9817b0e0082f467e86d2abeb690a42159b7502a1ff6e6b4905"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1049.npz",
+      "sha256": "15e4ac40deb99436f2552f65b916d230f43ba8749607ce2259d3424b74397e45"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1049.npz",
+      "sha256": "d5e5710b8b9de10ea93bbd10f55430149fdc7829b71c6e451dd7b6ffffe25741"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1089.npz",
+      "sha256": "d186f2c1b4ff4e00b6d8f0de6f48f78878501601e68aa6103bbf063891a319a9"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1089.npz",
+      "sha256": "74d1c307e5725efc19ddbd7c13f0d6e31139eaacf1000de74cf786cb24223023"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis1/case1129.npz",
+      "sha256": "72aeaa34684af31db2eacbbd21c9df27a88fd04bd0b98d533c4bbe5ccffc2bf8"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/current_measured_photometry_20261107/axis2/case1129.npz",
+      "sha256": "d64d28c844e59d03434bcf272a4b12b8b741d1ee4c65e7e62ec54e5a2e1f45cb"
+    }
+  ],
+  "configuration_checks": {
+    "records": [
+      {
+        "case": 1000,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "60d0013f869b00c5bf3cb2b0bdcd2e9b7d8ee3ea12559b5f61a50f4d4558f88a",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1000,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "f59fc84f317af3040cc9ba8addde6a02bf30f070809382ad7d0610b373fee990",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1000,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "36ad9f5ee2ed3e8e99bac330be9c91c317002c5b4d8be7478b09c31b191ae097",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1000,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "35d5b20eea0e4e46ecb7d5f10d0d65a347cbdaa928aa3673f5e103f1a8499b94",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1040,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "37ecbd4584e3b7be0964122b2d567b6fd87c5728baf1526c7a0d4ce05b0b0b89",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1040,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "a432b94c235e061b7fcde744ab1becfcdfd803f70daecdc92cb5a2cc28740a5e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1040,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "76b4a377c87196c3e900e8c57875d0fb6e44e020b50ecbe00f51920305718962",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1040,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "949829de533ddd17af81bcf7f54502219a9238bfe2f5f9beb6e9eebe45aeb1cb",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1080,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "f96fe3aa5055ba73e615776f39930215715d40fad15c9fde67301466dc2bdd8e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1080,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "d5f2cbd5d38785236b1afb09ffde60b1b9ab5346c8c56617ca93bc1eedfe9df2",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1080,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "4f1bf639e5730ebfce0eaecb05e582eeaf942c990f3ef1c3a738c8d63ef8cfb8",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1080,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "5297652bef755e72ebbf10b089ee72f4cf47c63a4142b7fdeacc6c02ea9ee16f",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1120,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "4c8fca83f402b8fdab364fda35f26c7ada738e199be62f5757170b328f6c22c5",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1120,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "d590aeb1aac3de17a959f6b14da02d7a6777258a0b57347f04611af37b0e361e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1120,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "93d137c58fb4038d64945d08c1f21a381885dbb45b78cbc8dfd2061a051e28c4",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1120,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "71fe801592b38396ded6187533b3ec573c886e4fbb5d168be2522d3dbb2496f9",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1001,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "1682329646b96d549763a33c05e7968bee4a68c22550d9895f82f6c4eaaaa1a0",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1001,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "13ae1d520a619b31737b4a98bd241464298f3fbdbfb3719e236bfa6524d99682",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1001,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "8fec6593ad7f96a912061ab13c85ad4273d81328d2a610791e2ea9cbe51c31da",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1001,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "3551db1726ad59ff378038517c9ac0f08883d8dd6b031edee6b98d0afe334439",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1041,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c37267b5a3d074be41063dc2b833c5c392b14f06b37503a3ed640feab5f1b578",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1041,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "f535fdee4857616c6ebcab4767f8ad9de3b7026792d43145c8cf25598100751f",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1041,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "31d31975d1b0d6a590dec09e6ce24d0f0259046c02bad0437c842388650ebd61",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1041,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "19d414118133be9330827757bfc7991547437437da1f0e181770e6aaa8cc429c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1081,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "931832825d15ed675fc010ea9e3e68040b5b116fe1c41780e0907d70e7c756d5",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1081,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "a20514441161b16aa86bfc4a77db3047f1e2a32dec37de5ffac9d288b9b08002",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1081,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "4478620c59e326e5435dbf3e9178f6a094629362c4630df337f63ed0650428c1",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1081,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "743fbe74346b8385f1dc37a35a4501c12d5321350b0e0490103b7e65cedc2800",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1121,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "9f6225f4504ee7180722b635891d3c9ebd15858653d7b98729a67dc6fc574943",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1121,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "297f9fba9628c14202270d428be9c204f6a8b7fcbd79049d29cc10135f0f42bb",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1121,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "0c81c2921b78c0010d948d162bf78d03f5b86abf04622ff77b7af742d8bdd706",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1121,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "9a4acc56064590679243d3a27b45e1e1838bb14871ed3b956c804067325d5c9b",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1002,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "6c1efb7e4dffcc8a34e113e61529cf4680c967fc9794d1dcf0a36973af52605a",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1002,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "9e5c36e673f3bc76d9ea8b4bcdb3a3c04ac410a4a4761661eba35aed08e196b6",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1002,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "592d1d8a196cd5adf4a8569db8ef76e41e2b82eff72e4d6683378b97fa7dcd77",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1002,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "928548c8b1c4dde255ba2cbd128db86780664ec37627204968d02193808a11bf",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1042,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "30099f20dc2981e0d817e6df98175ce54e94cf216b21745600e86c58afd2ddba",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1042,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "4d3ea8cfde2c7fc21c89056e30c80a916f5e11a98722c36829eecbd2e97ae5a2",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1042,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "1c9bb321f40814a9c3abe5fd67a418d2b2d1c28684aeb6633563fddf6148870c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1042,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "5a5e643b60dd79d01a2704305099cb24538610300dd3c04a1e99f8433a06b5f1",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1082,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "ec26d85db84177d66dc0467244e17b0b97d3bd6b5f97e58b1c61624bdbb00bea",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1082,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "a72cf5ebc66dd9f7480faa9eedcba684c73be8f22f94970d37a31cbd41c67403",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1082,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "3d5fdb06f921470ed1f8b1a85cbd59bb8d4bcd1c38ce8c8d14f1d30f928469e5",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1082,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "9022d8733723e8b0011c4fe8f3a5cb6d19b9845d2ea0830f6aeb89e3bb9eff42",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1122,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c535551441363d0d2ce0d61ec920b4fdc64e50f7b0810e2274a03266abdfb922",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1122,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "e21028ce931185312b90543200d874d0e9a30367cf41b02ce34ae39f5c009309",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1122,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c1c89cabde5ce08a4813035da5788dccbee17b4a97f65c75c649d16c598c556c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1122,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "8d4b64e54cfa263bb9f92d634e63f58af1de30e5b846a651404b82aeb766911e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1003,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "8311c8fd947e1d641f4ead6d9c95ec274e25cb3a0b5f167edb36d03f8c7fbea1",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1003,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "35285d8a7e338b166db09262b4511e1cb7b052292a93f8db471395a8b002f82b",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1003,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "4cfe37ea57e0eefc984fdbbed0f8c779cd95fac809a01bcf0cd27e0ad3a0fec3",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1003,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "116e59b44e820b8c05c5fdabb90d57a10a23b4c342231db20c12c251901bc38d",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1043,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c0ab63cfd2da837b927b093e14fc58749a32a5e9748f76ef394d58044deeef29",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1043,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "bd1110bd56eaf64b629c41116688768408c82d23a55875322513937567fa9734",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1043,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c839dfe87d24eae5cbce1b42cab28ee994784d38f58bdb042aa5531f7837d6ec",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1043,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "938501ea09e6e6e36d0feaf5e783a5a78cf19568e5dcbf374e2d4f5a607f09b0",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1083,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "ba28ed9e421b314f6c20d411c6cb8347326cec8c2f9e01475861d7bd0d20e9cd",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1083,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "a43a0231964b609cd6da96ba0682fb22928a1b698a4f45e42c992babe51fb3f5",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1083,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "64ee2c84544f13ed5771f15b851fcb9b641f85c8cb4b9617a561155e333f1bec",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1083,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "bdf5444448a2d2bae1c6c87380688644aadc74557f38e4695704bf2bd9bd055e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1123,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "4051c07692099f428b595c96a3b11de4e3bca468c9aa69973a718b91de043b52",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1123,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "ecbf82e26e3c279aaec8522d100bc79646886335bb89dd4d2d44102c9b0c5a45",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1123,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "258c86e0b823850ffaa10b8a15229de15fd008608dbdd1b196d86a43c08f92aa",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1123,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "4ee22268551bf8c70c952b6e0245c62b35fa061fd51c9f913db4d9583743e16a",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1004,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "edd6ea7fca27d8161beac105a04fa0470d5d80eef575f558d563c8d2d1a68eb3",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1004,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "4d0f4d9742dfdcdeeed638cca1398525752b4acb645a22b97130ff0e59ab8a11",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1004,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "b83126d7571616ba5b517795b2824a3f44ac716d7c6cf3f853bb424c1287789f",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1004,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "6c20787dabc4308b934f0c262820e42a34600d48af13d4e9ac8b97a94b6f631b",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1044,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "0c008b7b66798d68faaa5f92280781bdc0e00f2a1a7b4c9670642dd0c4ae1581",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1044,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "f21ca931f01855ff63878f6450f782636ca67345479e36524386caadae7e9499",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1044,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "be30afbbb34fe1a309634af7e7ebe8f8eee7449348ad478691d0a579859707ca",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1044,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "d69e45280e7a19c297fca6064c14ee3f6cb7d79a8d41a2e8b57cb1b46956ad33",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1084,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "8ccd4a6152d35f7412542ab0bdc749a3e6f587d83286a70a5c7170f57edd77b7",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1084,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "5743e59fd80dca84893b86311043f7acc666e613de7c85d35f25cd7aeb2a4b79",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1084,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "a95786479a6c3a6d41c7e7f8226e0f2a8ed7e21fca5dc10dd07fa22d9c023694",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1084,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "1fd201fecc0cd188abf9efe634252793db93a1dd1e246fac2c0cd6e40d653b53",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1124,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "acf526324786dfba6c7ea22e0eaef50fcb00513d758ce28d092c84f2b7236253",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1124,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "94502c080d1dbaecd6f632915b4b00fd92dcf01f6e8098bad37306e707d1261e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1124,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "203ae324fa25847f1c4b95c65897399355c72614006a21daf9b529ffe3737f72",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1124,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "84b10078e40d048f5fa56acba363fbf44f1cf137c51d0959915e2a0904881450",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1005,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "703a5d7cae6c3b1c1e9e256e8feed7e06724c5ab71237842c930ef563b7f17d4",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1005,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "0934859b5eb7be764356490f50f7c0e0d6ba971625050aa9799b7e248cd11078",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1005,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c07ab979448e2280e4b7575ecabd2872ce782eabb1d65db8e69dff4ee28ab71c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1005,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "e9c758660b8da881236271f9ce8aac31ca5ca764a19f22d7d2f8b5310726f442",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1045,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "720911a5aef69a1ec41aeec2f8bfe5be21d6624bbc2dc18a015373f45828104a",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1045,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "78785cd173b370e0dd73433b663b1c2a7dad03361c274047923307a1d96efc97",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1045,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "8fe0e8e30da74d176f753523e3418863637f230ff0ce386d2c4310d43689b67a",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1045,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "469adec918fedc5becdc02e5621aa5c71e3eab3328c1f7375dfdece4c83ac7e9",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1085,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "20d7e043445fc48ba4c30c5882f43355d76d015ed8ca2c24be0236db483a91a3",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1085,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "0bd8441c6f57a2b15fc8eac540ebe92160a2d2a275561b4a465d83dea873692f",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1085,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "1201ebc7ad0c7410d9f4a5fa6b0d6ae995c2659a540512c851960a506713f9ae",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1085,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "5861e531e4534c80f17dc7871b819a8e1fc79286f32d9fe0ada20d8d7fe7880c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1125,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "39e1eb46507c228381b95d13203496fb812bd83a95efec8fa94eb09b6a6d23ec",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1125,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "a3ad6b3c5693aae92a794d6944b96a5777e4a67c8abf83741d1628aa9cd0b747",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1125,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "bd92e8acb246dfb44fd66420d6dd662a98af2d7b2248b6974902ce0e1fe1e8ee",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1125,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "41f5f93aa7139feb2818eb658b80305ec8b7ee2f142547e7c25cb3e48de2e68e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1006,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "8289c7e874525fc8eab81e85456e215382141deb8cb3248ecef21749c7e2139a",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1006,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "40acfc917a8cf4e906e9aa6bdeeeff7e01f791fc85774f120369c9023215b9d4",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1006,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "375de79c872bbdd4dc1e441d4f44edbc9a0be5c1b9d3bea477bcf5d7894df14f",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1006,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "c40e36d4c935e2523d12427fc6597f0f99deab41f811da21f5591f49287454ff",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1046,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "f6a2880f8cd5d170e976bb0f13ca044af2c0eb4b0d7949dd45a88faec105302d",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1046,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "a5f00007714ad4a5a65630b202b70bcf809c88644e02651b7a84f1d1f6c1cfd8",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1046,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "31fd29313a035376e0e1aee5efeac6c63f55910566937832d2a949098f00891c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1046,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "3b3f5652e2025d0d6eef9c00508c56d091979724513d781c9dfb8594aea52e38",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1086,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "fc3e23077bb5a28adbebfac8ef1d2c5bd2b61c77c7b30a5cc2228e78060efcd1",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1086,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "07dc3ca8549052d573afeb0d355d7ba421fa25a58f34201ecfd07872ee8af822",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1086,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "7916f7da6acdcbefe92467e2178363bfbad01248b57a10edec821a1fe403ba46",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1086,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "bdb1159b1c2fd7e0ce5bd392229ac2e37bf37e1e5c5ac3e811aa5b553be39c07",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1126,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c0884c3eee834516d9fb768720bd08b7d7d16b870379aed524b400aeae4e4ca4",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1126,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "834807111554c13bd334378d74869b37bc3807fe5f1793221dfa6fdf75b2b0cc",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1126,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "dfb7d52c65862ef37de848be9f557c48eaedc45d5f96d9645c8b2b121525811b",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1126,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "1485c710f247a23992c8301397e9c2cfc3509a4da7ea11f5bd9e247db84aa99c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1007,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "d00296636e0cb017d2f4c775c2f2c78029ce959d620c5714e24e2864ecccbf26",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1007,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "e9cf5ff01d20c3d9d812d5d26cae37b5e5beb9bc77e358705d36c9b3376b4d6a",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1007,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "f69ba1549e0eb27d7f1a87923b92513c316d2964b3949e433ba92a6eedc689c8",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1007,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "90858b324a12eb06d9bb595a2d30bad66a4d0343e6aff9427031f383f26401d8",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1047,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "a218ba2365f7e66b6fc49543a0901f8037f56d2411d9b0af8b8a9193e9dfc10b",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1047,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "88511e4bac92f4652b56115214d92f01999521afa1532b8f3b686bb951613c92",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1047,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "397b8aa6bae080cd74fe18d6ddc39161180294f9991866b32e1d069e4dac4f4f",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1047,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "fc709d2b20453fdc63981fe287e305c63d598205d8cbfbbce3f464d7e241712f",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1087,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c1d955f801232eb7db35231bde90ea6fc89aaeb4e9c6d0cf48c6a7b963344103",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1087,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "2714d2b02f4054b4ba5ffb26458e3bafa34dc908e154b2d814a5e907ccd91e84",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1087,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "8d93e7db0ce299cfb4d5ddeab8a308e3540217f590c79c5b8ee586b750f36858",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1087,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "516a3ab03aa59fef840df34f33af93042b5024f9ad48cafb59a9e9b134437e6b",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1127,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "47206566d7eef394a7d4da000e8760a74277d6f2e0c5aa33e8fb85c66a448792",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1127,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "ff6a6adb1a0e2b5a47d073523b9eb4280f7751d4b8198347e9ceb5a41ee788ef",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1127,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "9b6c081dffc9eace41222b4de8d889d2cb0b3030b820bc4ba11f268d7aa3db48",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1127,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "5feca62929d13db9865e4c1b2e5e8092e0a0191022ff57afd76476f1e083dcf6",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1008,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "1b7c2deea1569f5cbbc32ebeb1b93d619c8abbc1b6a56bcfa714b3603c568818",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1008,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "ff64195d362ba6f163bebdbb791c0170db69eb829a2a583714c17df042198312",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1008,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "d862993994876201c2af145f76135b1d14644fdd0c02dd41c5be45ea1bf31ee9",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1008,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "72f7e787818e5293bf53ba04091ab7835959988e56de92f88c29ad92abbc3300",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1048,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "75c3942b3e962b380bd2a6a4befba054c1f91bf7a35e884ff204d21c7464f964",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1048,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "1732ca07da1da5dc5eaa436d0b6696eb23c84430c4bdfaf0649168d85d003cde",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1048,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "aa5709c5a86f83209535018aba669154f3aa71dfba4b2852144636a16a3f2c44",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1048,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "1c4369259c5a7a4ccc5286e992b435fa287f49b4b910160c41906f4ec0e84d01",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1088,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "3d45efa22dc18fd540e8fc9728de1317daeaf732eaa3a4077416368cd3babb44",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1088,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "d906142ab74d4aa23bd5a70a36131029ff3be314488a5ab0fd466b13d66b86fb",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1088,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "76474e37d351543d5ffda1528a4b03e903afe7ca9ef9c77aadb7d3fd4b0b1978",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1088,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "b9a59296ed669ea16fc91423c3a6ce2f4ea29a4c3acb0a94c9b8660a98c4001e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1128,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "a47fd9bc5604ce0349f1b14b8b45ebfb4efe9b0bbf8bbb64625ab4dbe596fc18",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1128,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "7eae271fd589b64fc3a632b9f98ad0c895a4e0b0bd455b7e18929e18bf27354c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1128,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "70ccf4943f0a44a82dca979150a923d1f9ffb3611d124084c528a857cb02627a",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1128,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "b44346a08fb0c0fed4304cc77c2ab30086d088289d093472d35faf00b8d0c2d1",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1009,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "89776d6010b4004c71a88da0991c1a00bb7f9b37d57a2584007734c1c769a614",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1009,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "a37a7437ce38dcf322bd184d8b981500066e70cd1504e44c87336374ca1be32c",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1009,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "473240e1a41cdbabc9a131a988b0682437e7164161af3b2dd5f2ceb15741f6bd",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1009,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "c56110e9c763ed3bc682b954efcd15fe0690a0321bdfabf5c2a9cf56b7b814ad",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1049,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "d730ab677aaa348903b0c6242947319a7596c3bd4c196baa367ead6b7c1b2038",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1049,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "0b82edbb67b82eecb7021a22704bf6e27af63e487b34e71938a6465543674daf",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1049,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "907f056c414f05ebfbd38f70c4dd5f0499b3ebaf84b1b70b1739f879afe4575b",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1049,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "69467db8d67d23692d3f4e14aa0952884da473e44928403ce22f709d7c40bdf6",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1089,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "a6edbd4a4382f6baa326b4fdeca949146fb54f484ed3c350bb51faf9185301a6",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1089,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "3339cbceb94deb7cf9b651d8c0a6189d19c07ba60ff6785eb1e905b16f955dbf",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1089,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "9df1d524ff7fc9a019be7627e79a309ef31290202e06fbef2c2af875f0c1d716",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1089,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "3a8443b31c08d507823f278b50e1fa3222edd0a8227a0be4aff44af2889c092e",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1129,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "c0abe9a13e3fe50de88af161964bdfaeddb53c7c5db6666455664e881facb32b",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1129,
+        "leg": "0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "b5c04af919f4e1429da4b0cbb30a47d216d022cff90d1e56c964649a9d5d1b03",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1129,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+        "config_sha256": "0516a32bd91b4f70cace64659af1703b1c0a6a7a86c78dd3aae6a47bfe1753a6",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      },
+      {
+        "case": 1129,
+        "leg": "-0.02",
+        "root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+        "config_sha256": "6a124bd5d53bf347e6d9ebd569fe9b7adc36bc5fd7cc382d7e10b03473d19d08",
+        "psf_sha256": "5bfa366bc0f66f37fbacc8f52c6a313920559f372b4694e820224923b1e0c1f5"
+      }
+    ],
+    "allowed_path_changes": [
+      [
+        "GalInfo",
+        "cata_file"
+      ],
+      [
+        "NoiseInfo",
+        "cata_file"
+      ],
+      [
+        "Paths",
+        "out_dir"
+      ],
+      [
+        "Paths",
+        "tmp_dir"
+      ]
+    ],
+    "noise_sha256": "72ef5f40b9fd968946015407907ecb5da495ca34de3148820af010561320c417",
+    "noise_parameters": {
+      "label": "180.0_-0.5",
+      "rmsExpo_r": "0.615864335517419",
+      "InputSeeing_r": "0.71",
+      "InputBeta_r": "2.45832751984934",
+      "seeing_e1_r": "0.0",
+      "seeing_e2_r": "0.0",
+      "chip_id": "0",
+      "expo_id": "0"
+    },
+    "psf_max_pixel_difference_all_cases_legs_axes": 0.0,
+    "truth_axis_verifications": 80
+  },
+  "cohorts": {
+    "original_four": {
+      "cases": [
+        1000,
+        1040,
+        1080,
+        1120
+      ],
+      "cuts": {
+        "mag24.9_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.8408074797426364,
+                0.0007439412075097739
+              ],
+              [
+                0.010974539670179072,
+                0.8461902835425648
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.008036090347346873,
+                0.010572145900420894
+              ],
+              [
+                0.006596843588255703,
+                0.005356700432122548
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.006938169072021102,
+                0.008952164396010813
+              ],
+              [
+                0.0057160569901072095,
+                0.004584683002980992
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8271275120129475,
+                  -0.019262706776985366
+                ],
+                [
+                  -0.00024662026623093245,
+                  0.8360357387950585
+                ]
+              ],
+              [
+                [
+                  0.8557329024281466,
+                  0.015868421585827446
+                ],
+                [
+                  0.022131528172551398,
+                  0.8547644239006952
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": -0.005382803799928393,
+            "jackknife_se": 0.0031767082457427997,
+            "bootstrap_se": 0.00277532044366845,
+            "bootstrap_ci95": [
+              -0.008908226782111006,
+              0.0009684785274514107
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.010230598462669297,
+            "jackknife_se": 0.009246032682925138,
+            "bootstrap_se": 0.007953072075866643,
+            "bootstrap_ci95": [
+              -0.02459744554159119,
+              0.004452216164972013
+            ]
+          }
+        },
+        "mag25_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.8228670399721707,
+                0.0016843584175490994
+              ],
+              [
+                0.010555755457244662,
+                0.8231203459392223
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.007943838033872217,
+                0.012572004124822869
+              ],
+              [
+                0.007343767003962742,
+                0.004093669248614839
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.006899940248608119,
+                0.010664559933782378
+              ],
+              [
+                0.006338134626280122,
+                0.0034610578438152187
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8113749740637727,
+                  -0.020586993898230543
+                ],
+                [
+                  -0.002178612362266294,
+                  0.8148829829104287
+                ]
+              ],
+              [
+                [
+                  0.838029167256645,
+                  0.01949174197283339
+                ],
+                [
+                  0.023227002143031035,
+                  0.8277310160331653
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": -0.00025330596705164243,
+            "jackknife_se": 0.006529988163634654,
+            "bootstrap_se": 0.0057213309420758515,
+            "bootstrap_ci95": [
+              -0.009338174935772714,
+              0.0127025914493889
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.008871397039695562,
+            "jackknife_se": 0.0117749071052968,
+            "bootstrap_se": 0.010175071652928063,
+            "bootstrap_ci95": [
+              -0.026573362748182526,
+              0.011366529010344134
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.8067093567872617,
+                0.0011830294801999353
+              ],
+              [
+                0.010249665601996664,
+                0.8060749791452142
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.005730933935286608,
+                0.012979179626710146
+              ],
+              [
+                0.008078197473378068,
+                0.0057224585956971545
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.004984846242112496,
+                0.010987643901600307
+              ],
+              [
+                0.007019757227127174,
+                0.0048956311149689815
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.7987633744113413,
+                  -0.023091690936799397
+                ],
+                [
+                  -0.0028981203467116933,
+                  0.7959196863791842
+                ]
+              ],
+              [
+                [
+                  0.8177911788592378,
+                  0.01926236047397812
+                ],
+                [
+                  0.023330610404864012,
+                  0.8144402383025335
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.0006343776420475455,
+            "jackknife_se": 0.003099784072200774,
+            "bootstrap_se": 0.0026742675077167815,
+            "bootstrap_ci95": [
+              -0.004575807047332514,
+              0.005880573944664458
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.009066636121796728,
+            "jackknife_se": 0.013502935223376578,
+            "bootstrap_se": 0.011603171793879288,
+            "bootstrap_ci95": [
+              -0.03176188115053036,
+              0.01361580344134131
+            ]
+          }
+        },
+        "mag24.9_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.9229744237114278,
+                0.0031981575466526148
+              ],
+              [
+                0.01141177042524659,
+                0.9313679926589968
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.006492564691674423,
+                0.006201264508209545
+              ],
+              [
+                0.004776195907299501,
+                0.007752418743492849
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.005661026058720802,
+                0.005275299872447745
+              ],
+              [
+                0.004185077080409934,
+                0.00678887808166753
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9144015236469977,
+                  -0.006847992353901277
+                ],
+                [
+                  0.0023671602923159515,
+                  0.9214998090936881
+                ]
+              ],
+              [
+                [
+                  0.9361367517398019,
+                  0.014469910482939616
+                ],
+                [
+                  0.017789542325667915,
+                  0.9468784254388547
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": -0.008393568947569041,
+            "jackknife_se": 0.0026106531028787087,
+            "bootstrap_se": 0.00225030408008572,
+            "bootstrap_ci95": [
+              -0.011930727372817085,
+              -0.0036227215552628866
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.008213612878593974,
+            "jackknife_se": 0.006857751526218058,
+            "bootstrap_se": 0.005887305801511093,
+            "bootstrap_ci95": [
+              -0.019721278926269882,
+              0.0032781782115666163
+            ]
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.905810911925029,
+                0.0036297104176494493
+              ],
+              [
+                0.010687899260102374,
+                0.9090964610112148
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0070951086718488805,
+                0.00799703855686372
+              ],
+              [
+                0.004571570178570572,
+                0.00478428893458258
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0062075301263220545,
+                0.006787802942367645
+              ],
+              [
+                0.00398286494344434,
+                0.004188630998276278
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8972706121958918,
+                  -0.009883086757965417
+                ],
+                [
+                  0.003175942903262478,
+                  0.9031246500026457
+                ]
+              ],
+              [
+                [
+                  0.92002334246951,
+                  0.015766174685200317
+                ],
+                [
+                  0.018155183387500617,
+                  0.9185670186100128
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": -0.003285549086185724,
+            "jackknife_se": 0.0031030570102926,
+            "bootstrap_se": 0.00269539206113191,
+            "bootstrap_ci95": [
+              -0.008211175974676133,
+              0.0015050235450857485
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.007058188842452925,
+            "jackknife_se": 0.008641080997358117,
+            "bootstrap_se": 0.007451084921272982,
+            "bootstrap_ci95": [
+              -0.020849581663488354,
+              0.006714510971678878
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.8898531122176547,
+                0.0035132553078836256
+              ],
+              [
+                0.009786723010455054,
+                0.8906483331000855
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.005811920033940269,
+                0.008687772375438286
+              ],
+              [
+                0.005700090784674852,
+                0.007911591690656285
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0050893548060392734,
+                0.007372031576480378
+              ],
+              [
+                0.004982055113247999,
+                0.0069155784230237995
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8815998628605541,
+                  -0.011413168452211894
+                ],
+                [
+                  -7.74697002785515e-05,
+                  0.8794463985653389
+                ]
+              ],
+              [
+                [
+                  0.9015542696120915,
+                  0.018080518798908072
+                ],
+                [
+                  0.01826101914766878,
+                  0.905106014576949
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": -0.0007952208824307805,
+            "jackknife_se": 0.004777803062397318,
+            "bootstrap_se": 0.004132817747880082,
+            "bootstrap_ci95": [
+              -0.00862652693898458,
+              0.006984506733554441
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.006273467702571429,
+            "jackknife_se": 0.009926441429223021,
+            "bootstrap_se": 0.008521378944057295,
+            "bootstrap_ci95": [
+              -0.02337005277262484,
+              0.010807974672167226
+            ]
+          }
+        },
+        "mag24.9_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9782645313705013,
+                -0.0010597019542927003
+              ],
+              [
+                0.01078207937158721,
+                0.9783875881407359
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.007958244674334565,
+                0.00644265262873039
+              ],
+              [
+                0.006095131654750187,
+                0.005606343082270259
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.006947674014512125,
+                0.0055162194453970805
+              ],
+              [
+                0.0052628638245692475,
+                0.004806140833739368
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9672255064940374,
+                  -0.011959463334879482
+                ],
+                [
+                  0.0006924259024181095,
+                  0.9689601213799467
+                ]
+              ],
+              [
+                [
+                  0.9928733368821161,
+                  0.008755328129924342
+                ],
+                [
+                  0.020806986606618623,
+                  0.9878031503449974
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": -0.0001230567702346086,
+            "jackknife_se": 0.0063100454567325565,
+            "bootstrap_se": 0.0054820145195380475,
+            "bootstrap_ci95": [
+              -0.011663716876931463,
+              0.00869784003415286
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.01184178132587991,
+            "jackknife_se": 0.012412217623842576,
+            "bootstrap_se": 0.010671509052381869,
+            "bootstrap_ci95": [
+              -0.031624996319463194,
+              0.008062902227506233
+            ]
+          }
+        },
+        "mag25_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9627550438772536,
+                0.0009460133588590799
+              ],
+              [
+                0.011110996437085265,
+                0.9560998967318667
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.009135477563443111,
+                0.00895969149834079
+              ],
+              [
+                0.004400312586447538,
+                0.004761846097105647
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.008002404260420065,
+                0.007688367001496202
+              ],
+              [
+                0.0038098191685599814,
+                0.004061636631293172
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9523349725146714,
+                  -0.015008946534693262
+                ],
+                [
+                  0.0038360034017538166,
+                  0.9486892121953711
+                ]
+              ],
+              [
+                [
+                  0.9807605813657703,
+                  0.014632002032855586
+                ],
+                [
+                  0.018336064016023522,
+                  0.9637846143659649
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.006655147145386953,
+            "jackknife_se": 0.009742961107493111,
+            "bootstrap_se": 0.008520489657801122,
+            "bootstrap_ci95": [
+              -0.010470793109308318,
+              0.025009732099981807
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.010164983078226185,
+            "jackknife_se": 0.013164413160500247,
+            "bootstrap_se": 0.011332064463858128,
+            "bootstrap_ci95": [
+              -0.03164094673084497,
+              0.01006280731826011
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9476609106693656,
+                -0.00016931195740598945
+              ],
+              [
+                0.008953130887333556,
+                0.9372811687766964
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.007552189590684224,
+                0.007790566775178616
+              ],
+              [
+                0.006257397122985001,
+                0.00456946294323078
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.006621008284284774,
+                0.006609709773265732
+              ],
+              [
+                0.005433947399485605,
+                0.0039126132632916946
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9388105845728887,
+                  -0.01590059000858921
+                ],
+                [
+                  -0.003569042713102058,
+                  0.9300508693338779
+                ]
+              ],
+              [
+                [
+                  0.9628709369602458,
+                  0.009276877751099165
+                ],
+                [
+                  0.018847499001798006,
+                  0.9445079664467393
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.010379741892669214,
+            "jackknife_se": 0.005833166417122237,
+            "bootstrap_se": 0.005075277009419376,
+            "bootstrap_ci95": [
+              0.00026914574229619515,
+              0.01958587730968575
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.009122442844739545,
+            "jackknife_se": 0.013144326863725594,
+            "bootstrap_se": 0.011253045803325673,
+            "bootstrap_ci95": [
+              -0.034770069954756774,
+              0.012845920464201223
+            ]
+          }
+        },
+        "uncut": {
+          "matrix": {
+            "value": [
+              [
+                0.5540431665058001,
+                -0.0024435822725117962
+              ],
+              [
+                0.007552472831240026,
+                0.5503437230857408
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0020464638505895963,
+                0.008389062320677924
+              ],
+              [
+                0.0044394540636780114,
+                0.003664221139290274
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0017688679401061727,
+                0.007143491179793899
+              ],
+              [
+                0.0038853256660619957,
+                0.0031471303862079265
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.5508095183371053,
+                  -0.016960243337784356
+                ],
+                [
+                  -0.001016879098194253,
+                  0.5444555646325869
+                ]
+              ],
+              [
+                [
+                  0.5578714020436788,
+                  0.013323068959718553
+                ],
+                [
+                  0.013686576270007545,
+                  0.556228676279282
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.003699443420059345,
+            "jackknife_se": 0.004131422714458494,
+            "bootstrap_se": 0.0035977503233891863,
+            "bootstrap_ci95": [
+              -0.0027758290963215693,
+              0.010197684472343371
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.009996055103751822,
+            "jackknife_se": 0.00811065576130579,
+            "bootstrap_se": 0.006903075306843576,
+            "bootstrap_ci95": [
+              -0.02305180281902237,
+              0.003061910802935366
+            ]
+          }
+        },
+        "mag25": {
+          "matrix": {
+            "value": [
+              [
+                0.7490815575201412,
+                0.0022640824815356544
+              ],
+              [
+                0.010510912809028996,
+                0.7483537621925945
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.005259222170657426,
+                0.012272581682925434
+              ],
+              [
+                0.006897583662423369,
+                0.002941066830093942
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.004575052112747238,
+                0.010413652112325386
+              ],
+              [
+                0.005958847923872992,
+                0.0024893189771036024
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.7417540039749452,
+                  -0.01932956008545827
+                ],
+                [
+                  -0.0014154047270514176,
+                  0.7425618746717497
+                ]
+              ],
+              [
+                [
+                  0.7594501482597643,
+                  0.020056875143745444
+                ],
+                [
+                  0.02237963074459292,
+                  0.7528573778933534
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.000727795327546632,
+            "jackknife_se": 0.004903042907502242,
+            "bootstrap_se": 0.0042919053246282856,
+            "bootstrap_ci95": [
+              -0.006776035528847202,
+              0.010185922281289894
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.008246830327493342,
+            "jackknife_se": 0.011508640130105063,
+            "bootstrap_se": 0.009930326995818164,
+            "bootstrap_ci95": [
+              -0.025997993682768183,
+              0.010757783477012103
+            ]
+          }
+        },
+        "mag25.8": {
+          "matrix": {
+            "value": [
+              [
+                0.6201388330458736,
+                -0.004040384643175441
+              ],
+              [
+                0.0073705064726981165,
+                0.6211625762797892
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0038381973686916946,
+                0.011608179546321514
+              ],
+              [
+                0.006704844142838403,
+                0.00424313604968148
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0033529945106190004,
+                0.009866083826889709
+              ],
+              [
+                0.005870997814342185,
+                0.0035980890262966377
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.6158331511470329,
+                  -0.023048151024281455
+                ],
+                [
+                  -0.00584871753194966,
+                  0.6136551398744491
+                ]
+              ],
+              [
+                [
+                  0.6277181865061358,
+                  0.014472127654630684
+                ],
+                [
+                  0.017516959419922273,
+                  0.6273503770592171
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": -0.0010237432339156305,
+            "jackknife_se": 0.00579856577033145,
+            "bootstrap_se": 0.005030289791358888,
+            "bootstrap_ci95": [
+              -0.01086681325377059,
+              0.008835636342104825
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.011410891115873557,
+            "jackknife_se": 0.01270748676081946,
+            "bootstrap_se": 0.01087431591873345,
+            "bootstrap_ci95": [
+              -0.03182911441460762,
+              0.009036876216436743
+            ]
+          }
+        },
+        "mag25.8_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.8156680998404886,
+                -0.00010014478599238829
+              ],
+              [
+                0.00877901771195199,
+                0.8187981326788191
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.007202004858686576,
+                0.009449753295924929
+              ],
+              [
+                0.004842561490853518,
+                0.00620507218117987
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.006295775640876253,
+                0.00801600564378054
+              ],
+              [
+                0.0042432052267272966,
+                0.00539687517827523
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8068262668699435,
+                  -0.016050778246282173
+                ],
+                [
+                  -0.0008883220037904742,
+                  0.810209339851357
+                ]
+              ],
+              [
+                [
+                  0.8299037973022189,
+                  0.015053972547737531
+                ],
+                [
+                  0.01590353972164541,
+                  0.8302733121034144
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": -0.0031300328383304654,
+            "jackknife_se": 0.003414535826301375,
+            "bootstrap_se": 0.0029538046598923764,
+            "bootstrap_ci95": [
+              -0.009904353339559302,
+              0.0005450114331628786
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.00887916249794438,
+            "jackknife_se": 0.010216028236043466,
+            "bootstrap_se": 0.008718459035264905,
+            "bootstrap_ci95": [
+              -0.02521151930876608,
+              0.0074585153488275786
+            ]
+          }
+        },
+        "mag25.8_radius_ge0.75": {
+          "matrix": {
+            "value": [
+              [
+                0.915043456081945,
+                0.013134323780059163
+              ],
+              [
+                0.002274444580397957,
+                0.8929395890585122
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.014926142780781486,
+                0.00916249125385699
+              ],
+              [
+                0.011444408001414354,
+                0.010370430458934016
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.013061023200740025,
+                0.007760821729312034
+              ],
+              [
+                0.009847384251556195,
+                0.009018230677705387
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8926901771963188,
+                  -0.0047076771289928905
+                ],
+                [
+                  -0.01677024415495804,
+                  0.8773922297908207
+                ]
+              ],
+              [
+                [
+                  0.9400636506234064,
+                  0.024845631685040937
+                ],
+                [
+                  0.02114336605136845,
+                  0.9106203402354087
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.02210386702343281,
+            "jackknife_se": 0.01011249341092214,
+            "bootstrap_se": 0.00865014189599467,
+            "bootstrap_ci95": [
+              0.005924701202715377,
+              0.03855173155074443
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": 0.010859879199661205,
+            "jackknife_se": 0.01862783866681714,
+            "bootstrap_se": 0.015897602207825014,
+            "bootstrap_ci95": [
+              -0.024360691023052394,
+              0.035901218762312004
+            ]
+          }
+        }
+      },
+      "central_delete_one_diagonal_range": [
+        -0.005614846336693846,
+        -0.0008020831789371519
+      ],
+      "per_case_central_diagonal_difference": [
+        -0.005419821186784413,
+        0.0037595986644809454,
+        -0.01071645533235377,
+        -0.0007263666019184933
+      ],
+      "positive_diagonal_cases": 1
+    },
+    "additional_thirty_six": {
+      "cases": [
+        1001,
+        1041,
+        1081,
+        1121,
+        1002,
+        1042,
+        1082,
+        1122,
+        1003,
+        1043,
+        1083,
+        1123,
+        1004,
+        1044,
+        1084,
+        1124,
+        1005,
+        1045,
+        1085,
+        1125,
+        1006,
+        1046,
+        1086,
+        1126,
+        1007,
+        1047,
+        1087,
+        1127,
+        1008,
+        1048,
+        1088,
+        1128,
+        1009,
+        1049,
+        1089,
+        1129
+      ],
+      "cuts": {
+        "mag24.9_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.8457133625600293,
+                -0.006963264331217799
+              ],
+              [
+                -0.0033402573791665347,
+                0.8371084340258458
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002741487429953204,
+                0.0023303956645449324
+              ],
+              [
+                0.0020412607492972814,
+                0.002697352845907796
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0026907461028428804,
+                0.002309652352072671
+              ],
+              [
+                0.002016978633414343,
+                0.0026204165346906862
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8402103994609591,
+                  -0.011567591487469836
+                ],
+                [
+                  -0.007281000878104854,
+                  0.8319010072886688
+                ]
+              ],
+              [
+                [
+                  0.850813273118318,
+                  -0.0025371304390472593
+                ],
+                [
+                  0.0005912558241495904,
+                  0.8421630471007416
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.008604928534183487,
+            "jackknife_se": 0.0037832393428656923,
+            "bootstrap_se": 0.003723220318088782,
+            "bootstrap_ci95": [
+              0.0012839696970089244,
+              0.015861597338682254
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0036230069520512644,
+            "jackknife_se": 0.003215705207499244,
+            "bootstrap_se": 0.003189260269250744,
+            "bootstrap_ci95": [
+              -0.010213806240947655,
+              0.002344684322712186
+            ]
+          }
+        },
+        "mag25_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.8264462849358656,
+                -0.005570494042360229
+              ],
+              [
+                -0.0030367183614417523,
+                0.8175586684000143
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002870581347105032,
+                0.0024505754162160087
+              ],
+              [
+                0.0019762956854914564,
+                0.0024212786604776854
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0028106952040398065,
+                0.0024195869787833426
+              ],
+              [
+                0.0019626349562348183,
+                0.0023579615270613516
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8207165596757554,
+                  -0.01042223916815959
+                ],
+                [
+                  -0.006892959965628423,
+                  0.8128950573615307
+                ]
+              ],
+              [
+                [
+                  0.8318081826477028,
+                  -0.0009395889869440556
+                ],
+                [
+                  0.0007542634353625605,
+                  0.8221205348367183
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.00888761653585124,
+            "jackknife_se": 0.003722687759611653,
+            "bootstrap_se": 0.003658381110049574,
+            "bootstrap_ci95": [
+              0.0016191086550138096,
+              0.01589053394244381
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0025337756809184764,
+            "jackknife_se": 0.003384234482920746,
+            "bootstrap_se": 0.003348313666421353,
+            "bootstrap_ci95": [
+              -0.009446111989885654,
+              0.003700003630920236
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.808934848693048,
+                -0.004620882320175657
+              ],
+              [
+                -0.0026691999462471745,
+                0.80058939217688
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002710386101950611,
+                0.00224386231549272
+              ],
+              [
+                0.002019211050977022,
+                0.002384643104722613
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0026571094126873803,
+                0.002205256187809675
+              ],
+              [
+                0.0020008686709744174,
+                0.0023249615478357147
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8035569255080872,
+                  -0.009019411608606625
+                ],
+                [
+                  -0.0066791291844741285,
+                  0.7960138990899678
+                ]
+              ],
+              [
+                [
+                  0.8140310156878139,
+                  -0.0003683425939231411
+                ],
+                [
+                  0.001189562693556317,
+                  0.805051584404466
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.008345456516168026,
+            "jackknife_se": 0.0035127761160139446,
+            "bootstrap_se": 0.00346255091706347,
+            "bootstrap_ci95": [
+              0.0014459855089213826,
+              0.015017273644514946
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.001951682373928482,
+            "jackknife_se": 0.003125124832035608,
+            "bootstrap_se": 0.0030856723487569402,
+            "bootstrap_ci95": [
+              -0.008322434601743842,
+              0.0036744697450184077
+            ]
+          }
+        },
+        "mag24.9_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.9269751346910474,
+                -0.005651820391389645
+              ],
+              [
+                -0.0023324719951484723,
+                0.9167002796424281
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0030040880649583367,
+                0.0028258456596638747
+              ],
+              [
+                0.002033779285622709,
+                0.0025966403710768553
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.002971772895363987,
+                0.0027966470095453434
+              ],
+              [
+                0.002012286571333607,
+                0.002533171744475813
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9211646701236335,
+                  -0.01140239540257328
+                ],
+                [
+                  -0.006364546233102935,
+                  0.91168482039741
+                ]
+              ],
+              [
+                [
+                  0.9327194860908801,
+                  -0.0003429976787613782
+                ],
+                [
+                  0.0015107115991687225,
+                  0.9215264399016124
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.010274855048619358,
+            "jackknife_se": 0.0037724694776468705,
+            "bootstrap_se": 0.003734585723648051,
+            "bootstrap_ci95": [
+              0.003014424511497671,
+              0.017737474603146466
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0033193483962411724,
+            "jackknife_se": 0.003699286228794833,
+            "bootstrap_se": 0.003670260325332505,
+            "bootstrap_ci95": [
+              -0.010818634793158257,
+              0.003517878017119995
+            ]
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.9072856006880872,
+                -0.004307323227453251
+              ],
+              [
+                -0.0018108626764362927,
+                0.8961959360339309
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.003080458316465749,
+                0.002904102797065792
+              ],
+              [
+                0.0020422169711219085,
+                0.0024610222027646165
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.003046114878245953,
+                0.002863435578466729
+              ],
+              [
+                0.0020296523695401522,
+                0.0024088210796377064
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9013224018737432,
+                  -0.010106435524643305
+                ],
+                [
+                  -0.005811834790532713,
+                  0.8914329223671676
+                ]
+              ],
+              [
+                [
+                  0.9131403642272088,
+                  0.0012194766305437552
+                ],
+                [
+                  0.002161737577590888,
+                  0.9008435749242077
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.011089664654156284,
+            "jackknife_se": 0.0038855799456350274,
+            "bootstrap_se": 0.0038377762305484616,
+            "bootstrap_ci95": [
+              0.003544181007087055,
+              0.018653792233984518
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.002496460551016958,
+            "jackknife_se": 0.0039330065825419645,
+            "bootstrap_se": 0.0038950937016493793,
+            "bootstrap_ci95": [
+              -0.010470628961476033,
+              0.004804062552109451
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.8895961977176375,
+                -0.003543153315831399
+              ],
+              [
+                -0.0014912383837853492,
+                0.8788581009463267
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002928010445856519,
+                0.002650268188426879
+              ],
+              [
+                0.0021797420254997973,
+                0.0024167773729705387
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0028986452958747735,
+                0.002602918049373668
+              ],
+              [
+                0.002161599536104492,
+                0.0023686313701966628
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8838317927624056,
+                  -0.008755396903396238
+                ],
+                [
+                  -0.005703612944966989,
+                  0.8741319265028149
+                ]
+              ],
+              [
+                [
+                  0.8951601083731615,
+                  0.0014729627949184908
+                ],
+                [
+                  0.0027875182294952888,
+                  0.8834116568909652
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.010738096771310879,
+            "jackknife_se": 0.003699699526421309,
+            "bootstrap_se": 0.003670763232532727,
+            "bootstrap_ci95": [
+              0.0035024015412630535,
+              0.017905486278261124
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.00205191493204605,
+            "jackknife_se": 0.003674439493439192,
+            "bootstrap_se": 0.0036300393845824044,
+            "bootstrap_ci95": [
+              -0.009629857643280774,
+              0.004551622196320397
+            ]
+          }
+        },
+        "mag24.9_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9756967032937263,
+                -0.0033125230421571505
+              ],
+              [
+                -0.0009596443329153628,
+                0.9693689923172202
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002589077909794261,
+                0.0027249916678078905
+              ],
+              [
+                0.002118894514975583,
+                0.0028614213825518793
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0025668295546151234,
+                0.0026958398044541493
+              ],
+              [
+                0.0020848838738244052,
+                0.0027851274889054718
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9707699970629166,
+                  -0.008777020830258607
+                ],
+                [
+                  -0.004952526768622356,
+                  0.9636904781086919
+                ]
+              ],
+              [
+                [
+                  0.9807838217593116,
+                  0.0017313544474879682
+                ],
+                [
+                  0.003142770512070542,
+                  0.9746722649922365
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.006327710976506085,
+            "jackknife_se": 0.003512463029981884,
+            "bootstrap_se": 0.003478578401554288,
+            "bootstrap_ci95": [
+              -0.00031170339992344915,
+              0.013150961582349362
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0023528787092417878,
+            "jackknife_se": 0.0036841613256992354,
+            "bootstrap_se": 0.0036294181682511167,
+            "bootstrap_ci95": [
+              -0.009774300933569261,
+              0.004301120961325274
+            ]
+          }
+        },
+        "mag25_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9569904011207618,
+                -0.0018892563778558314
+              ],
+              [
+                -0.0005991830524270346,
+                0.9496981446885332
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002662030698813732,
+                0.0028723993661094785
+              ],
+              [
+                0.001935641518049498,
+                0.002687922896468309
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0026354894721802974,
+                0.002835631405139906
+              ],
+              [
+                0.0019100217467529089,
+                0.0026233164406339778
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9518912547121113,
+                  -0.007557839806431218
+                ],
+                [
+                  -0.004211059858444907,
+                  0.9443945226745418
+                ]
+              ],
+              [
+                [
+                  0.962201836435382,
+                  0.0033921984790100555
+                ],
+                [
+                  0.003199113977454336,
+                  0.9546953281291723
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007292256432228639,
+            "jackknife_se": 0.0036106918519366897,
+            "bootstrap_se": 0.003570489100697002,
+            "bootstrap_ci95": [
+              0.00041877587696816934,
+              0.01419832572276393
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0012900733254287968,
+            "jackknife_se": 0.003814120731966288,
+            "bootstrap_se": 0.0037597035996260846,
+            "bootstrap_ci95": [
+              -0.00901814197580948,
+              0.005705767880326758
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9400541279949699,
+                -0.0015818813320761969
+              ],
+              [
+                -0.0002518513020072013,
+                0.9329653295330035
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002712519062182381,
+                0.0025894815383609503
+              ],
+              [
+                0.0021775565246151384,
+                0.002672268149942047
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0026840456570981683,
+                0.002552254461883262
+              ],
+              [
+                0.0021477026135289087,
+                0.0026140594264577456
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9349753995134115,
+                  -0.006679231283595179
+                ],
+                [
+                  -0.004401134139907831,
+                  0.9278181210790055
+                ]
+              ],
+              [
+                [
+                  0.9454468070233807,
+                  0.0031919552836697732
+                ],
+                [
+                  0.0039411857006493006,
+                  0.938065366908878
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007088798461966417,
+            "jackknife_se": 0.0035590591183941884,
+            "bootstrap_se": 0.003533761574766704,
+            "bootstrap_ci95": [
+              0.00023119506203604645,
+              0.014028651122478829
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0013300300300689955,
+            "jackknife_se": 0.0038108679108380078,
+            "bootstrap_se": 0.0037555311272667734,
+            "bootstrap_ci95": [
+              -0.009079575128545202,
+              0.005574874564161282
+            ]
+          }
+        },
+        "uncut": {
+          "matrix": {
+            "value": [
+              [
+                0.5499579961596843,
+                -0.0049116250539780245
+              ],
+              [
+                -0.00124683160514652,
+                0.5428857477460961
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0021563718340563104,
+                0.0017437907919245353
+              ],
+              [
+                0.001642945830925675,
+                0.001895002296063756
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0021169726187130165,
+                0.0017133522915767708
+              ],
+              [
+                0.0016326744935210961,
+                0.0018622371283073358
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.5457100187623831,
+                  -0.008211149502012625
+                ],
+                [
+                  -0.004548140913961103,
+                  0.5392335086736444
+                ]
+              ],
+              [
+                [
+                  0.5541051409487029,
+                  -0.0015148770594337225
+                ],
+                [
+                  0.0019180869753482681,
+                  0.5464507628278753
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007072248413588222,
+            "jackknife_se": 0.002889300720376549,
+            "bootstrap_se": 0.002850039756251837,
+            "bootstrap_ci95": [
+              0.0014893651513956554,
+              0.012657827576375964
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0036647934488315045,
+            "jackknife_se": 0.002401216291236023,
+            "bootstrap_se": 0.002383225404701963,
+            "bootstrap_ci95": [
+              -0.008325330323242602,
+              0.0008822870114698913
+            ]
+          }
+        },
+        "mag25": {
+          "matrix": {
+            "value": [
+              [
+                0.7510396947624098,
+                -0.005495259763723911
+              ],
+              [
+                -0.0025346960295820264,
+                0.742039072990504
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0029656450828906664,
+                0.0021536617382149057
+              ],
+              [
+                0.0018589280464548633,
+                0.002283807111788191
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.002901569882064458,
+                0.0021212397211861204
+              ],
+              [
+                0.001844058749925916,
+                0.0022317054464840204
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.7450828517668683,
+                  -0.009757124408405995
+                ],
+                [
+                  -0.006129501984032524,
+                  0.7376066584506115
+                ]
+              ],
+              [
+                [
+                  0.7565151492261943,
+                  -0.001493043630163784
+                ],
+                [
+                  0.0010198923656638994,
+                  0.7464107904777778
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.009000621771905859,
+            "jackknife_se": 0.003771413842001692,
+            "bootstrap_se": 0.00370137355263719,
+            "bootstrap_ci95": [
+              0.0016453554511386304,
+              0.015997715887250172
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0029605637341418847,
+            "jackknife_se": 0.0030790509111208817,
+            "bootstrap_se": 0.003049598605848154,
+            "bootstrap_ci95": [
+              -0.009224506162777793,
+              0.0028978449454985186
+            ]
+          }
+        },
+        "mag25.8": {
+          "matrix": {
+            "value": [
+              [
+                0.6198995459314247,
+                -0.005076313216121699
+              ],
+              [
+                -0.0017697198228711227,
+                0.6119600658489445
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002100879099584405,
+                0.001710130233912689
+              ],
+              [
+                0.0017492683928073205,
+                0.0019672357045383815
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.002061552752755116,
+                0.0016650103157413575
+              ],
+              [
+                0.00173685767699946,
+                0.0019384734745904258
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.6157766975715239,
+                  -0.008322136134241506
+                ],
+                [
+                  -0.005170365211324982,
+                  0.608190767067485
+                ]
+              ],
+              [
+                [
+                  0.623880535239785,
+                  -0.001857441526944548
+                ],
+                [
+                  0.0016037934157711498,
+                  0.615764909325463
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007939480082480244,
+            "jackknife_se": 0.0028613930229518395,
+            "bootstrap_se": 0.0028261693880321475,
+            "bootstrap_ci95": [
+              0.002394672296470685,
+              0.013398689121092596
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0033065933932505767,
+            "jackknife_se": 0.0024753783547080805,
+            "bootstrap_se": 0.002448825316575676,
+            "bootstrap_ci95": [
+              -0.008177327743560739,
+              0.0013827068620879688
+            ]
+          }
+        },
+        "mag25.8_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.8142792530834427,
+                -0.00502824650209145
+              ],
+              [
+                -0.0010772430551754708,
+                0.8040344471430576
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0024813553244797085,
+                0.002342733262140153
+              ],
+              [
+                0.002086019325564415,
+                0.00225972484669284
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.002445858857512896,
+                0.002288192787243047
+              ],
+              [
+                0.002068594604984032,
+                0.0022224734802114596
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8094883729826352,
+                  -0.00953244217982256
+                ],
+                [
+                  -0.005130146263924677,
+                  0.7997196601225818
+                ]
+              ],
+              [
+                [
+                  0.8190590167128371,
+                  -0.0006380788118873994
+                ],
+                [
+                  0.003043316658384178,
+                  0.8083697053709807
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.010244805940385127,
+            "jackknife_se": 0.003272127135546872,
+            "bootstrap_se": 0.0032346367662377164,
+            "bootstrap_ci95": [
+              0.0040300812873648815,
+              0.016765405344376504
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.00395100344691598,
+            "jackknife_se": 0.003343509241564063,
+            "bootstrap_se": 0.0032976252798231557,
+            "bootstrap_ci95": [
+              -0.010622182733885495,
+              0.002291978597636202
+            ]
+          }
+        },
+        "mag25.8_radius_ge0.75": {
+          "matrix": {
+            "value": [
+              [
+                0.9087348569404207,
+                -0.004313231223060855
+              ],
+              [
+                0.0012007133973273416,
+                0.9015240226795507
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0033708232122551924,
+                0.003361801768058102
+              ],
+              [
+                0.003374198332610606,
+                0.0033130439540681278
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0032955426206732015,
+                0.0032912725980116706
+              ],
+              [
+                0.003337734678645077,
+                0.0032582805675866002
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9021642214468467,
+                  -0.010663458861622701
+                ],
+                [
+                  -0.0051818683232380345,
+                  0.8949584176337771
+                ]
+              ],
+              [
+                [
+                  0.9151955659855938,
+                  0.002193123346780984
+                ],
+                [
+                  0.007764390419959705,
+                  0.9078918978844549
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007210834260869992,
+            "jackknife_se": 0.004661815506693808,
+            "bootstrap_se": 0.004580901230311959,
+            "bootstrap_ci95": [
+              -0.0018418540000691374,
+              0.01621212492100737
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.005513944620388197,
+            "jackknife_se": 0.004600414032002466,
+            "bootstrap_se": 0.004500068609323029,
+            "bootstrap_ci95": [
+              -0.014237134616727468,
+              0.003252193032779018
+            ]
+          }
+        }
+      },
+      "central_delete_one_diagonal_range": [
+        0.009687450178571422,
+        0.012804796946516372
+      ],
+      "per_case_central_diagonal_difference": [
+        0.04073724704443882,
+        0.0166974323976391,
+        0.060003756262736574,
+        -0.0009200682846168817,
+        -0.009421440551429572,
+        0.0210365279534257,
+        -0.04928691512088412,
+        0.008356499650451377,
+        0.018171781582207447,
+        0.013187968049187426,
+        0.04550406966852938,
+        0.0011008199659959805,
+        0.00419227605016903,
+        -0.033244908691621444,
+        0.008551437042364274,
+        0.05073829438825661,
+        -0.02560372969011404,
+        0.016142398268428004,
+        0.005490582657840415,
+        -0.01473710279121243,
+        0.0322823371380252,
+        -0.002160677605693051,
+        -0.008573493873730742,
+        0.002216901982429187,
+        0.014748460948558861,
+        0.03628073492559869,
+        -0.0011936750204074587,
+        0.022575293614325753,
+        0.01314855205256582,
+        0.0189741113532107,
+        0.01772303422553878,
+        0.00986839501122494,
+        -0.01606464564505683,
+        0.050178964077240984,
+        0.015389610821461175,
+        0.015931535886907877
+      ],
+      "positive_diagonal_cases": 26
+    },
+    "all_forty": {
+      "cases": [
+        1000,
+        1040,
+        1080,
+        1120,
+        1001,
+        1041,
+        1081,
+        1121,
+        1002,
+        1042,
+        1082,
+        1122,
+        1003,
+        1043,
+        1083,
+        1123,
+        1004,
+        1044,
+        1084,
+        1124,
+        1005,
+        1045,
+        1085,
+        1125,
+        1006,
+        1046,
+        1086,
+        1126,
+        1007,
+        1047,
+        1087,
+        1127,
+        1008,
+        1048,
+        1088,
+        1128,
+        1009,
+        1049,
+        1089,
+        1129
+      ],
+      "cuts": {
+        "mag24.9_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.8452226649835876,
+                -0.006193115853337061
+              ],
+              [
+                -0.001908957429047377,
+                0.8380165635625665
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0025737889579931345,
+                0.002320341181439269
+              ],
+              [
+                0.002043605410004735,
+                0.002507772618611963
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0025598661780549827,
+                0.002305752698317753
+              ],
+              [
+                0.0020356288898531884,
+                0.002470925996023645
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8400325927691651,
+                  -0.010772719119205201
+                ],
+                [
+                  -0.005935709413046383,
+                  0.8332260209090208
+                ]
+              ],
+              [
+                [
+                  0.8501925475460718,
+                  -0.00174682603131952
+                ],
+                [
+                  0.0020950280215803266,
+                  0.842765079078382
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007206101421021072,
+            "jackknife_se": 0.0034774059945710816,
+            "bootstrap_se": 0.0034445576627983978,
+            "bootstrap_ci95": [
+              0.0003604925537044279,
+              0.013848884330493427
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.004284158424289684,
+            "jackknife_se": 0.0030186294047201043,
+            "bootstrap_se": 0.003024845597441714,
+            "bootstrap_ci95": [
+              -0.010456842259419605,
+              0.0015706599302115203
+            ]
+          }
+        },
+        "mag25_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.8260883644050419,
+                -0.004846267320163895
+              ],
+              [
+                -0.001678118812747573,
+                0.8181151396417323
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.00267810040705319,
+                0.0024875688991139386
+              ],
+              [
+                0.001999469482016613,
+                0.0022218007509811105
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0026659339666709027,
+                0.002462549783093948
+              ],
+              [
+                0.001984705624666095,
+                0.002186708851181209
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8206866631026699,
+                  -0.009715724384333465
+                ],
+                [
+                  -0.0054886665933940385,
+                  0.8139290810875723
+                ]
+              ],
+              [
+                [
+                  0.831215848175086,
+                  -3.405643918079379e-05
+                ],
+                [
+                  0.0023526128224663025,
+                  0.8223740529481702
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007973224763309528,
+            "jackknife_se": 0.003423230575876579,
+            "bootstrap_se": 0.0033820508640878557,
+            "bootstrap_ci95": [
+              0.0011907456231633592,
+              0.014425063031359873
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.003168148507416322,
+            "jackknife_se": 0.0032268316147452767,
+            "bootstrap_se": 0.003209375592602517,
+            "bootstrap_ci95": [
+              -0.009639570057280895,
+              0.0030093932498466754
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.56": {
+          "matrix": {
+            "value": [
+              [
+                0.8087122201485685,
+                -0.004041740404908261
+              ],
+              [
+                -0.00137758665037693,
+                0.8011386130491843
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0024897279687160776,
+                0.00233237737960563
+              ],
+              [
+                0.002045183070569979,
+                0.0022168602704657676
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0024823924382557164,
+                0.002314236295764372
+              ],
+              [
+                0.00202812021319225,
+                0.0021894204196520805
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8036501923122281,
+                  -0.008599458385879643
+                ],
+                [
+                  -0.00536707037199794,
+                  0.7969804588534539
+                ]
+              ],
+              [
+                [
+                  0.8134431011193807,
+                  0.00047005894838303663
+                ],
+                [
+                  0.0026740673187686005,
+                  0.8054089160188986
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.00757360709938415,
+            "jackknife_se": 0.003190644682128913,
+            "bootstrap_se": 0.0031520987056211825,
+            "bootstrap_ci95": [
+              0.0012421514963627646,
+              0.013474578759579789
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.002664153754531331,
+            "jackknife_se": 0.0030674829880952574,
+            "bootstrap_se": 0.0030515761359773373,
+            "bootstrap_ci95": [
+              -0.008801901212151589,
+              0.0032216164554709444
+            ]
+          }
+        },
+        "mag24.9_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.9265747277304847,
+                -0.004768573960245599
+              ],
+              [
+                -0.0009589159855148276,
+                0.9181659612560535
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002766344798773728,
+                0.0026321006035619947
+              ],
+              [
+                0.0019887361482386063,
+                0.0025304381969336594
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.002725832474484708,
+                0.0026119729471132834
+              ],
+              [
+                0.0019706121739936117,
+                0.002492689669852786
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9210833257239268,
+                  -0.00988456451906064
+                ],
+                [
+                  -0.004817298044535484,
+                  0.9132780502353024
+                ]
+              ],
+              [
+                [
+                  0.9318021164780175,
+                  0.00019413972446053813
+                ],
+                [
+                  0.0028705869625647073,
+                  0.9230818275787909
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.008408766474431117,
+            "jackknife_se": 0.003514857641506286,
+            "bootstrap_se": 0.0034664736850597705,
+            "bootstrap_ci95": [
+              0.0016917652192413202,
+              0.015328720891718378
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0038096579747307715,
+            "jackknife_se": 0.0033871010591885803,
+            "bootstrap_se": 0.0033802499590048804,
+            "bootstrap_ci95": [
+              -0.010627391463071196,
+              0.002510540499305535
+            ]
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.9071377585399267,
+                -0.003515943696695419
+              ],
+              [
+                -0.0005625152517300263,
+                0.8974846804701043
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002838831463144722,
+                0.0027295769755433115
+              ],
+              [
+                0.001972759173220831,
+                0.002334902514675785
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0028051167375915368,
+                0.002699393878909922
+              ],
+              [
+                0.001947044935175412,
+                0.002299611043030183
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9015050502015078,
+                  -0.008699431634258684
+                ],
+                [
+                  -0.004332239444536678,
+                  0.8929752338130822
+                ]
+              ],
+              [
+                [
+                  0.9123887649862914,
+                  0.0017453070884944249
+                ],
+                [
+                  0.003254584563567858,
+                  0.901998911817383
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.009653078069822407,
+            "jackknife_se": 0.0035709600764428405,
+            "bootstrap_se": 0.003517492249471978,
+            "bootstrap_ci95": [
+              0.0026981166243130158,
+              0.01663576745700226
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.002953428444965393,
+            "jackknife_se": 0.003622149934804906,
+            "bootstrap_se": 0.003590794237572434,
+            "bootstrap_ci95": [
+              -0.010232874208203154,
+              0.0038388474845894318
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.8896211609778685,
+                -0.002839766925642949
+              ],
+              [
+                -0.00036439320793290757,
+                0.8800363366964495
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002680749617031009,
+                0.0025236444496018764
+              ],
+              [
+                0.0020936633689787273,
+                0.0023489152299923633
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0026516285921577214,
+                0.002496674082932093
+              ],
+              [
+                0.002069771528416301,
+                0.0023197317744727847
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8842531547868766,
+                  -0.00772009638145615
+                ],
+                [
+                  -0.0043623112104772,
+                  0.8755863639711686
+                ]
+              ],
+              [
+                [
+                  0.8946089576941937,
+                  0.002021107748258412
+                ],
+                [
+                  0.003757678337234875,
+                  0.8846222561576436
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.009584824281418935,
+            "jackknife_se": 0.0033972274104687203,
+            "bootstrap_se": 0.0033388896702599862,
+            "bootstrap_ci95": [
+              0.002976609071033723,
+              0.016032453985578975
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0024753737177100415,
+            "jackknife_se": 0.0034214027601837563,
+            "bootstrap_se": 0.003392222373325548,
+            "bootstrap_ci95": [
+              -0.009404660509638153,
+              0.0038804436431866957
+            ]
+          }
+        },
+        "mag24.9_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9759520267878112,
+                -0.0030892192255956193
+              ],
+              [
+                0.00021410127107395843,
+                0.9702708752815744
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.00243230558801338,
+                0.0025157651604885006
+              ],
+              [
+                0.002057318336845816,
+                0.0026540163544185895
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.002396260473434625,
+                0.002498380914010296
+              ],
+              [
+                0.0020208634992957943,
+                0.0026086089531546417
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.97123589654646,
+                  -0.0080347790344605
+                ],
+                [
+                  -0.0037145229674316075,
+                  0.9651690270933996
+                ]
+              ],
+              [
+                [
+                  0.9806350820177937,
+                  0.001586898143114323
+                ],
+                [
+                  0.00423604320301765,
+                  0.9753789679517906
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.005681151506236826,
+            "jackknife_se": 0.0032201128919328685,
+            "bootstrap_se": 0.0031789543306755055,
+            "bootstrap_ci95": [
+              -0.0006504329028068634,
+              0.011857592579921864
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0033033204966695776,
+            "jackknife_se": 0.0035154586669661845,
+            "bootstrap_se": 0.003481883471198445,
+            "bootstrap_ci95": [
+              -0.01049891664521817,
+              0.0031117004437691115
+            ]
+          }
+        },
+        "mag25_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9575653879020967,
+                -0.0016089172988167143
+              ],
+              [
+                0.0005704087084887897,
+                0.9503385092463547
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0025377630486746908,
+                0.0027021330354632246
+              ],
+              [
+                0.0018690211154641966,
+                0.0024709200149360603
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0025056711176410663,
+                0.002681258278647227
+              ],
+              [
+                0.0018306940066265794,
+                0.0024331822414781442
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9525665741109743,
+                  -0.006906482098528295
+                ],
+                [
+                  -0.0029451909796709952,
+                  0.9455058747523521
+                ]
+              ],
+              [
+                [
+                  0.9623664396783015,
+                  0.003449865355413495
+                ],
+                [
+                  0.0042325423029439735,
+                  0.9550665826003959
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007226878655742008,
+            "jackknife_se": 0.0033558857819991476,
+            "bootstrap_se": 0.003309941059027551,
+            "bootstrap_ci95": [
+              0.0006686925405623684,
+              0.013613042466574084
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.002179326007305504,
+            "jackknife_se": 0.003642665075679844,
+            "bootstrap_se": 0.0035947548289895835,
+            "bootstrap_ci95": [
+              -0.009481868943882617,
+              0.004581401719918901
+            ]
+          }
+        },
+        "mag25.1_radius_gt0.64": {
+          "matrix": {
+            "value": [
+              [
+                0.9408125950490276,
+                -0.0014437392929476601
+              ],
+              [
+                0.0006678596041565373,
+                0.9333975353975915
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0025521140810278197,
+                0.002426551593122381
+              ],
+              [
+                0.002080754896518558,
+                0.0024437595807145973
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.002518620436927568,
+                0.0024065882174000913
+              ],
+              [
+                0.002040788229686917,
+                0.002414709775508028
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9357766608691114,
+                  -0.006294928382564552
+                ],
+                [
+                  -0.0033135897095896995,
+                  0.9287341313472678
+                ]
+              ],
+              [
+                [
+                  0.9456789984007656,
+                  0.0030845705450673203
+                ],
+                [
+                  0.004780207698594958,
+                  0.9381749370277643
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.007415059651436073,
+            "jackknife_se": 0.0032431748360544615,
+            "bootstrap_se": 0.003193378731790012,
+            "bootstrap_ci95": [
+              0.0010538188412753337,
+              0.013454769185396074
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0021115988971041975,
+            "jackknife_se": 0.0036336233196519185,
+            "bootstrap_se": 0.003589163934086347,
+            "bootstrap_ci95": [
+              -0.00939494487649991,
+              0.004532058738502433
+            ]
+          }
+        },
+        "uncut": {
+          "matrix": {
+            "value": [
+              [
+                0.5503659852973704,
+                -0.0046651172295644645
+              ],
+              [
+                -0.00036676234713458575,
+                0.5436316325304844
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0019560920696483648,
+                0.0017353441130220787
+              ],
+              [
+                0.0015845443262666207,
+                0.0017698221009114989
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0019442325579646386,
+                0.001714613545039281
+              ],
+              [
+                0.001564935921625148,
+                0.0017529196744608064
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.5464677222656933,
+                  -0.007950251582829046
+                ],
+                [
+                  -0.0034826056606088673,
+                  0.5402530471319583
+                ]
+              ],
+              [
+                [
+                  0.5541307398949973,
+                  -0.0012140171912091396
+                ],
+                [
+                  0.0026200079611706107,
+                  0.5470712835831866
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.006734352766885943,
+            "jackknife_se": 0.002626869897575895,
+            "bootstrap_se": 0.002605066453422051,
+            "bootstrap_ci95": [
+              0.0015158612736657392,
+              0.011703833744263882
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.004298354882429879,
+            "jackknife_se": 0.002292588749144962,
+            "bootstrap_se": 0.0022775113115998356,
+            "bootstrap_ci95": [
+              -0.008746388336495393,
+              0.0002012613738042715
+            ]
+          }
+        },
+        "mag25": {
+          "matrix": {
+            "value": [
+              [
+                0.7508436964293602,
+                -0.00472026019263154
+              ],
+              [
+                -0.0012305411815489381,
+                0.7426707634531057
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0027067207372016115,
+                0.0022460568025436762
+              ],
+              [
+                0.0018846408430831427,
+                0.00209098812147123
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.002691873321199386,
+                0.00222261589913215
+              ],
+              [
+                0.0018713946168293623,
+                0.002059436080636405
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.7453466424644128,
+                  -0.009061921934432358
+                ],
+                [
+                  -0.004857971254455075,
+                  0.7387230090105645
+                ]
+              ],
+              [
+                [
+                  0.7560032699772409,
+                  -0.00034495063409116386
+                ],
+                [
+                  0.0025196422025987476,
+                  0.7467367190350361
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.008172932976254543,
+            "jackknife_se": 0.0034400987074893613,
+            "bootstrap_se": 0.003407722514430784,
+            "bootstrap_ci95": [
+              0.001247491073011939,
+              0.014605363468392118
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.0034897190110826015,
+            "jackknife_se": 0.0029567490417301105,
+            "bootstrap_se": 0.002944961169128296,
+            "bootstrap_ci95": [
+              -0.009385956007268846,
+              0.002229202634114778
+            ]
+          }
+        },
+        "mag25.8": {
+          "matrix": {
+            "value": [
+              [
+                0.6199235707632534,
+                -0.004972724129848613
+              ],
+              [
+                -0.0008550925314736655,
+                0.6128809279605926
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.0019178433753583293,
+                0.0018443367368000494
+              ],
+              [
+                0.0017353196600207077,
+                0.0018600234883128339
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0019117399112986101,
+                0.0018244537783907735
+              ],
+              [
+                0.001714581065809892,
+                0.001839403253160952
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.6161114382272794,
+                  -0.008494597227860272
+                ],
+                [
+                  -0.004268857253394319,
+                  0.6093629088183459
+                ]
+              ],
+              [
+                [
+                  0.6236560785454953,
+                  -0.0013830440013225208
+                ],
+                [
+                  0.002493480991987653,
+                  0.616532700711138
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.00704264280266087,
+            "jackknife_se": 0.002656607651285558,
+            "bootstrap_se": 0.0026416843723499105,
+            "bootstrap_ci95": [
+              0.0018144378460377838,
+              0.012117122941968183
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.004117631598374948,
+            "jackknife_se": 0.002518847278021449,
+            "bootstrap_se": 0.0024986801637901087,
+            "bootstrap_ci95": [
+              -0.009072326156646241,
+              0.0007420283251507052
+            ]
+          }
+        },
+        "mag25.8_radius_gt0.60": {
+          "matrix": {
+            "value": [
+              [
+                0.8144179316081342,
+                -0.004536543384460996
+              ],
+              [
+                -9.223721839275395e-05,
+                0.8055099778407778
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.002318944965270468,
+                0.0022746568730607495
+              ],
+              [
+                0.001980148069854246,
+                0.0022185552293474717
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0023019283654742736,
+                0.0022472158757555183
+              ],
+              [
+                0.001954087600013553,
+                0.002192811343934131
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.8098248967900648,
+                  -0.008840396568704464
+                ],
+                [
+                  -0.003890567206628001,
+                  0.8013110281133035
+                ]
+              ],
+              [
+                [
+                  0.8187905369867876,
+                  -0.0001255903576749557
+                ],
+                [
+                  0.0037521658656778185,
+                  0.8098672138305261
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.008907953767356425,
+            "jackknife_se": 0.003025297381716239,
+            "bootstrap_se": 0.0029963189552665143,
+            "bootstrap_ci95": [
+              0.003079371256958524,
+              0.014778151643580486
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.004444306166068242,
+            "jackknife_se": 0.0031446245474620947,
+            "bootstrap_se": 0.003100354473291008,
+            "bootstrap_ci95": [
+              -0.010650920091073731,
+              0.001403158121659954
+            ]
+          }
+        },
+        "mag25.8_radius_ge0.75": {
+          "matrix": {
+            "value": [
+              [
+                0.9093607813577875,
+                -0.0025730760538054988
+              ],
+              [
+                0.001307444707495988,
+                0.9006670035540975
+              ]
+            ],
+            "jackknife_se": [
+              [
+                0.003312926384621004,
+                0.003238669779807835
+              ],
+              [
+                0.0031952325093170353,
+                0.0031406131759531154
+              ]
+            ],
+            "bootstrap_se": [
+              [
+                0.0032698740532308176,
+                0.0031844371653089515
+              ],
+              [
+                0.003165209680300302,
+                0.003111480498556564
+              ]
+            ],
+            "bootstrap_ci95": [
+              [
+                [
+                  0.9028235604201509,
+                  -0.008828944263237442
+                ],
+                [
+                  -0.004905915542824573,
+                  0.8945608016446505
+                ]
+              ],
+              [
+                [
+                  0.915756979935028,
+                  0.0036782340352982954
+                ],
+                [
+                  0.007587990262984184,
+                  0.9066443821211709
+                ]
+              ]
+            ]
+          },
+          "diagonal_difference": {
+            "value": 0.008693777803690073,
+            "jackknife_se": 0.004339941854466503,
+            "bootstrap_se": 0.004284251011213386,
+            "bootstrap_ci95": [
+              0.00019057671381139397,
+              0.01702769483414545
+            ]
+          },
+          "offdiagonal_difference": {
+            "value": -0.003880520761301487,
+            "jackknife_se": 0.004516497592302831,
+            "bootstrap_se": 0.004440360711696344,
+            "bootstrap_ci95": [
+              -0.012586241634781805,
+              0.0048292663475990715
+            ]
+          }
+        }
+      },
+      "central_delete_one_diagonal_range": [
+        0.008357449832838926,
+        0.011155977840875075
+      ],
+      "per_case_central_diagonal_difference": [
+        -0.005419821186784413,
+        0.0037595986644809454,
+        -0.01071645533235377,
+        -0.0007263666019184933,
+        0.04073724704443882,
+        0.0166974323976391,
+        0.060003756262736574,
+        -0.0009200682846168817,
+        -0.009421440551429572,
+        0.0210365279534257,
+        -0.04928691512088412,
+        0.008356499650451377,
+        0.018171781582207447,
+        0.013187968049187426,
+        0.04550406966852938,
+        0.0011008199659959805,
+        0.00419227605016903,
+        -0.033244908691621444,
+        0.008551437042364274,
+        0.05073829438825661,
+        -0.02560372969011404,
+        0.016142398268428004,
+        0.005490582657840415,
+        -0.01473710279121243,
+        0.0322823371380252,
+        -0.002160677605693051,
+        -0.008573493873730742,
+        0.002216901982429187,
+        0.014748460948558861,
+        0.03628073492559869,
+        -0.0011936750204074587,
+        0.022575293614325753,
+        0.01314855205256582,
+        0.0189741113532107,
+        0.01772303422553878,
+        0.00986839501122494,
+        -0.01606464564505683,
+        0.050178964077240984,
+        0.015389610821461175,
+        0.015931535886907877
+      ],
+      "positive_diagonal_cases": 27
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "time": "2026-11-08T01:19:45.792066",
+  "queue": "               JOBID     STATE       TIME   CPUS NODELIST(REASON)\n          17824712_8   PENDING       0:00     40 (None)\n          17824712_9   PENDING       0:00     40 (None)\n         17824712_10   PENDING       0:00     40 (None)\n         17824712_11   PENDING       0:00     40 (None)\n          17824712_7   PENDING       0:00     40 (None)\n            17824713   PENDING       0:00      1 (Dependency)\n          17824712_6   RUNNING       0:34     40 cip-cl-compute9\n          17824712_0   RUNNING       2:08     40 usm-cl-1116cs01\n          17824712_1   RUNNING       2:08     40 th-cl-262h04n3\n          17824712_2   RUNNING       2:08     40 th-cl-262h03n3\n          17824712_3   RUNNING       2:08     40 th-cl-262h03n4\n          17824712_4   RUNNING       2:08     40 th-cl-262h04n1\n          17824712_5   RUNNING       2:08     40 th-cl-naples04\n",
+  "verified_chunks": [
+    {
+      "case": 1000,
+      "chunk": 15,
+      "attempted": 2524,
+      "valid": 2524,
+      "seconds": 74.14178356621414
+    },
+    {
+      "case": 1001,
+      "chunk": 15,
+      "attempted": 2441,
+      "valid": 2439,
+      "seconds": 107.01761828083545
+    },
+    {
+      "case": 1002,
+      "chunk": 15,
+      "attempted": 1932,
+      "valid": 1931,
+      "seconds": 94.59759795106947
+    },
+    {
+      "case": 1003,
+      "chunk": 15,
+      "attempted": 2232,
+      "valid": 2230,
+      "seconds": 90.15222769323736
+    },
+    {
+      "case": 1004,
+      "chunk": 15,
+      "attempted": 1334,
+      "valid": 1334,
+      "seconds": 66.6086090800818
+    },
+    {
+      "case": 1005,
+      "chunk": 15,
+      "attempted": 632,
+      "valid": 632,
+      "seconds": 73.92178222350776
+    },
+    {
+      "case": 1042,
+      "chunk": 15,
+      "attempted": 2031,
+      "valid": 2031,
+      "seconds": 67.80855692457408
+    },
+    {
+      "case": 1043,
+      "chunk": 15,
+      "attempted": 1189,
+      "valid": 1187,
+      "seconds": 69.8900681193918
+    },
+    {
+      "case": 1044,
+      "chunk": 15,
+      "attempted": 1772,
+      "valid": 1767,
+      "seconds": 104.31340984907001
+    },
+    {
+      "case": 1045,
+      "chunk": 15,
+      "attempted": 1639,
+      "valid": 1636,
+      "seconds": 74.27263975609094
+    },
+    {
+      "case": 1046,
+      "chunk": 15,
+      "attempted": 1892,
+      "valid": 1892,
+      "seconds": 88.2602383189369
+    }
+  ],
+  "resource_note": "Login resource scan is informational only; Slurm resources determine execution. Initial groups0-5 request120GiB; pending6-11 reduced to64GiB based on previous batchMaxRSS~5.2GiB. Same40 CPUs/group, no scientific changes.",
+  "project_free_space": "14TiB at launch"
+}

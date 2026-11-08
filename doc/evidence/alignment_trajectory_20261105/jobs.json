@@ -1,0 +1,33 @@
+{
+  "jobs": {
+    "native_replays": "17758686",
+    "galsbi_fs2_rate": "17758694",
+    "selected_evaluation": "17758743",
+    "native_report": "17758753",
+    "final_report": "17758754",
+    "two_hour_status": "17758885"
+  },
+  "dependencies": {
+    "17758694": "afterok:17758686",
+    "17758743": "afterok:17758694",
+    "17758753": "afterok:17758686",
+    "17758754": "afterok:17758743"
+  },
+  "maximum_simultaneous_gpus": 2,
+  "external_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_trajectory_20261105",
+  "status_check_is_chat_wakeup": false,
+  "sources": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/evaluate.py": "a36af1d0e2301f1d5f9ac67adf8e1f82adc3264b9df54b85631411a1a27617f5",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/trace.py": "1754dc2c59a1fdcbb1313f541b36d9e7e7e9354f7895eb2c9e9a358c626d1fd4",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/report.py": "f9d49d033d965481860717d95648d6ee06e1884a47a712ad7a29f4eef93fdebb",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/train.py": "ba13278a1bef73a834f8d4fea15f825ca26fec9c87753f3ef040838e93750d42",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/plot.py": "80fea538ab6516297691e4fc54fbadb9d7afcb589ca963d5dedfd6d03fa01ff7",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/verify.py": "8d12016b61a6dda667cd29d783254e84ba1b01275e7194232dadc63b409a6776",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/check.py": "d5265dca57f5be08f18029108b7fd75cef26d4a1a6c56991c707b1e538d04ada",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/run.sh": "1646b4a070073f838103948609613b15d45592a8fafbb2d1b7c17563d7309c03",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/run_evaluate.sh": "4569898cd07b49a2d6af27bfc9760c7797ccc39a9fe2359060ec7819908050ee",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/run_report.sh": "1bc136624c99dd4ff45cc58ae33b0ac1fe29b66618558be4d88149e74f4bebf2",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/run_check.sh": "b754f60da07608e68ab45297f1bcb4b2677f5ded89861643970f5226d06bbfc2",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_trajectory_20261105/rule.md": "a9e8d917239d655199ca680a6624160d9fbd6166250f38fe4180186dcd1e8eae"
+  }
+}

@@ -1,0 +1,317 @@
+{
+  "train": "17772044",
+  "standalone": "17772045",
+  "control_array": "17771754",
+  "control_throttle": 4,
+  "release_dependencies": [
+    "17771754_19",
+    "17771754_18",
+    "17771754_16"
+  ],
+  "throttle_note": "Bulk update reports completed tasks; live task metadata verifies throttle4. Depend on all current allocations before adding two workers.",
+  "utc": "2026-11-05T22:37:04.915665+00:00",
+  "source_sha256": {
+    "run.sh": "dc1d989ac537695370e4bf5ee012f4a66e583438a188865601f2d685ddefeab1",
+    "rule.md": "448a6752782288de7ec17a1214bba59853b572a8c98c8ed35f891fc32ddcb309",
+    "evaluate.py": "18f43a4ad81b7b9193955c4e558e5dc815a0ed21ae9f03a6a602c5b47868a870",
+    "train.py": "1b4f1e1cafdc66d0ba7b99c209c94135d10ca0f67701a31f090ae43e94842d4b",
+    "run_evaluate.sh": "c83796fe1d511e94ffc17121cff58be2a3294a366459e92de38a40511359a445",
+    "report_constant.py": "03407523b837df2eafabf7013f7d508a4488feb052e64cc16afc35116bb25ea5",
+    "evaluate_constant.py": "1dcff59b01d8caf6bc17de74efa3a53d240e317e6d3a1b43d740c4985aa41b2f",
+    "report_standalone.py": "ebf41b6e6080fdcfd310286d96c455bc7808f7511c1ec13d462641655442100b",
+    "manifest.json": "2079a85f8f97de94c764ea889d88fe4228ffa63bc00cf02aae6ca9625ee60a9e",
+    "run_report_standalone.sh": "6c3366e6dfdcb54b1ad743134ca2da610208f6528dc08a41fd541200caf999fc",
+    "run_report_constant.sh": "ad400fc71cac507a86747cfb2c44559bd7454eb67f16f0f4cb590037952cf4dd",
+    "run_constant.sh": "9f6b81c376f355a5710ee8361d2426339fb83eab5dc0d7ad1312667f265a683c"
+  },
+  "standalone_report": "17772053",
+  "constant": "17772054",
+  "constant_report": "17772055",
+  "partition_amendment": {
+    "utc": "2026-11-05T22:44:08.192520+00:00",
+    "reason": "Reserve cip A40 availability for the two fixed-recipe training jobs. Running controls unchanged; pending controls use authorized inter GPUs. Total concurrency4+2 remains6.",
+    "updates": [
+      {
+        "job": "17771754_24",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_25",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_26",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_27",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_28",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_29",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_30",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_31",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_32",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_33",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_34",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_35",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_36",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_37",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_38",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_39",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_40",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_41",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_42",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_43",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_44",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_45",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_46",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_47",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_48",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_49",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_50",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_51",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_52",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_53",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_54",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_55",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_56",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_57",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_58",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_59",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_60",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_61",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_62",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_63",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_64",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_65",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_66",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_67",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_68",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_69",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_70",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_71",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_72",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_73",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_74",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_75",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_76",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_77",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_78",
+        "returncode": 0,
+        "stderr": ""
+      },
+      {
+        "job": "17771754_79",
+        "returncode": 0,
+        "stderr": ""
+      }
+    ]
+  },
+  "check": "17772183"
+}

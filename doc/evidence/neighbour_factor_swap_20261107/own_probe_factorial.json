@@ -1,0 +1,1276 @@
+{
+  "definition": "Fixed common-random-number own-data probes; changes in model response, without case uncertainty. These are not joint constant-shear residuals.",
+  "comparisons": {
+    "response_regularization": {
+      "nll": {
+        "photo_at_old_shape": 0.005461104411741413,
+        "shape_at_old_photo": 0.0011977179004922789,
+        "interaction": -2.9266100654012916e-10,
+        "total": 0.0066588220195726855,
+        "photo_at_new_shape": 0.005461104119080407,
+        "shape_at_new_photo": 0.0011977176078312723
+      },
+      "train": {
+        "mag24.9_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.00036459701279212275,
+            "shape_at_old_photo": -0.011315424669222196,
+            "interaction": 6.069196821334444e-06,
+            "total": -0.011673952485192984,
+            "photo_at_new_shape": -0.0003585278159707883,
+            "shape_at_new_photo": -0.011309355472400862
+          },
+          "R12": {
+            "photo_at_old_shape": 2.328662512815854e-05,
+            "shape_at_old_photo": -0.0008778633882716438,
+            "interaction": -6.4680536741226345e-06,
+            "total": -0.0008610448168176077,
+            "photo_at_new_shape": 1.6818571454035934e-05,
+            "shape_at_new_photo": -0.0008843314419457664
+          },
+          "R21": {
+            "photo_at_old_shape": 2.971202826309964e-05,
+            "shape_at_old_photo": 0.0016830764608101927,
+            "interaction": 8.591029180739923e-07,
+            "total": 0.0017136475919913663,
+            "photo_at_new_shape": 3.057113118117363e-05,
+            "shape_at_new_photo": 0.0016839355637282667
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0002960093230937044,
+            "shape_at_old_photo": -0.008700724500667167,
+            "interaction": 1.065362759788968e-06,
+            "total": -0.008995668461001083,
+            "photo_at_new_shape": -0.00029494396033391546,
+            "shape_at_new_photo": -0.008699659137907378
+          }
+        },
+        "mag25_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.000353429628863422,
+            "shape_at_old_photo": -0.011355221149569106,
+            "interaction": 6.104191294875605e-06,
+            "total": -0.011702546587137652,
+            "photo_at_new_shape": -0.0003473254375685464,
+            "shape_at_new_photo": -0.01134911695827423
+          },
+          "R12": {
+            "photo_at_old_shape": 2.5558055564946905e-05,
+            "shape_at_old_photo": -0.0008295072169083581,
+            "interaction": -6.272738903439706e-06,
+            "total": -0.0008102219002468509,
+            "photo_at_new_shape": 1.92853166615072e-05,
+            "shape_at_new_photo": -0.0008357799558117978
+          },
+          "R21": {
+            "photo_at_old_shape": 3.0863668341193375e-05,
+            "shape_at_old_photo": 0.0017270122859176858,
+            "interaction": 4.940035825581586e-07,
+            "total": 0.0017583699578414373,
+            "photo_at_new_shape": 3.1357671923751534e-05,
+            "shape_at_new_photo": 0.0017275062895002438
+          },
+          "R22": {
+            "photo_at_old_shape": -0.00029089244795577063,
+            "shape_at_old_photo": -0.008613688179027523,
+            "interaction": 1.0675254982217552e-06,
+            "total": -0.008903513101485072,
+            "photo_at_new_shape": -0.00028982492245754887,
+            "shape_at_new_photo": -0.008612620653529302
+          }
+        },
+        "mag25.1_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.00033996049974405196,
+            "shape_at_old_photo": -0.011364897614564051,
+            "interaction": 6.1685402091837815e-06,
+            "total": -0.01169868957409892,
+            "photo_at_new_shape": -0.0003337919595348682,
+            "shape_at_new_photo": -0.011358729074354867
+          },
+          "R12": {
+            "photo_at_old_shape": 2.806652479314103e-05,
+            "shape_at_old_photo": -0.0007829373989866073,
+            "interaction": -6.1197306129161006e-06,
+            "total": -0.0007609906048063823,
+            "photo_at_new_shape": 2.1946794180224957e-05,
+            "shape_at_new_photo": -0.0007890571295995233
+          },
+          "R21": {
+            "photo_at_old_shape": 2.9706862821584907e-05,
+            "shape_at_old_photo": 0.001768156517322244,
+            "interaction": 2.474456788337763e-07,
+            "total": 0.0017981108258226628,
+            "photo_at_new_shape": 2.9954308500418792e-05,
+            "shape_at_new_photo": 0.0017684039630010777
+          },
+          "R22": {
+            "photo_at_old_shape": -0.00028531958486399667,
+            "shape_at_old_photo": -0.00851953026794039,
+            "interaction": 1.0177051973370155e-06,
+            "total": -0.008803832147607049,
+            "photo_at_new_shape": -0.00028430187966665965,
+            "shape_at_new_photo": -0.008518512562743052
+          }
+        },
+        "mag24.9_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0003640279912544564,
+            "shape_at_old_photo": -0.011213818430355516,
+            "interaction": 1.2753553292887965e-05,
+            "total": -0.011565092868317084,
+            "photo_at_new_shape": -0.00035127443796156843,
+            "shape_at_new_photo": -0.011201064877062628
+          },
+          "R12": {
+            "photo_at_old_shape": 5.47448807144647e-05,
+            "shape_at_old_photo": -0.0008309764450873306,
+            "interaction": -9.462951487869544e-06,
+            "total": -0.0007856945158607354,
+            "photo_at_new_shape": 4.528192922659518e-05,
+            "shape_at_new_photo": -0.0008404393965752001
+          },
+          "R21": {
+            "photo_at_old_shape": 3.63527040266572e-05,
+            "shape_at_old_photo": 0.0018000363679104908,
+            "interaction": 4.692517848125209e-07,
+            "total": 0.0018368583237219605,
+            "photo_at_new_shape": 3.682195581146972e-05,
+            "shape_at_new_photo": 0.0018005056196953033
+          },
+          "R22": {
+            "photo_at_old_shape": -0.00024806040969449494,
+            "shape_at_old_photo": -0.008522684210627185,
+            "interaction": -6.78167452750067e-07,
+            "total": -0.00877142278777443,
+            "photo_at_new_shape": -0.000248738577147245,
+            "shape_at_new_photo": -0.008523362378079935
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.00035918695087377994,
+            "shape_at_old_photo": -0.011264395683754702,
+            "interaction": 1.3026949069017135e-05,
+            "total": -0.011610555685559465,
+            "photo_at_new_shape": -0.0003461600018047628,
+            "shape_at_new_photo": -0.011251368734685685
+          },
+          "R12": {
+            "photo_at_old_shape": 5.655486761811326e-05,
+            "shape_at_old_photo": -0.000785172681751242,
+            "interaction": -9.137527086187783e-06,
+            "total": -0.0007377553412193166,
+            "photo_at_new_shape": 4.7417340531925476e-05,
+            "shape_at_new_photo": -0.0007943102088374299
+          },
+          "R21": {
+            "photo_at_old_shape": 3.8707396416533734e-05,
+            "shape_at_old_photo": 0.0018433415239235878,
+            "interaction": 4.051852970981748e-09,
+            "total": 0.0018820529721930925,
+            "photo_at_new_shape": 3.8711448269504716e-05,
+            "shape_at_new_photo": 0.0018433455757765587
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0002517161491690789,
+            "shape_at_old_photo": -0.008445030269629283,
+            "interaction": -2.2098366847522755e-07,
+            "total": -0.008696967402466838,
+            "photo_at_new_shape": -0.00025193713283755415,
+            "shape_at_new_photo": -0.008445251253297759
+          }
+        },
+        "mag25.1_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.00035088111347159057,
+            "shape_at_old_photo": -0.011287714673029248,
+            "interaction": 1.3309148535922688e-05,
+            "total": -0.011625286637964916,
+            "photo_at_new_shape": -0.0003375719649356679,
+            "shape_at_new_photo": -0.011274405524493325
+          },
+          "R12": {
+            "photo_at_old_shape": 5.7931233053800215e-05,
+            "shape_at_old_photo": -0.0007418026772452995,
+            "interaction": -8.854794044635064e-06,
+            "total": -0.0006927262382361343,
+            "photo_at_new_shape": 4.907643900916518e-05,
+            "shape_at_new_photo": -0.0007506574712899345
+          },
+          "R21": {
+            "photo_at_old_shape": 3.70328079166407e-05,
+            "shape_at_old_photo": 0.001883610994262994,
+            "interaction": -3.304267065458487e-07,
+            "total": 0.0019203133754730887,
+            "photo_at_new_shape": 3.670238121009474e-05,
+            "shape_at_new_photo": 0.0018832805675564482
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0002561992513291367,
+            "shape_at_old_photo": -0.00836201196392361,
+            "interaction": 1.434513179354724e-07,
+            "total": -0.008618067763934811,
+            "photo_at_new_shape": -0.0002560558000112012,
+            "shape_at_new_photo": -0.008361868512605675
+          }
+        },
+        "mag24.9_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.00043689166736426976,
+            "shape_at_old_photo": -0.010980772133988514,
+            "interaction": 2.3273251143374196e-05,
+            "total": -0.01139439055020941,
+            "photo_at_new_shape": -0.00041361841622089557,
+            "shape_at_new_photo": -0.01095749888284514
+          },
+          "R12": {
+            "photo_at_old_shape": 8.198423310513893e-05,
+            "shape_at_old_photo": -0.000663832581083024,
+            "interaction": -3.7187007269712333e-06,
+            "total": -0.0005855670487048563,
+            "photo_at_new_shape": 7.82655323781677e-05,
+            "shape_at_new_photo": -0.0006675512818099952
+          },
+          "R21": {
+            "photo_at_old_shape": 5.6725604008450226e-05,
+            "shape_at_old_photo": 0.0019559195185972354,
+            "interaction": 2.638343358528036e-06,
+            "total": 0.0020152834659642135,
+            "photo_at_new_shape": 5.9363947366978045e-05,
+            "shape_at_new_photo": 0.0019585578619557634
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0002936775110553569,
+            "shape_at_old_photo": -0.008009627578218215,
+            "interaction": 9.308672601515688e-06,
+            "total": -0.008293996416672056,
+            "photo_at_new_shape": -0.0002843688384538412,
+            "shape_at_new_photo": -0.008000318905616699
+          }
+        },
+        "mag25_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.00044177648782095513,
+            "shape_at_old_photo": -0.011036122531191572,
+            "interaction": 2.3788208154296164e-05,
+            "total": -0.011454110810858231,
+            "photo_at_new_shape": -0.00041798827966665897,
+            "shape_at_new_photo": -0.011012334323037276
+          },
+          "R12": {
+            "photo_at_old_shape": 8.278303314530509e-05,
+            "shape_at_old_photo": -0.0006256399191274221,
+            "interaction": -3.7609359617196995e-06,
+            "total": -0.0005466178219438367,
+            "photo_at_new_shape": 7.902209718358539e-05,
+            "shape_at_new_photo": -0.0006294008550891418
+          },
+          "R21": {
+            "photo_at_old_shape": 5.8425908351347126e-05,
+            "shape_at_old_photo": 0.0019964018886599673,
+            "interaction": 1.9021063160531526e-06,
+            "total": 0.0020567299033273675,
+            "photo_at_new_shape": 6.0328014667400225e-05,
+            "shape_at_new_photo": 0.0019983039949760203
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0003055150241169091,
+            "shape_at_old_photo": -0.007945468009157408,
+            "interaction": 9.663188742847773e-06,
+            "total": -0.00824131984453147,
+            "photo_at_new_shape": -0.00029585183537406134,
+            "shape_at_new_photo": -0.00793580482041456
+          }
+        },
+        "mag25.1_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.00044097372281381997,
+            "shape_at_old_photo": -0.011067681628281534,
+            "interaction": 2.4319570267050672e-05,
+            "total": -0.011484335780828303,
+            "photo_at_new_shape": -0.0004166541525467693,
+            "shape_at_new_photo": -0.011043362058014483
+          },
+          "R12": {
+            "photo_at_old_shape": 8.394266747508393e-05,
+            "shape_at_old_photo": -0.000590134682853522,
+            "interaction": -3.8293611153285105e-06,
+            "total": -0.0005100213764937665,
+            "photo_at_new_shape": 8.011330635975542e-05,
+            "shape_at_new_photo": -0.0005939640439688505
+          },
+          "R21": {
+            "photo_at_old_shape": 5.818118522770316e-05,
+            "shape_at_old_photo": 0.0020333783626448657,
+            "interaction": 1.3303238223212415e-06,
+            "total": 0.00209288987169489,
+            "photo_at_new_shape": 5.9511509050024294e-05,
+            "shape_at_new_photo": 0.002034708686467187
+          },
+          "R22": {
+            "photo_at_old_shape": -0.00031729739234276355,
+            "shape_at_old_photo": -0.007877597235779077,
+            "interaction": 9.920119269923866e-06,
+            "total": -0.008184974508851917,
+            "photo_at_new_shape": -0.0003073772730728397,
+            "shape_at_new_photo": -0.007867677116509153
+          }
+        }
+      },
+      "validation": {
+        "mag24.9_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.00037236718166111515,
+            "shape_at_old_photo": -0.011329940028026675,
+            "interaction": 4.23770281798852e-06,
+            "total": -0.011698069506869802,
+            "photo_at_new_shape": -0.00036812947884312663,
+            "shape_at_new_photo": -0.011325702325208686
+          },
+          "R12": {
+            "photo_at_old_shape": 1.3843698942066099e-05,
+            "shape_at_old_photo": -0.0008449493845210872,
+            "interaction": -7.582519523393282e-06,
+            "total": -0.0008386882051024144,
+            "photo_at_new_shape": 6.261179418672763e-06,
+            "shape_at_new_photo": -0.0008525319040444805
+          },
+          "R21": {
+            "photo_at_old_shape": 3.9146098900730915e-05,
+            "shape_at_old_photo": 0.001650344982866301,
+            "interaction": -1.996397033713856e-05,
+            "total": 0.0016695271114298934,
+            "photo_at_new_shape": 1.9182128563592464e-05,
+            "shape_at_new_photo": 0.0016303810125291624
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0002802938404617983,
+            "shape_at_old_photo": -0.008791940605076487,
+            "interaction": -2.3487130759836106e-05,
+            "total": -0.009095721576298121,
+            "photo_at_new_shape": -0.0003037809712216344,
+            "shape_at_new_photo": -0.008815427735836323
+          }
+        },
+        "mag25_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.0003642855541813317,
+            "shape_at_old_photo": -0.011370858585499244,
+            "interaction": 4.503125090482563e-06,
+            "total": -0.011730641014590093,
+            "photo_at_new_shape": -0.0003597824290908491,
+            "shape_at_new_photo": -0.011366355460408761
+          },
+          "R12": {
+            "photo_at_old_shape": 1.1973409098780868e-05,
+            "shape_at_old_photo": -0.0007959384543244695,
+            "interaction": -7.103867947052124e-06,
+            "total": -0.0007910689131727408,
+            "photo_at_new_shape": 4.86954115172869e-06,
+            "shape_at_new_photo": -0.0008030423222715217
+          },
+          "R21": {
+            "photo_at_old_shape": 3.67950618376684e-05,
+            "shape_at_old_photo": 0.0016988659671023022,
+            "interaction": -1.9052723831233104e-05,
+            "total": 0.0017166083051087374,
+            "photo_at_new_shape": 1.7742338006435186e-05,
+            "shape_at_new_photo": 0.0016798132432710691
+          },
+          "R22": {
+            "photo_at_old_shape": -0.00027265638206863674,
+            "shape_at_old_photo": -0.008706393167851045,
+            "interaction": -2.2141404143249943e-05,
+            "total": -0.009001190954062932,
+            "photo_at_new_shape": -0.0002947977862118867,
+            "shape_at_new_photo": -0.008728534571994295
+          }
+        },
+        "mag25.1_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.00034649433133771,
+            "shape_at_old_photo": -0.011381739742069574,
+            "interaction": 4.502303141751263e-06,
+            "total": -0.011723731770265533,
+            "photo_at_new_shape": -0.00034199202819595875,
+            "shape_at_new_photo": -0.011377237438927823
+          },
+          "R12": {
+            "photo_at_old_shape": 1.3668780229717387e-05,
+            "shape_at_old_photo": -0.0007506877687250342,
+            "interaction": -6.82265256796868e-06,
+            "total": -0.0007438416410632855,
+            "photo_at_new_shape": 6.8461276617487075e-06,
+            "shape_at_new_photo": -0.000757510421293003
+          },
+          "R21": {
+            "photo_at_old_shape": 3.7733919741333955e-05,
+            "shape_at_old_photo": 0.0017417279358178626,
+            "interaction": -1.8281493011843572e-05,
+            "total": 0.001761180362547353,
+            "photo_at_new_shape": 1.9452426729490383e-05,
+            "shape_at_new_photo": 0.001723446442806019
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0002664401855518861,
+            "shape_at_old_photo": -0.008610082720282852,
+            "interaction": -2.100348897760007e-05,
+            "total": -0.008897526394812338,
+            "photo_at_new_shape": -0.00028744367452948616,
+            "shape_at_new_photo": -0.008631086209260452
+          }
+        },
+        "mag24.9_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0003626419805089487,
+            "shape_at_old_photo": -0.01127528481122786,
+            "interaction": 6.839125628599341e-06,
+            "total": -0.011631087666108209,
+            "photo_at_new_shape": -0.00035580285488034935,
+            "shape_at_new_photo": -0.01126844568559926
+          },
+          "R12": {
+            "photo_at_old_shape": 4.0075769725255415e-05,
+            "shape_at_old_photo": -0.000773201691098882,
+            "interaction": -6.10859362695917e-06,
+            "total": -0.0007392345150005857,
+            "photo_at_new_shape": 3.396717609829619e-05,
+            "shape_at_new_photo": -0.0007793102847258411
+          },
+          "R21": {
+            "photo_at_old_shape": 6.862654514225362e-05,
+            "shape_at_old_photo": 0.0017132979666597344,
+            "interaction": -2.2106026664431007e-05,
+            "total": 0.001759818485137557,
+            "photo_at_new_shape": 4.652051847782272e-05,
+            "shape_at_new_photo": 0.0016911919399953033
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0002282506851967181,
+            "shape_at_old_photo": -0.00860675327357785,
+            "interaction": -1.4581559125259602e-05,
+            "total": -0.008849585517899827,
+            "photo_at_new_shape": -0.0002428322443219777,
+            "shape_at_new_photo": -0.00862133483270311
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.00036264858974754954,
+            "shape_at_old_photo": -0.011324863137634367,
+            "interaction": 7.574448567582159e-06,
+            "total": -0.011679937278814334,
+            "photo_at_new_shape": -0.0003550741411799674,
+            "shape_at_new_photo": -0.011317288689066785
+          },
+          "R12": {
+            "photo_at_old_shape": 3.670602987180887e-05,
+            "shape_at_old_photo": -0.000728017163191099,
+            "interaction": -5.737251230438352e-06,
+            "total": -0.0006970483845497285,
+            "photo_at_new_shape": 3.096877864137049e-05,
+            "shape_at_new_photo": -0.0007337544144215373
+          },
+          "R21": {
+            "photo_at_old_shape": 6.563998174342997e-05,
+            "shape_at_old_photo": 0.0017629458973023103,
+            "interaction": -2.1277664594288774e-05,
+            "total": 0.0018073082144514515,
+            "photo_at_new_shape": 4.43623171491412e-05,
+            "shape_at_new_photo": 0.0017416682327080215
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0002294237966430357,
+            "shape_at_old_photo": -0.008530198235151887,
+            "interaction": -1.3418005726850701e-05,
+            "total": -0.008773040037521773,
+            "photo_at_new_shape": -0.0002428418023698864,
+            "shape_at_new_photo": -0.008543616240878737
+          }
+        },
+        "mag25.1_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0003526042150727715,
+            "shape_at_old_photo": -0.011346984689910022,
+            "interaction": 7.986151159822263e-06,
+            "total": -0.011691602753822972,
+            "photo_at_new_shape": -0.00034461806391294925,
+            "shape_at_new_photo": -0.0113389985387502
+          },
+          "R12": {
+            "photo_at_old_shape": 3.738668740353131e-05,
+            "shape_at_old_photo": -0.0006865962407746739,
+            "interaction": -5.545484467731505e-06,
+            "total": -0.0006547550378388741,
+            "photo_at_new_shape": 3.184120293579979e-05,
+            "shape_at_new_photo": -0.0006921417252424054
+          },
+          "R21": {
+            "photo_at_old_shape": 6.562232595981241e-05,
+            "shape_at_old_photo": 0.0018075005550346013,
+            "interaction": -2.0582743968426578e-05,
+            "total": 0.001852540137025987,
+            "photo_at_new_shape": 4.503958199138583e-05,
+            "shape_at_new_photo": 0.0017869178110661748
+          },
+          "R22": {
+            "photo_at_old_shape": -0.00023191508014286377,
+            "shape_at_old_photo": -0.008445066614692354,
+            "interaction": -1.2451817957503941e-05,
+            "total": -0.008689433512792721,
+            "photo_at_new_shape": -0.0002443668981003677,
+            "shape_at_new_photo": -0.008457518432649858
+          }
+        },
+        "mag24.9_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.0004208911099620183,
+            "shape_at_old_photo": -0.011051245934948328,
+            "interaction": 1.3067111619080585e-05,
+            "total": -0.011459069933291266,
+            "photo_at_new_shape": -0.0004078239983429377,
+            "shape_at_new_photo": -0.011038178823329248
+          },
+          "R12": {
+            "photo_at_old_shape": 6.719228961572608e-05,
+            "shape_at_old_photo": -0.0006442576625775812,
+            "interaction": -3.761555952041856e-06,
+            "total": -0.000580826928913897,
+            "photo_at_new_shape": 6.343073366368423e-05,
+            "shape_at_new_photo": -0.0006480192185296231
+          },
+          "R21": {
+            "photo_at_old_shape": 8.6282370385558e-05,
+            "shape_at_old_photo": 0.001898957052848246,
+            "interaction": -2.1595430340999854e-05,
+            "total": 0.001963643992892804,
+            "photo_at_new_shape": 6.468694004455825e-05,
+            "shape_at_new_photo": 0.001877361622507246
+          },
+          "R22": {
+            "photo_at_old_shape": -0.00026916411230293313,
+            "shape_at_old_photo": -0.008092222927189585,
+            "interaction": 3.030174691720511e-06,
+            "total": -0.008358356864800798,
+            "photo_at_new_shape": -0.0002661339376112126,
+            "shape_at_new_photo": -0.008089192752497865
+          }
+        },
+        "mag25_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.00043426506115162855,
+            "shape_at_old_photo": -0.011106691835692128,
+            "interaction": 1.4252300521988559e-05,
+            "total": -0.011526704596321768,
+            "photo_at_new_shape": -0.00042001276062964,
+            "shape_at_new_photo": -0.01109243953517014
+          },
+          "R12": {
+            "photo_at_old_shape": 6.383640637290798e-05,
+            "shape_at_old_photo": -0.0006049128658167879,
+            "interaction": -3.4977866934607924e-06,
+            "total": -0.0005445742461373408,
+            "photo_at_new_shape": 6.033861967944714e-05,
+            "shape_at_new_photo": -0.0006084106525102487
+          },
+          "R21": {
+            "photo_at_old_shape": 8.551491378424236e-05,
+            "shape_at_old_photo": 0.0019422165009849316,
+            "interaction": -2.099692422300245e-05,
+            "total": 0.0020067344905461714,
+            "photo_at_new_shape": 6.451798956123985e-05,
+            "shape_at_new_photo": 0.001921219576761929
+          },
+          "R22": {
+            "photo_at_old_shape": -0.00028258647316836694,
+            "shape_at_old_photo": -0.008027045294373147,
+            "interaction": 3.6812318626733287e-06,
+            "total": -0.008305950535678841,
+            "photo_at_new_shape": -0.0002789052413056936,
+            "shape_at_new_photo": -0.008023364062510474
+          }
+        },
+        "mag25.1_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.0004329114139092205,
+            "shape_at_old_photo": -0.011137115647455897,
+            "interaction": 1.5002502680605545e-05,
+            "total": -0.011555024558684512,
+            "photo_at_new_shape": -0.00041790891122861495,
+            "shape_at_new_photo": -0.011122113144775292
+          },
+          "R12": {
+            "photo_at_old_shape": 6.525795083994204e-05,
+            "shape_at_old_photo": -0.0005692063715800267,
+            "interaction": -3.439082588693851e-06,
+            "total": -0.0005073875033287785,
+            "photo_at_new_shape": 6.181886825124818e-05,
+            "shape_at_new_photo": -0.0005726454541687205
+          },
+          "R21": {
+            "photo_at_old_shape": 8.823333907267094e-05,
+            "shape_at_old_photo": 0.001981212829005846,
+            "interaction": -2.0532255872984963e-05,
+            "total": 0.0020489139122055323,
+            "photo_at_new_shape": 6.770108319968616e-05,
+            "shape_at_new_photo": 0.0019606805731328613
+          },
+          "R22": {
+            "photo_at_old_shape": -0.000294909249750841,
+            "shape_at_old_photo": -0.007956023038794946,
+            "interaction": 4.1482718535768015e-06,
+            "total": -0.00824678401669221,
+            "photo_at_new_shape": -0.0002907609778972642,
+            "shape_at_new_photo": -0.00795187476694137
+          }
+        }
+      }
+    },
+    "neighbour_moment": {
+      "nll": {
+        "photo_at_old_shape": -0.00343983538240078,
+        "shape_at_old_photo": -0.00011143548981351614,
+        "interaction": 2.1779333891913666e-10,
+        "total": -0.003551270654420957,
+        "photo_at_new_shape": -0.003439835164607441,
+        "shape_at_new_photo": -0.00011143527202017722
+      },
+      "train": {
+        "mag24.9_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.0005697670837394586,
+            "shape_at_old_photo": -0.0010196231701226077,
+            "interaction": 2.207760136596626e-06,
+            "total": -0.0015871824937254697,
+            "photo_at_new_shape": -0.000567559323602862,
+            "shape_at_new_photo": -0.001017415409986011
+          },
+          "R12": {
+            "photo_at_old_shape": 1.1953060196739289e-05,
+            "shape_at_old_photo": -2.05705171335772e-05,
+            "interaction": -1.4077987429917055e-06,
+            "total": -1.0025255679829616e-05,
+            "photo_at_new_shape": 1.0545261453747583e-05,
+            "shape_at_new_photo": -2.1978315876568905e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -2.608402360436456e-05,
+            "shape_at_old_photo": -0.00130741387006348,
+            "interaction": 2.783114295465579e-06,
+            "total": -0.0013307147793723791,
+            "photo_at_new_shape": -2.3300909308899198e-05,
+            "shape_at_new_photo": -0.0013046307557680146
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0005203723469491273,
+            "shape_at_old_photo": -0.003049116242910044,
+            "interaction": -6.568855983601907e-07,
+            "total": -0.0035701454754575312,
+            "photo_at_new_shape": -0.0005210292325474875,
+            "shape_at_new_photo": -0.003049773128508404
+          }
+        },
+        "mag25_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.0005604039367499425,
+            "shape_at_old_photo": -0.0010070954299996604,
+            "interaction": 2.0983418296260936e-06,
+            "total": -0.0015654010249199768,
+            "photo_at_new_shape": -0.0005583055949203164,
+            "shape_at_new_photo": -0.0010049970881700343
+          },
+          "R12": {
+            "photo_at_old_shape": 9.552700043749768e-06,
+            "shape_at_old_photo": -2.7919991732379976e-05,
+            "interaction": -1.3477914073284098e-06,
+            "total": -1.9715083095958618e-05,
+            "photo_at_new_shape": 8.204908636421358e-06,
+            "shape_at_new_photo": -2.9267783139708386e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -2.5951499721069832e-05,
+            "shape_at_old_photo": -0.0012916394504658526,
+            "interaction": 2.6252289370863255e-06,
+            "total": -0.0013149657212498363,
+            "photo_at_new_shape": -2.3326270783983723e-05,
+            "shape_at_new_photo": -0.0012890142215287665
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0005145418298196924,
+            "shape_at_old_photo": -0.003005196258441978,
+            "interaction": -5.655201206211657e-07,
+            "total": -0.0035203036083822914,
+            "photo_at_new_shape": -0.0005151073499403136,
+            "shape_at_new_photo": -0.003005761778562599
+          }
+        },
+        "mag25.1_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.0005497605061517419,
+            "shape_at_old_photo": -0.0009931329458836569,
+            "interaction": 2.0088815090302248e-06,
+            "total": -0.0015408845705263685,
+            "photo_at_new_shape": -0.0005477516246427117,
+            "shape_at_new_photo": -0.0009911240643746266
+          },
+          "R12": {
+            "photo_at_old_shape": 6.4639674384392096e-06,
+            "shape_at_old_photo": -3.4031208041573674e-05,
+            "interaction": -1.2714489380819764e-06,
+            "total": -2.883868954121644e-05,
+            "photo_at_new_shape": 5.192518500357233e-06,
+            "shape_at_new_photo": -3.530265697965565e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -2.463659650066112e-05,
+            "shape_at_old_photo": -0.0012748113356668045,
+            "interaction": 2.4950982872033907e-06,
+            "total": -0.0012969528338802622,
+            "photo_at_new_shape": -2.214149821345773e-05,
+            "shape_at_new_photo": -0.0012723162373796011
+          },
+          "R22": {
+            "photo_at_old_shape": -0.000507563255977117,
+            "shape_at_old_photo": -0.0029609737812652526,
+            "interaction": -4.986743986634679e-07,
+            "total": -0.003469035711641033,
+            "photo_at_new_shape": -0.0005080619303757805,
+            "shape_at_new_photo": -0.002961472455663916
+          }
+        },
+        "mag24.9_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0008373857702625997,
+            "shape_at_old_photo": -0.0009931848993924852,
+            "interaction": 4.124487571255386e-06,
+            "total": -0.0018264461820838296,
+            "photo_at_new_shape": -0.0008332612826913444,
+            "shape_at_new_photo": -0.0009890604118212298
+          },
+          "R12": {
+            "photo_at_old_shape": -3.907805185925789e-06,
+            "shape_at_old_photo": -1.658518080385643e-05,
+            "interaction": -2.3835298571248716e-06,
+            "total": -2.287651584690709e-05,
+            "photo_at_new_shape": -6.291335043050661e-06,
+            "shape_at_new_photo": -1.89687106609813e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -9.02124391113316e-06,
+            "shape_at_old_photo": -0.001301213149309323,
+            "interaction": 5.721276175137211e-06,
+            "total": -0.001304513117045319,
+            "photo_at_new_shape": -3.299967735995949e-06,
+            "shape_at_new_photo": -0.0012954918731341858
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0008042571230015838,
+            "shape_at_old_photo": -0.002925732802294023,
+            "interaction": 1.716408195795438e-06,
+            "total": -0.0037282735170998116,
+            "photo_at_new_shape": -0.0008025407148057884,
+            "shape_at_new_photo": -0.0029240163940982278
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0008277219650293377,
+            "shape_at_old_photo": -0.000984183457429455,
+            "interaction": 3.948797886232924e-06,
+            "total": -0.0018079566245725598,
+            "photo_at_new_shape": -0.0008237731671431048,
+            "shape_at_new_photo": -0.000980234659543222
+          },
+          "R12": {
+            "photo_at_old_shape": -6.677388241118688e-06,
+            "shape_at_old_photo": -2.2946480201619605e-05,
+            "interaction": -2.273532167757137e-06,
+            "total": -3.189740061049543e-05,
+            "photo_at_new_shape": -8.950920408875825e-06,
+            "shape_at_new_photo": -2.5220012369376742e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -1.0873017354379004e-05,
+            "shape_at_old_photo": -0.0012867188404395453,
+            "interaction": 5.459598985163745e-06,
+            "total": -0.0012921322588087605,
+            "photo_at_new_shape": -5.413418369215259e-06,
+            "shape_at_new_photo": -0.0012812592414543815
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0007952858978490518,
+            "shape_at_old_photo": -0.002884736016545375,
+            "interaction": 1.7681167929772812e-06,
+            "total": -0.0036782537976014495,
+            "photo_at_new_shape": -0.0007935177810560745,
+            "shape_at_new_photo": -0.0028829678997523978
+          }
+        },
+        "mag25.1_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0008153662588086252,
+            "shape_at_old_photo": -0.0009735897697451534,
+            "interaction": 3.7919872977187907e-06,
+            "total": -0.0017851640412560599,
+            "photo_at_new_shape": -0.0008115742715109064,
+            "shape_at_new_photo": -0.0009697977824474346
+          },
+          "R12": {
+            "photo_at_old_shape": -8.417462027704328e-06,
+            "shape_at_old_photo": -2.814146902598274e-05,
+            "interaction": -2.1469533314161585e-06,
+            "total": -3.8705884385103226e-05,
+            "photo_at_new_shape": -1.0564415359120487e-05,
+            "shape_at_new_photo": -3.0288422357398898e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -7.71945925306895e-06,
+            "shape_at_old_photo": -0.001271697070610375,
+            "interaction": 5.244096002349034e-06,
+            "total": -0.001274172433861095,
+            "photo_at_new_shape": -2.475363250719915e-06,
+            "shape_at_new_photo": -0.001266452974608026
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0007828145032753309,
+            "shape_at_old_photo": -0.002844271866248138,
+            "interaction": 1.8115318624056798e-06,
+            "total": -0.0036252748376610633,
+            "photo_at_new_shape": -0.0007810029714129252,
+            "shape_at_new_photo": -0.0028424603343857324
+          }
+        },
+        "mag24.9_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.001551458011491702,
+            "shape_at_old_photo": -0.0009176867940359212,
+            "interaction": 3.178205053466776e-06,
+            "total": -0.0024659666004741565,
+            "photo_at_new_shape": -0.0015482798064382353,
+            "shape_at_new_photo": -0.0009145085889824545
+          },
+          "R12": {
+            "photo_at_old_shape": -1.5185086539397635e-05,
+            "shape_at_old_photo": -6.500608476863682e-05,
+            "interaction": -1.2045529599934244e-06,
+            "total": -8.139572426802788e-05,
+            "photo_at_new_shape": -1.638963949939106e-05,
+            "shape_at_new_photo": -6.621063772863024e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -2.2336236136843123e-05,
+            "shape_at_old_photo": -0.0013026883610447347,
+            "interaction": 6.78900174538085e-06,
+            "total": -0.001318235595436197,
+            "photo_at_new_shape": -1.5547234391462272e-05,
+            "shape_at_new_photo": -0.0012958993592993538
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0014750732609430939,
+            "shape_at_old_photo": -0.0028060648725097836,
+            "interaction": -1.7397412566122483e-07,
+            "total": -0.004281312107578539,
+            "photo_at_new_shape": -0.001475247235068755,
+            "shape_at_new_photo": -0.002806238846635445
+          }
+        },
+        "mag25_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.0015225298893796202,
+            "shape_at_old_photo": -0.0009118641675726069,
+            "interaction": 3.0767058618597076e-06,
+            "total": -0.0024313173510903674,
+            "photo_at_new_shape": -0.0015194531835177605,
+            "shape_at_new_photo": -0.0009087874617107472
+          },
+          "R12": {
+            "photo_at_old_shape": -1.617360693713008e-05,
+            "shape_at_old_photo": -6.750669788673576e-05,
+            "interaction": -1.161593914588907e-06,
+            "total": -8.484189873845475e-05,
+            "photo_at_new_shape": -1.7335200851718987e-05,
+            "shape_at_new_photo": -6.866829180132467e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -2.643241756816782e-05,
+            "shape_at_old_photo": -0.0012879867683351864,
+            "interaction": 6.488990984853445e-06,
+            "total": -0.0013079301949185007,
+            "photo_at_new_shape": -1.9943426583314376e-05,
+            "shape_at_new_photo": -0.001281497777350333
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0014537931285676375,
+            "shape_at_old_photo": -0.0027659112570133093,
+            "interaction": -3.928064662428454e-08,
+            "total": -0.004219743666227571,
+            "photo_at_new_shape": -0.0014538324092142618,
+            "shape_at_new_photo": -0.0027659505376599336
+          }
+        },
+        "mag25.1_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.0014921228211111082,
+            "shape_at_old_photo": -0.000904553387434337,
+            "interaction": 2.979382022871846e-06,
+            "total": -0.0023936968265225733,
+            "photo_at_new_shape": -0.0014891434390882363,
+            "shape_at_new_photo": -0.0009015740054114652
+          },
+          "R12": {
+            "photo_at_old_shape": -1.6703079315528828e-05,
+            "shape_at_old_photo": -6.952896177330392e-05,
+            "interaction": -1.0971147568882705e-06,
+            "total": -8.732915584572102e-05,
+            "photo_at_new_shape": -1.78001940724171e-05,
+            "shape_at_new_photo": -7.062607653019219e-05
+          },
+          "R21": {
+            "photo_at_old_shape": -2.7842506680312434e-05,
+            "shape_at_old_photo": -0.0012732588960588636,
+            "interaction": 6.216048505728374e-06,
+            "total": -0.0012948853542334477,
+            "photo_at_new_shape": -2.162645817458406e-05,
+            "shape_at_new_photo": -0.0012670428475531352
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0014302683617748446,
+            "shape_at_old_photo": -0.0027273942300256593,
+            "interaction": 4.99533165942978e-08,
+            "total": -0.00415761263848391,
+            "photo_at_new_shape": -0.0014302184084582503,
+            "shape_at_new_photo": -0.002727344276709065
+          }
+        }
+      },
+      "validation": {
+        "mag24.9_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.0005275118105925181,
+            "shape_at_old_photo": -0.0009615251052558227,
+            "interaction": -6.591661119270675e-06,
+            "total": -0.0014956285769676114,
+            "photo_at_new_shape": -0.0005341034717117887,
+            "shape_at_new_photo": -0.0009681167663750934
+          },
+          "R12": {
+            "photo_at_old_shape": 1.938694055153437e-05,
+            "shape_at_old_photo": -6.308119330277276e-05,
+            "interaction": -9.242804158852047e-06,
+            "total": -5.2937056910090435e-05,
+            "photo_at_new_shape": 1.0144136392682321e-05,
+            "shape_at_new_photo": -7.23239974616248e-05
+          },
+          "R21": {
+            "photo_at_old_shape": 1.7760356203102515e-05,
+            "shape_at_old_photo": -0.0013191186882979813,
+            "interaction": -7.342200677019732e-07,
+            "total": -0.0013020925521625806,
+            "photo_at_new_shape": 1.702613613540076e-05,
+            "shape_at_new_photo": -0.001319852908365683
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0005281478801124617,
+            "shape_at_old_photo": -0.0030921416202456253,
+            "interaction": -1.3300428903795236e-06,
+            "total": -0.0036216195432484666,
+            "photo_at_new_shape": -0.0005294779230028412,
+            "shape_at_new_photo": -0.003093471663136005
+          }
+        },
+        "mag25_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.0005189581808482391,
+            "shape_at_old_photo": -0.0009525000552994545,
+            "interaction": -6.209264229006806e-06,
+            "total": -0.0014776675003767004,
+            "photo_at_new_shape": -0.0005251674450772459,
+            "shape_at_new_photo": -0.0009587093195284613
+          },
+          "R12": {
+            "photo_at_old_shape": 1.4294645542988404e-05,
+            "shape_at_old_photo": -6.783626913586739e-05,
+            "interaction": -8.723572127270342e-06,
+            "total": -6.226519572014933e-05,
+            "photo_at_new_shape": 5.5710734157180626e-06,
+            "shape_at_new_photo": -7.655984126313773e-05
+          },
+          "R21": {
+            "photo_at_old_shape": 9.177338836273679e-06,
+            "shape_at_old_photo": -0.0013024706546017296,
+            "interaction": -6.794624989557574e-07,
+            "total": -0.0012939727782644117,
+            "photo_at_new_shape": 8.497876337317922e-06,
+            "shape_at_new_photo": -0.0013031501171006854
+          },
+          "R22": {
+            "photo_at_old_shape": -0.000521512476326591,
+            "shape_at_old_photo": -0.0030462135081829045,
+            "interaction": -1.2466954036893796e-06,
+            "total": -0.003568972679913185,
+            "photo_at_new_shape": -0.0005227591717302804,
+            "shape_at_new_photo": -0.003047460203586594
+          }
+        },
+        "mag25.1_radius_gt0.56": {
+          "R11": {
+            "photo_at_old_shape": -0.0005112053803271177,
+            "shape_at_old_photo": -0.0009415548751272595,
+            "interaction": -5.877057312031475e-06,
+            "total": -0.0014586373127664087,
+            "photo_at_new_shape": -0.0005170824376391492,
+            "shape_at_new_photo": -0.000947431932439291
+          },
+          "R12": {
+            "photo_at_old_shape": 1.6203231520895778e-05,
+            "shape_at_old_photo": -7.147380425571298e-05,
+            "interaction": -8.256186860059432e-06,
+            "total": -6.352675959487664e-05,
+            "photo_at_new_shape": 7.947044660836346e-06,
+            "shape_at_new_photo": -7.972999111577242e-05
+          },
+          "R21": {
+            "photo_at_old_shape": 7.558461360755112e-06,
+            "shape_at_old_photo": -0.0012858719456159881,
+            "interaction": -6.156018913837727e-07,
+            "total": -0.001278929086146617,
+            "photo_at_new_shape": 6.942859469371123e-06,
+            "shape_at_new_photo": -0.0012864875475073721
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0005068560492571539,
+            "shape_at_old_photo": -0.0030000674087822254,
+            "interaction": -1.1374872871394714e-06,
+            "total": -0.003508060945326519,
+            "photo_at_new_shape": -0.0005079935365442934,
+            "shape_at_new_photo": -0.003001204896069365
+          }
+        },
+        "mag24.9_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0008169827877925195,
+            "shape_at_old_photo": -0.0009341575866529395,
+            "interaction": -4.376966140084981e-06,
+            "total": -0.001755517340585544,
+            "photo_at_new_shape": -0.0008213597539326045,
+            "shape_at_new_photo": -0.0009385345527930244
+          },
+          "R12": {
+            "photo_at_old_shape": 1.1494851555824358e-05,
+            "shape_at_old_photo": -7.336901803634552e-05,
+            "interaction": -7.818018924223122e-06,
+            "total": -6.969218540474429e-05,
+            "photo_at_new_shape": 3.6768326316012363e-06,
+            "shape_at_new_photo": -8.118703696056865e-05
+          },
+          "R21": {
+            "photo_at_old_shape": 2.004086621801727e-05,
+            "shape_at_old_photo": -0.0013034407562827611,
+            "interaction": 9.239481600911356e-07,
+            "total": -0.0012824759419046527,
+            "photo_at_new_shape": 2.0964814378108404e-05,
+            "shape_at_new_photo": -0.00130251680812267
+          },
+          "R22": {
+            "photo_at_old_shape": -0.000846447936163619,
+            "shape_at_old_photo": -0.0030090743109290052,
+            "interaction": 2.2717185175213928e-06,
+            "total": -0.003853250528575103,
+            "photo_at_new_shape": -0.0008441762176460976,
+            "shape_at_new_photo": -0.003006802592411484
+          }
+        },
+        "mag25_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0008029056605403095,
+            "shape_at_old_photo": -0.0009284488272716107,
+            "interaction": -4.094796400289091e-06,
+            "total": -0.0017354492842122093,
+            "photo_at_new_shape": -0.0008070004569405986,
+            "shape_at_new_photo": -0.0009325436236718998
+          },
+          "R12": {
+            "photo_at_old_shape": 5.709375782984925e-06,
+            "shape_at_old_photo": -7.631142288876168e-05,
+            "interaction": -7.3955931271563234e-06,
+            "total": -7.799764023293308e-05,
+            "photo_at_new_shape": -1.6862173441713982e-06,
+            "shape_at_new_photo": -8.3707016015918e-05
+          },
+          "R21": {
+            "photo_at_old_shape": 9.402905479789607e-06,
+            "shape_at_old_photo": -0.0012884212821475402,
+            "interaction": 8.927113812383716e-07,
+            "total": -0.0012781256652865125,
+            "photo_at_new_shape": 1.0295616861027762e-05,
+            "shape_at_new_photo": -0.001287528570766302
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0008367960753787873,
+            "shape_at_old_photo": -0.0029638743591398065,
+            "interaction": 2.2481404338137168e-06,
+            "total": -0.00379842229408478,
+            "photo_at_new_shape": -0.0008345479349449736,
+            "shape_at_new_photo": -0.0029616262187059927
+          }
+        },
+        "mag25.1_radius_gt0.60": {
+          "R11": {
+            "photo_at_old_shape": -0.0007883945063261732,
+            "shape_at_old_photo": -0.0009207744292530906,
+            "interaction": -3.852239737422991e-06,
+            "total": -0.0017130211753166869,
+            "photo_at_new_shape": -0.0007922467460635962,
+            "shape_at_new_photo": -0.0009246266689905136
+          },
+          "R12": {
+            "photo_at_old_shape": 7.256138057533585e-06,
+            "shape_at_old_photo": -7.848403918023954e-05,
+            "interaction": -7.01349422665737e-06,
+            "total": -7.824139534936333e-05,
+            "photo_at_new_shape": 2.426438308762149e-07,
+            "shape_at_new_photo": -8.549753340689691e-05
+          },
+          "R21": {
+            "photo_at_old_shape": 8.705873369695052e-06,
+            "shape_at_old_photo": -0.001273596988077933,
+            "interaction": 8.989189386994847e-07,
+            "total": -0.0012639921957695384,
+            "photo_at_new_shape": 9.604792308394536e-06,
+            "shape_at_new_photo": -0.0012726980691392335
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0008183479031724783,
+            "shape_at_old_photo": -0.002919535317384092,
+            "interaction": 2.2526836563896424e-06,
+            "total": -0.0037356305369001808,
+            "photo_at_new_shape": -0.0008160952195160887,
+            "shape_at_new_photo": -0.0029172826337277025
+          }
+        },
+        "mag24.9_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.0015403274798755362,
+            "shape_at_old_photo": -0.0008694247399622101,
+            "interaction": -1.2073830628622773e-06,
+            "total": -0.0024109596029006086,
+            "photo_at_new_shape": -0.0015415348629383985,
+            "shape_at_new_photo": -0.0008706321230250724
+          },
+          "R12": {
+            "photo_at_old_shape": 2.8718455883348275e-05,
+            "shape_at_old_photo": -0.00010207770346502875,
+            "interaction": -5.023722791190665e-06,
+            "total": -7.838297037287114e-05,
+            "photo_at_new_shape": 2.369473309215761e-05,
+            "shape_at_new_photo": -0.00010710142625621941
+          },
+          "R21": {
+            "photo_at_old_shape": 3.242983947346345e-05,
+            "shape_at_old_photo": -0.001316457476064362,
+            "interaction": 8.265053514765891e-07,
+            "total": -0.001283201131239422,
+            "photo_at_new_shape": 3.325634482493993e-05,
+            "shape_at_new_photo": -0.0013156309707128854
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0015729844707954577,
+            "shape_at_old_photo": -0.002855480005758637,
+            "interaction": 4.609337385108603e-06,
+            "total": -0.004423855139168986,
+            "photo_at_new_shape": -0.001568375133410349,
+            "shape_at_new_photo": -0.0028508706683735285
+          }
+        },
+        "mag25_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.0015044541939264189,
+            "shape_at_old_photo": -0.0008661860045034997,
+            "interaction": -1.0780324233294891e-06,
+            "total": -0.002371718230853248,
+            "photo_at_new_shape": -0.0015055322263497484,
+            "shape_at_new_photo": -0.0008672640369268292
+          },
+          "R12": {
+            "photo_at_old_shape": 1.9169944408934823e-05,
+            "shape_at_old_photo": -0.00010235136625042244,
+            "interaction": -4.773981755051837e-06,
+            "total": -8.795540359653946e-05,
+            "photo_at_new_shape": 1.4395962653882986e-05,
+            "shape_at_new_photo": -0.00010712534800547428
+          },
+          "R21": {
+            "photo_at_old_shape": 1.5710351454576322e-05,
+            "shape_at_old_photo": -0.0013008133053641771,
+            "interaction": 8.050361829945243e-07,
+            "total": -0.0012842979177266065,
+            "photo_at_new_shape": 1.6515387637570738e-05,
+            "shape_at_new_photo": -0.0013000082691811828
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0015417751935453694,
+            "shape_at_old_photo": -0.002812824852283846,
+            "interaction": 4.509714629619133e-06,
+            "total": -0.004350090331199596,
+            "photo_at_new_shape": -0.0015372654789157503,
+            "shape_at_new_photo": -0.002808315137654227
+          }
+        },
+        "mag25.1_radius_gt0.64": {
+          "R11": {
+            "photo_at_old_shape": -0.0014692070867532436,
+            "shape_at_old_photo": -0.0008610467386370724,
+            "interaction": -9.849020871088854e-07,
+            "total": -0.002331238727477425,
+            "photo_at_new_shape": -0.0014701919888403525,
+            "shape_at_new_photo": -0.0008620316407241813
+          },
+          "R12": {
+            "photo_at_old_shape": 1.6916414227564642e-05,
+            "shape_at_old_photo": -0.00010244654315547498,
+            "interaction": -4.533975866327341e-06,
+            "total": -9.006410479423768e-05,
+            "photo_at_new_shape": 1.2382438361237301e-05,
+            "shape_at_new_photo": -0.00010698051902180233
+          },
+          "R21": {
+            "photo_at_old_shape": 8.219870531399852e-06,
+            "shape_at_old_photo": -0.0012859162244667401,
+            "interaction": 8.080844380920806e-07,
+            "total": -0.0012768882694972484,
+            "photo_at_new_shape": 9.027954969491824e-06,
+            "shape_at_new_photo": -0.0012851081400286483
+          },
+          "R22": {
+            "photo_at_old_shape": -0.0015018275137097525,
+            "shape_at_old_photo": -0.002772192832292353,
+            "interaction": 4.4378982705373105e-06,
+            "total": -0.004269582447731568,
+            "photo_at_new_shape": -0.0014973896154392152,
+            "shape_at_new_photo": -0.0027677549340218155
+          }
+        }
+      }
+    }
+  },
+  "clipping_diagnostic": {
+    "control": {
+      "steps": 64,
+      "clipped_steps": 64,
+      "minimum_norm": 8.584874153137207,
+      "maximum_norm": 307.0859069824219,
+      "mean_norm": 37.6030600219965,
+      "interpretation": "Global clipping is an available indirect coupling; this diagnostic does not measure its causal contribution."
+    },
+    "weighted": {
+      "steps": 64,
+      "clipped_steps": 64,
+      "minimum_norm": 8.385185241699219,
+      "maximum_norm": 310.9290771484375,
+      "mean_norm": 39.308160692453384,
+      "interpretation": "Global clipping is an available indirect coupling; this diagnostic does not measure its causal contribution."
+    }
+  },
+  "direct_factor_max_abs": 0.0
+}

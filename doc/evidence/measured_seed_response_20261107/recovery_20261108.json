@@ -1,0 +1,113 @@
+{
+  "utc": "2026-11-07T23:17:41.765919+00:00",
+  "cancelled_slow_workers": [
+    "17821856_1",
+    "17821856_2"
+  ],
+  "new_workers": 17824227,
+  "reason": "Original group0/3 completed in75/55minutes; group1 only two full cases and55/66chunks of third after2h53; group2 no completed chunk. Preserve data and restart missing chunks with fast-io+x86-64-v3 nodes, excluding the two slow Naples hosts.",
+  "quarantined_incomplete_files": [],
+  "counts_at_stop": [
+    {
+      "case": 1040,
+      "completed": 66,
+      "required": 66
+    },
+    {
+      "case": 1080,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1041,
+      "completed": 67,
+      "required": 67
+    },
+    {
+      "case": 1081,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1042,
+      "completed": 55,
+      "required": 66
+    },
+    {
+      "case": 1082,
+      "completed": 0,
+      "required": 66
+    },
+    {
+      "case": 1043,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1083,
+      "completed": 0,
+      "required": 66
+    },
+    {
+      "case": 1044,
+      "completed": 0,
+      "required": 66
+    },
+    {
+      "case": 1084,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1045,
+      "completed": 0,
+      "required": 66
+    },
+    {
+      "case": 1085,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1046,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1086,
+      "completed": 0,
+      "required": 66
+    },
+    {
+      "case": 1047,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1087,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1048,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1088,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1049,
+      "completed": 0,
+      "required": 67
+    },
+    {
+      "case": 1089,
+      "completed": 0,
+      "required": 67
+    }
+  ],
+  "report_dependency": 17824227
+}

@@ -1,0 +1,111 @@
+{
+  "prepared_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/prepared",
+  "original_prepared_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/prepared",
+  "validation_indices": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/base/flow/validation_nll_indices.npy",
+  "cuts": [
+    [
+      "mag24.9_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.1
+    ]
+  ],
+  "latent_seed": 202611069912,
+  "bootstrap_seed": 202611069913,
+  "rows_per_split": 500000,
+  "draws": 64,
+  "block": 1024,
+  "arms": {
+    "baseline": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb",
+      "loader": "original",
+      "mean_score": false
+    },
+    "nine_weak": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+      "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e",
+      "loader": "original",
+      "mean_score": false
+    },
+    "neighbour_nll": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/neighbour/nll.pt",
+      "sha256": "12ca78567660b72ae594dd18527c75d2ff66aa551c91e98f7530804e2c19c507",
+      "loader": "neighbour",
+      "mean_score": false
+    },
+    "current": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/control/final.pt",
+      "sha256": "5cc126e14355626098bf6b5775b54ed18c3b115504ed1612e1c50b1b8945b5db",
+      "loader": "neighbour",
+      "mean_score": false
+    }
+  },
+  "sample": "g0 rows within the existing fixed500k validation-NLL sample; preserve original row block/latent streams"
+}

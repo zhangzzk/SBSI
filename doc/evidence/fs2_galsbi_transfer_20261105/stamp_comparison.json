@@ -1,0 +1,2037 @@
+{
+  "definition": "Paired 48-subpixel versus centred65 fits on the same pixels/detections. True Re [0.15,0.25), mag<25, measured radius [2.4,3.6). Two seeds, common across stamps. Conditional object bootstrap within each radius bin; not population/case uncertainty and not a shear-response result.",
+  "cases": {
+    "40": {
+      "family": "fs2",
+      "sample": 3784,
+      "valid_fraction": [
+        [
+          1.0,
+          0.9997357293868921
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "negative_T_fraction": [
+        0.7125677282939078,
+        0.7110200845665962
+      ]
+    },
+    "80": {
+      "family": "fs2",
+      "sample": 3783,
+      "valid_fraction": [
+        [
+          0.999735659529474,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "negative_T_fraction": [
+        0.7128883013879709,
+        0.7092254824213587
+      ]
+    },
+    "1000": {
+      "family": "galsbi",
+      "sample": 4580,
+      "valid_fraction": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.9997816593886463
+        ]
+      ],
+      "negative_T_fraction": [
+        0.46626637554585154,
+        0.46140408341522
+      ]
+    },
+    "1080": {
+      "family": "galsbi",
+      "sample": 4580,
+      "valid_fraction": [
+        [
+          0.9997816593886463,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "negative_T_fraction": [
+        0.4695927503002511,
+        0.46179039301310043
+      ]
+    }
+  },
+  "families": {
+    "fs2": {
+      "0": {
+        "radius_low": 2.4,
+        "common_objects": 23,
+        "alignment_48": -0.09591021884186654,
+        "alignment_65": -0.10506086115766242,
+        "alignment_change_65_minus_48": -0.009150642315795876,
+        "conditional_object_se": 0.008988618130004225,
+        "original_alignment": -0.09667017244943683,
+        "negative_T_fraction": [
+          0.043478260869565216,
+          0.043478260869565216
+        ],
+        "median_inferred_noise_sigma": [
+          0.3651451331497944,
+          0.3610088289024717
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": 0.0008601125531902143,
+            "nonnegative_T_contribution": -0.09677033139505677
+          },
+          {
+            "negative_T_contribution": 0.0008701644898521519,
+            "nonnegative_T_contribution": -0.1059310256475146
+          }
+        ]
+      },
+      "1": {
+        "radius_low": 2.5,
+        "common_objects": 61,
+        "alignment_48": -0.050227574671819916,
+        "alignment_65": -0.02981659535949225,
+        "alignment_change_65_minus_48": 0.020410979312327666,
+        "conditional_object_se": 0.027034907419913684,
+        "original_alignment": -0.050398722728377816,
+        "negative_T_fraction": [
+          0.5737704918032787,
+          0.5737704918032787
+        ],
+        "median_inferred_noise_sigma": [
+          0.3639342240084036,
+          0.3416975111841126
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.14321370548374054,
+            "nonnegative_T_contribution": 0.09298613081192063
+          },
+          {
+            "negative_T_contribution": -0.1430859486233785,
+            "nonnegative_T_contribution": 0.11326935326388625
+          }
+        ]
+      },
+      "2": {
+        "radius_low": 2.6,
+        "common_objects": 283,
+        "alignment_48": -0.3623569349347026,
+        "alignment_65": -0.3486981802010434,
+        "alignment_change_65_minus_48": 0.01365875473365924,
+        "conditional_object_se": 0.006113282927742529,
+        "original_alignment": -0.37321537589143156,
+        "negative_T_fraction": [
+          0.8975265017667845,
+          0.8975265017667845
+        ],
+        "median_inferred_noise_sigma": [
+          0.33634555631730234,
+          0.34504761524921823
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.3838027802429638,
+            "nonnegative_T_contribution": 0.02144584530826113
+          },
+          {
+            "negative_T_contribution": -0.37838525438008846,
+            "nonnegative_T_contribution": 0.029687074179044988
+          }
+        ]
+      },
+      "3": {
+        "radius_low": 2.7,
+        "common_objects": 800,
+        "alignment_48": -0.5121580947415775,
+        "alignment_65": -0.5030497701353455,
+        "alignment_change_65_minus_48": 0.00910832460623201,
+        "conditional_object_se": 0.003822990210187361,
+        "original_alignment": -0.5290415633677337,
+        "negative_T_fraction": [
+          0.949375,
+          0.94875
+        ],
+        "median_inferred_noise_sigma": [
+          0.3355973655240494,
+          0.3489555351593584
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5227155476881042,
+            "nonnegative_T_contribution": 0.010557452946526609
+          },
+          {
+            "negative_T_contribution": -0.515935093560305,
+            "nonnegative_T_contribution": 0.012885323424959683
+          }
+        ]
+      },
+      "4": {
+        "radius_low": 2.8,
+        "common_objects": 800,
+        "alignment_48": -0.6852667113731775,
+        "alignment_65": -0.6788106898841706,
+        "alignment_change_65_minus_48": 0.0064560214890069245,
+        "conditional_object_se": 0.0032528103945250607,
+        "original_alignment": -0.719041266382786,
+        "negative_T_fraction": [
+          0.96375,
+          0.9625
+        ],
+        "median_inferred_noise_sigma": [
+          0.33955998517877506,
+          0.3439272807227467
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.6849719945947137,
+            "nonnegative_T_contribution": -0.0002947167784643156
+          },
+          {
+            "negative_T_contribution": -0.6810583734520526,
+            "nonnegative_T_contribution": 0.0022476835678813365
+          }
+        ]
+      },
+      "5": {
+        "radius_low": 2.9,
+        "common_objects": 799,
+        "alignment_48": -0.7343036809682908,
+        "alignment_65": -0.7301959888607983,
+        "alignment_change_65_minus_48": 0.004107692107492511,
+        "conditional_object_se": 0.007735509934810199,
+        "original_alignment": -0.7260349831422155,
+        "negative_T_fraction": [
+          0.932415519399249,
+          0.932415519399249
+        ],
+        "median_inferred_noise_sigma": [
+          0.34122899008724716,
+          0.3478033145067169
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.791809890796834,
+            "nonnegative_T_contribution": 0.05750620982854288
+          },
+          {
+            "negative_T_contribution": -0.7813331223928832,
+            "nonnegative_T_contribution": 0.051137133532084544
+          }
+        ]
+      },
+      "6": {
+        "radius_low": 3.0,
+        "common_objects": 800,
+        "alignment_48": -0.6472882502716198,
+        "alignment_65": -0.6216483908798549,
+        "alignment_change_65_minus_48": 0.02563985939176494,
+        "conditional_object_se": 0.015715228686981008,
+        "original_alignment": -0.6571579590427353,
+        "negative_T_fraction": [
+          0.86875,
+          0.86375
+        ],
+        "median_inferred_noise_sigma": [
+          0.3396999012998777,
+          0.3432337499540771
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.8539487412633524,
+            "nonnegative_T_contribution": 0.20666049099173192
+          },
+          {
+            "negative_T_contribution": -0.8372677467588657,
+            "nonnegative_T_contribution": 0.21561935587901043
+          }
+        ]
+      },
+      "7": {
+        "radius_low": 3.1,
+        "common_objects": 799,
+        "alignment_48": -0.46700445374055854,
+        "alignment_65": -0.46437209299660615,
+        "alignment_change_65_minus_48": 0.0026323607439524,
+        "conditional_object_se": 0.015144799269267647,
+        "original_alignment": -0.47773001972267026,
+        "negative_T_fraction": [
+          0.7690863579474343,
+          0.7665832290362954
+        ],
+        "median_inferred_noise_sigma": [
+          0.33990072503860275,
+          0.3457399231952818
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.7996104387157258,
+            "nonnegative_T_contribution": 0.3326059849751671
+          },
+          {
+            "negative_T_contribution": -0.7871911332894551,
+            "nonnegative_T_contribution": 0.3228190402928488
+          }
+        ]
+      },
+      "8": {
+        "radius_low": 3.2,
+        "common_objects": 800,
+        "alignment_48": -0.04707216474394016,
+        "alignment_65": -0.06391528106440937,
+        "alignment_change_65_minus_48": -0.016843116320469212,
+        "conditional_object_se": 0.01583192811776906,
+        "original_alignment": -0.005868401445447698,
+        "negative_T_fraction": [
+          0.625,
+          0.62875
+        ],
+        "median_inferred_noise_sigma": [
+          0.34494666483981096,
+          0.34614026554530264
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5645313182023187,
+            "nonnegative_T_contribution": 0.5174591534583786
+          },
+          {
+            "negative_T_contribution": -0.5734737786992347,
+            "nonnegative_T_contribution": 0.5095584976348253
+          }
+        ]
+      },
+      "9": {
+        "radius_low": 3.3,
+        "common_objects": 800,
+        "alignment_48": 0.005207631562686559,
+        "alignment_65": 0.02169698034041432,
+        "alignment_change_65_minus_48": 0.01648934877772776,
+        "conditional_object_se": 0.01689970474292113,
+        "original_alignment": -0.0052865796688979306,
+        "negative_T_fraction": [
+          0.530625,
+          0.519375
+        ],
+        "median_inferred_noise_sigma": [
+          0.34782124839548134,
+          0.35025238509360923
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.4819674426538388,
+            "nonnegative_T_contribution": 0.4871750742165254
+          },
+          {
+            "negative_T_contribution": -0.46298515566667753,
+            "nonnegative_T_contribution": 0.4846821360070918
+          }
+        ]
+      },
+      "10": {
+        "radius_low": 3.4,
+        "common_objects": 800,
+        "alignment_48": 0.18950709859151682,
+        "alignment_65": 0.18254344939968897,
+        "alignment_change_65_minus_48": -0.006963649191827848,
+        "conditional_object_se": 0.009303928357422329,
+        "original_alignment": 0.17075738049739286,
+        "negative_T_fraction": [
+          0.40625,
+          0.40375
+        ],
+        "median_inferred_noise_sigma": [
+          0.34814063232347114,
+          0.350724350624385
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.3758131576502783,
+            "nonnegative_T_contribution": 0.565320256241795
+          },
+          {
+            "negative_T_contribution": -0.3718970463889747,
+            "nonnegative_T_contribution": 0.5544404957886635
+          }
+        ]
+      },
+      "11": {
+        "radius_low": 3.5,
+        "common_objects": 800,
+        "alignment_48": 0.26581450075854074,
+        "alignment_65": 0.2753839723339159,
+        "alignment_change_65_minus_48": 0.009569471575375188,
+        "conditional_object_se": 0.008892728278197579,
+        "original_alignment": 0.3210259618453612,
+        "negative_T_fraction": [
+          0.335,
+          0.330625
+        ],
+        "median_inferred_noise_sigma": [
+          0.35143017161692736,
+          0.34872610159672396
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.2897978980928827,
+            "nonnegative_T_contribution": 0.5556123988514236
+          },
+          {
+            "negative_T_contribution": -0.2845602155800548,
+            "nonnegative_T_contribution": 0.5599441879139708
+          }
+        ]
+      }
+    },
+    "galsbi": {
+      "0": {
+        "radius_low": 2.4,
+        "common_objects": 360,
+        "alignment_48": -0.4163864068060273,
+        "alignment_65": -0.3932261113224581,
+        "alignment_change_65_minus_48": 0.023160295483569182,
+        "conditional_object_se": 0.013533542214614102,
+        "original_alignment": -0.3968020981098018,
+        "negative_T_fraction": [
+          0.8763888888888889,
+          0.8736111111111111
+        ],
+        "median_inferred_noise_sigma": [
+          0.6630673605509854,
+          0.6672517505643376
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.44548297258193903,
+            "nonnegative_T_contribution": 0.02909656577591174
+          },
+          {
+            "negative_T_contribution": -0.4285011957211897,
+            "nonnegative_T_contribution": 0.03527508439873138
+          }
+        ]
+      },
+      "1": {
+        "radius_low": 2.5,
+        "common_objects": 800,
+        "alignment_48": -0.5017236578687977,
+        "alignment_65": -0.47456446750716297,
+        "alignment_change_65_minus_48": 0.027159190361634722,
+        "conditional_object_se": 0.007580298974208154,
+        "original_alignment": -0.48297244187512256,
+        "negative_T_fraction": [
+          0.935625,
+          0.92875
+        ],
+        "median_inferred_noise_sigma": [
+          0.6626950798600382,
+          0.6708715906817744
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5216420480317032,
+            "nonnegative_T_contribution": 0.019918390162905353
+          },
+          {
+            "negative_T_contribution": -0.49973157992071515,
+            "nonnegative_T_contribution": 0.025167112413552132
+          }
+        ]
+      },
+      "2": {
+        "radius_low": 2.6,
+        "common_objects": 800,
+        "alignment_48": -0.5006965100243859,
+        "alignment_65": -0.47395690180880967,
+        "alignment_change_65_minus_48": 0.026739608215576194,
+        "conditional_object_se": 0.013286850407776088,
+        "original_alignment": -0.45319254075512677,
+        "negative_T_fraction": [
+          0.890625,
+          0.885
+        ],
+        "median_inferred_noise_sigma": [
+          0.6624943005802439,
+          0.6702571392413673
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5869666273648421,
+            "nonnegative_T_contribution": 0.08627011734045646
+          },
+          {
+            "negative_T_contribution": -0.5623718455195267,
+            "nonnegative_T_contribution": 0.08841494371071724
+          }
+        ]
+      },
+      "3": {
+        "radius_low": 2.7,
+        "common_objects": 800,
+        "alignment_48": -0.377561117601474,
+        "alignment_65": -0.3495624567128191,
+        "alignment_change_65_minus_48": 0.02799866088865488,
+        "conditional_object_se": 0.013403219764051533,
+        "original_alignment": -0.3494288519012583,
+        "negative_T_fraction": [
+          0.810625,
+          0.798125
+        ],
+        "median_inferred_noise_sigma": [
+          0.6582013505513828,
+          0.6709796084794901
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5913244498644423,
+            "nonnegative_T_contribution": 0.21376333226296806
+          },
+          {
+            "negative_T_contribution": -0.5676648435003091,
+            "nonnegative_T_contribution": 0.2181023867874895
+          }
+        ]
+      },
+      "4": {
+        "radius_low": 2.8,
+        "common_objects": 800,
+        "alignment_48": -0.15411605393377273,
+        "alignment_65": -0.1359699116095294,
+        "alignment_change_65_minus_48": 0.01814614232424333,
+        "conditional_object_se": 0.011333628918287847,
+        "original_alignment": -0.10830047180206,
+        "negative_T_fraction": [
+          0.671875,
+          0.663125
+        ],
+        "median_inferred_noise_sigma": [
+          0.65922442279463,
+          0.661961619674128
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.533895445910262,
+            "nonnegative_T_contribution": 0.3797793919764891
+          },
+          {
+            "negative_T_contribution": -0.5163355467068359,
+            "nonnegative_T_contribution": 0.38036563509730636
+          }
+        ]
+      },
+      "5": {
+        "radius_low": 2.9,
+        "common_objects": 799,
+        "alignment_48": 0.14375318204537613,
+        "alignment_65": 0.1581016101526105,
+        "alignment_change_65_minus_48": 0.014348428107234384,
+        "conditional_object_se": 0.012385500981758567,
+        "original_alignment": 0.18480042021885154,
+        "negative_T_fraction": [
+          0.5156445556946183,
+          0.5018773466833542
+        ],
+        "median_inferred_noise_sigma": [
+          0.6687099267242244,
+          0.6730590793874066
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.4121378325409114,
+            "nonnegative_T_contribution": 0.5558910145862876
+          },
+          {
+            "negative_T_contribution": -0.40042063535603234,
+            "nonnegative_T_contribution": 0.5585222455086428
+          }
+        ]
+      },
+      "6": {
+        "radius_low": 3.0,
+        "common_objects": 800,
+        "alignment_48": 0.3945509946532104,
+        "alignment_65": 0.38490856328303746,
+        "alignment_change_65_minus_48": -0.009642431370172955,
+        "conditional_object_se": 0.012215370199120114,
+        "original_alignment": 0.39441238477750157,
+        "negative_T_fraction": [
+          0.38375,
+          0.378125
+        ],
+        "median_inferred_noise_sigma": [
+          0.6707661417999455,
+          0.6734442192010575
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.31772674720007604,
+            "nonnegative_T_contribution": 0.7122777418532863
+          },
+          {
+            "negative_T_contribution": -0.3142326743176565,
+            "nonnegative_T_contribution": 0.699141237600694
+          }
+        ]
+      },
+      "7": {
+        "radius_low": 3.1,
+        "common_objects": 800,
+        "alignment_48": 0.560165295989164,
+        "alignment_65": 0.5700395113986023,
+        "alignment_change_65_minus_48": 0.009874215409438336,
+        "conditional_object_se": 0.009157652742141182,
+        "original_alignment": 0.6079000439867088,
+        "negative_T_fraction": [
+          0.24875,
+          0.23875
+        ],
+        "median_inferred_noise_sigma": [
+          0.6687995854085954,
+          0.6756940630020652
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.19286884467529036,
+            "nonnegative_T_contribution": 0.7530341406644547
+          },
+          {
+            "negative_T_contribution": -0.18499393961251007,
+            "nonnegative_T_contribution": 0.7550334510111126
+          }
+        ]
+      },
+      "8": {
+        "radius_low": 3.2,
+        "common_objects": 799,
+        "alignment_48": 0.6025552233006567,
+        "alignment_65": 0.5885600049656644,
+        "alignment_change_65_minus_48": -0.013995218334992288,
+        "conditional_object_se": 0.00876789458122736,
+        "original_alignment": 0.5730266680919153,
+        "negative_T_fraction": [
+          0.18272841051314143,
+          0.17959949937421776
+        ],
+        "median_inferred_noise_sigma": [
+          0.6652315132821697,
+          0.6765246429874624
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.13256541452210485,
+            "nonnegative_T_contribution": 0.7351206378227614
+          },
+          {
+            "negative_T_contribution": -0.1322303548773223,
+            "nonnegative_T_contribution": 0.7207903598429868
+          }
+        ]
+      },
+      "9": {
+        "radius_low": 3.3,
+        "common_objects": 800,
+        "alignment_48": 0.5917547221434591,
+        "alignment_65": 0.6046728142648728,
+        "alignment_change_65_minus_48": 0.012918092121413705,
+        "conditional_object_se": 0.009844878180532946,
+        "original_alignment": 0.5798761699576592,
+        "negative_T_fraction": [
+          0.145625,
+          0.14375
+        ],
+        "median_inferred_noise_sigma": [
+          0.672890292852612,
+          0.6746768741444307
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.08800857850920003,
+            "nonnegative_T_contribution": 0.6797633006526591
+          },
+          {
+            "negative_T_contribution": -0.07757756146455043,
+            "nonnegative_T_contribution": 0.6822503757294236
+          }
+        ]
+      },
+      "10": {
+        "radius_low": 3.4,
+        "common_objects": 800,
+        "alignment_48": 0.6037102507880951,
+        "alignment_65": 0.6017429797996675,
+        "alignment_change_65_minus_48": -0.0019672709884276385,
+        "conditional_object_se": 0.008314185533987993,
+        "original_alignment": 0.618832174738088,
+        "negative_T_fraction": [
+          0.104375,
+          0.1
+        ],
+        "median_inferred_noise_sigma": [
+          0.6643520012824163,
+          0.6720714463661644
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.05868742577736764,
+            "nonnegative_T_contribution": 0.6623976765654629
+          },
+          {
+            "negative_T_contribution": -0.05321709568557348,
+            "nonnegative_T_contribution": 0.6549600754852409
+          }
+        ]
+      },
+      "11": {
+        "radius_low": 3.5,
+        "common_objects": 800,
+        "alignment_48": 0.569630943989862,
+        "alignment_65": 0.5679504840159603,
+        "alignment_change_65_minus_48": -0.00168045997390176,
+        "conditional_object_se": 0.010177067896983758,
+        "original_alignment": 0.61562310589478,
+        "negative_T_fraction": [
+          0.074375,
+          0.075625
+        ],
+        "median_inferred_noise_sigma": [
+          0.6763546409822276,
+          0.6791896447679281
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.03101377183204878,
+            "nonnegative_T_contribution": 0.600644715821911
+          },
+          {
+            "negative_T_contribution": -0.03312700204217631,
+            "nonnegative_T_contribution": 0.6010774860581366
+          }
+        ]
+      }
+    }
+  },
+  "case_profiles": {
+    "fs2_case40": {
+      "0": {
+        "radius_low": 2.4,
+        "common_objects": 8,
+        "alignment_48": 0.8626752767478586,
+        "alignment_65": 0.8368059511097895,
+        "alignment_change_65_minus_48": -0.025869325638069096,
+        "conditional_object_se": 0.033422438503698804,
+        "original_alignment": 0.8623750270614353,
+        "negative_T_fraction": [
+          0.125,
+          0.125
+        ],
+        "median_inferred_noise_sigma": [
+          0.4015499483618429,
+          0.37776923224046993
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": 0.0025696176156048077,
+            "nonnegative_T_contribution": 0.8601056591322537
+          },
+          {
+            "negative_T_contribution": 0.0025996481429138843,
+            "nonnegative_T_contribution": 0.8342063029668757
+          }
+        ]
+      },
+      "1": {
+        "radius_low": 2.5,
+        "common_objects": 29,
+        "alignment_48": -0.19281838123040373,
+        "alignment_65": -0.15539337073869794,
+        "alignment_change_65_minus_48": 0.037425010491705796,
+        "conditional_object_se": 0.06751461110146224,
+        "original_alignment": -0.19266196692048898,
+        "negative_T_fraction": [
+          0.7241379310344828,
+          0.7241379310344828
+        ],
+        "median_inferred_noise_sigma": [
+          0.3549709131862355,
+          0.346957890595981
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.19206029338913388,
+            "nonnegative_T_contribution": -0.0007580878412698692
+          },
+          {
+            "negative_T_contribution": -0.19269865908513642,
+            "nonnegative_T_contribution": 0.03730528834643845
+          }
+        ]
+      },
+      "2": {
+        "radius_low": 2.6,
+        "common_objects": 147,
+        "alignment_48": -0.4070043802934453,
+        "alignment_65": -0.3890193678546328,
+        "alignment_change_65_minus_48": 0.01798501243881251,
+        "conditional_object_se": 0.010002021707112905,
+        "original_alignment": -0.41348314152988647,
+        "negative_T_fraction": [
+          0.9251700680272109,
+          0.9251700680272109
+        ],
+        "median_inferred_noise_sigma": [
+          0.3339558974568417,
+          0.3417801611951624
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.4174995600351036,
+            "nonnegative_T_contribution": 0.01049517974165818
+          },
+          {
+            "negative_T_contribution": -0.40903538665629935,
+            "nonnegative_T_contribution": 0.02001601880166648
+          }
+        ]
+      },
+      "3": {
+        "radius_low": 2.7,
+        "common_objects": 400,
+        "alignment_48": -0.5705335204299303,
+        "alignment_65": -0.5647985871385621,
+        "alignment_change_65_minus_48": 0.005734933291368205,
+        "conditional_object_se": 0.002782475725195516,
+        "original_alignment": -0.5726246460674601,
+        "negative_T_fraction": [
+          0.9625,
+          0.96375
+        ],
+        "median_inferred_noise_sigma": [
+          0.3360873198548032,
+          0.3485506815130256
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5442846053577004,
+            "nonnegative_T_contribution": -0.026248915072230237
+          },
+          {
+            "negative_T_contribution": -0.5378556951843672,
+            "nonnegative_T_contribution": -0.026942891954195216
+          }
+        ]
+      },
+      "4": {
+        "radius_low": 2.8,
+        "common_objects": 400,
+        "alignment_48": -0.6935697963639246,
+        "alignment_65": -0.690998108854261,
+        "alignment_change_65_minus_48": 0.0025716875096635228,
+        "conditional_object_se": 0.002944141768100326,
+        "original_alignment": -0.7334607765033743,
+        "negative_T_fraction": [
+          0.9575,
+          0.9575
+        ],
+        "median_inferred_noise_sigma": [
+          0.34088622410318303,
+          0.34483452133483933
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.7008104983938772,
+            "nonnegative_T_contribution": 0.007240702029952387
+          },
+          {
+            "negative_T_contribution": -0.6995456748894254,
+            "nonnegative_T_contribution": 0.008547566035164003
+          }
+        ]
+      },
+      "5": {
+        "radius_low": 2.9,
+        "common_objects": 399,
+        "alignment_48": -0.7347238519864688,
+        "alignment_65": -0.7386004356812255,
+        "alignment_change_65_minus_48": -0.00387658369475663,
+        "conditional_object_se": 0.010243481330521229,
+        "original_alignment": -0.7218534742549713,
+        "negative_T_fraction": [
+          0.9260651629072681,
+          0.9298245614035088
+        ],
+        "median_inferred_noise_sigma": [
+          0.3431474691266556,
+          0.346278686064216
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.7958648493650806,
+            "nonnegative_T_contribution": 0.06114099737861195
+          },
+          {
+            "negative_T_contribution": -0.794688665711396,
+            "nonnegative_T_contribution": 0.05608823003017082
+          }
+        ]
+      },
+      "6": {
+        "radius_low": 3.0,
+        "common_objects": 400,
+        "alignment_48": -0.6426523676366188,
+        "alignment_65": -0.590434451006021,
+        "alignment_change_65_minus_48": 0.05221791663059783,
+        "conditional_object_se": 0.02404508387960018,
+        "original_alignment": -0.6530994450040745,
+        "negative_T_fraction": [
+          0.86375,
+          0.855
+        ],
+        "median_inferred_noise_sigma": [
+          0.34049089696937995,
+          0.3440007877303568
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.8324421416983518,
+            "nonnegative_T_contribution": 0.1897897740617328
+          },
+          {
+            "negative_T_contribution": -0.8008079626361412,
+            "nonnegative_T_contribution": 0.2103735116301202
+          }
+        ]
+      },
+      "7": {
+        "radius_low": 3.1,
+        "common_objects": 400,
+        "alignment_48": -0.4600639460425096,
+        "alignment_65": -0.4829739718709248,
+        "alignment_change_65_minus_48": -0.02291002582841517,
+        "conditional_object_se": 0.020502602670652636,
+        "original_alignment": -0.48437618490801826,
+        "negative_T_fraction": [
+          0.78125,
+          0.79
+        ],
+        "median_inferred_noise_sigma": [
+          0.3394010550851878,
+          0.3417707960245701
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.7718430213112639,
+            "nonnegative_T_contribution": 0.3117790752687543
+          },
+          {
+            "negative_T_contribution": -0.7735512354643458,
+            "nonnegative_T_contribution": 0.290577263593421
+          }
+        ]
+      },
+      "8": {
+        "radius_low": 3.2,
+        "common_objects": 400,
+        "alignment_48": -0.06779802669765621,
+        "alignment_65": -0.10190954353300545,
+        "alignment_change_65_minus_48": -0.03411151683534924,
+        "conditional_object_se": 0.023624878143069274,
+        "original_alignment": -0.06568791769249212,
+        "negative_T_fraction": [
+          0.63875,
+          0.64875
+        ],
+        "median_inferred_noise_sigma": [
+          0.34653316483089625,
+          0.34698084599960594
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5828183328452431,
+            "nonnegative_T_contribution": 0.5150203061475869
+          },
+          {
+            "negative_T_contribution": -0.5983334226969986,
+            "nonnegative_T_contribution": 0.49642387916399305
+          }
+        ]
+      },
+      "9": {
+        "radius_low": 3.3,
+        "common_objects": 400,
+        "alignment_48": 0.04518896176904404,
+        "alignment_65": 0.06075024676422733,
+        "alignment_change_65_minus_48": 0.015561284995183285,
+        "conditional_object_se": 0.029919472711513514,
+        "original_alignment": -0.1063445915631175,
+        "negative_T_fraction": [
+          0.5,
+          0.4875
+        ],
+        "median_inferred_noise_sigma": [
+          0.3531223601649798,
+          0.3503283059596116
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.48057299247556523,
+            "nonnegative_T_contribution": 0.5257619542446093
+          },
+          {
+            "negative_T_contribution": -0.46496965855853817,
+            "nonnegative_T_contribution": 0.5257199053227655
+          }
+        ]
+      },
+      "10": {
+        "radius_low": 3.4,
+        "common_objects": 400,
+        "alignment_48": 0.26894117897381964,
+        "alignment_65": 0.2593460706437533,
+        "alignment_change_65_minus_48": -0.009595108330066326,
+        "conditional_object_se": 0.01327963791293081,
+        "original_alignment": 0.19509449138788154,
+        "negative_T_fraction": [
+          0.3875,
+          0.38
+        ],
+        "median_inferred_noise_sigma": [
+          0.35021406467574606,
+          0.3469375694958339
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.34197629425735543,
+            "nonnegative_T_contribution": 0.6109174732311751
+          },
+          {
+            "negative_T_contribution": -0.34196458482955716,
+            "nonnegative_T_contribution": 0.6013106554733104
+          }
+        ]
+      },
+      "11": {
+        "radius_low": 3.5,
+        "common_objects": 400,
+        "alignment_48": 0.29194308391336404,
+        "alignment_65": 0.29847859528907933,
+        "alignment_change_65_minus_48": 0.006535511375715286,
+        "conditional_object_se": 0.009775160350933556,
+        "original_alignment": 0.32400964553534084,
+        "negative_T_fraction": [
+          0.33,
+          0.32125
+        ],
+        "median_inferred_noise_sigma": [
+          0.34925594897036144,
+          0.3446188255485299
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.25514010365633283,
+            "nonnegative_T_contribution": 0.5470831875696971
+          },
+          {
+            "negative_T_contribution": -0.25613606068014155,
+            "nonnegative_T_contribution": 0.5546146559692208
+          }
+        ]
+      }
+    },
+    "fs2_case80": {
+      "0": {
+        "radius_low": 2.4,
+        "common_objects": 15,
+        "alignment_48": -0.5782085379227301,
+        "alignment_65": -0.5789474184283632,
+        "alignment_change_65_minus_48": -0.0007388805056330883,
+        "conditional_object_se": 0.0022047172393480615,
+        "original_alignment": -0.5791997848572538,
+        "negative_T_fraction": [
+          0.0,
+          0.0
+        ],
+        "median_inferred_noise_sigma": [
+          0.3453787301171175,
+          0.3511559456181956
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": 0.0,
+            "nonnegative_T_contribution": -0.5782085379227302
+          },
+          {
+            "negative_T_contribution": 0.0,
+            "nonnegative_T_contribution": -0.5789474184283634
+          }
+        ]
+      },
+      "1": {
+        "radius_low": 2.5,
+        "common_objects": 32,
+        "alignment_48": 0.04225948768297931,
+        "alignment_65": 0.05163484835640731,
+        "alignment_change_65_minus_48": 0.009375360673428,
+        "conditional_object_se": 0.02180022888660142,
+        "original_alignment": 0.041875876552930055,
+        "negative_T_fraction": [
+          0.4375,
+          0.4375
+        ],
+        "median_inferred_noise_sigma": [
+          0.37621829781514543,
+          0.337660322765464
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.1115308955574975,
+            "nonnegative_T_contribution": 0.15379038324047684
+          },
+          {
+            "negative_T_contribution": -0.11090621728717906,
+            "nonnegative_T_contribution": 0.16254106564358642
+          }
+        ]
+      },
+      "2": {
+        "radius_low": 2.6,
+        "common_objects": 136,
+        "alignment_48": -0.31388793991453273,
+        "alignment_65": -0.3049257442220951,
+        "alignment_change_65_minus_48": 0.008962195692437613,
+        "conditional_object_se": 0.006331699481678566,
+        "original_alignment": -0.3295009345270623,
+        "negative_T_fraction": [
+          0.8676470588235294,
+          0.8676470588235294
+        ],
+        "median_inferred_noise_sigma": [
+          0.3451703576825961,
+          0.34929332243667466
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.3472217611316168,
+            "nonnegative_T_contribution": 0.033333821217084135
+          },
+          {
+            "negative_T_contribution": -0.34511165727444093,
+            "nonnegative_T_contribution": 0.04018591305234589
+          }
+        ]
+      },
+      "3": {
+        "radius_low": 2.7,
+        "common_objects": 400,
+        "alignment_48": -0.4573497526262516,
+        "alignment_65": -0.4450741708549751,
+        "alignment_change_65_minus_48": 0.012275581771276523,
+        "conditional_object_se": 0.006838101038548507,
+        "original_alignment": -0.48812166464528667,
+        "negative_T_fraction": [
+          0.93625,
+          0.93375
+        ],
+        "median_inferred_noise_sigma": [
+          0.33540998788897625,
+          0.3490279348915486
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5024644869391582,
+            "nonnegative_T_contribution": 0.045114734312906433
+          },
+          {
+            "negative_T_contribution": -0.49535397027052525,
+            "nonnegative_T_contribution": 0.05027979941554992
+          }
+        ]
+      },
+      "4": {
+        "radius_low": 2.8,
+        "common_objects": 400,
+        "alignment_48": -0.6774912147369582,
+        "alignment_65": -0.6673976746841889,
+        "alignment_change_65_minus_48": 0.010093540052769301,
+        "conditional_object_se": 0.005592513332098577,
+        "original_alignment": -0.7055379898821218,
+        "negative_T_fraction": [
+          0.97,
+          0.9675
+        ],
+        "median_inferred_noise_sigma": [
+          0.33899204872534383,
+          0.3427448141420085
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.6701398890399242,
+            "nonnegative_T_contribution": -0.0073513256970344125
+          },
+          {
+            "negative_T_contribution": -0.6637457781577414,
+            "nonnegative_T_contribution": -0.0036518965264480245
+          }
+        ]
+      },
+      "5": {
+        "radius_low": 2.9,
+        "common_objects": 400,
+        "alignment_48": -0.7338997503956228,
+        "alignment_65": -0.7221163906251493,
+        "alignment_change_65_minus_48": 0.011783359770473512,
+        "conditional_object_se": 0.0112933798704501,
+        "original_alignment": -0.7300548683945822,
+        "negative_T_fraction": [
+          0.93875,
+          0.935
+        ],
+        "median_inferred_noise_sigma": [
+          0.33879665737425074,
+          0.3484665343630252
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.787911664441946,
+            "nonnegative_T_contribution": 0.05401191404632385
+          },
+          {
+            "negative_T_contribution": -0.7684937973857763,
+            "nonnegative_T_contribution": 0.04637740676062753
+          }
+        ]
+      },
+      "6": {
+        "radius_low": 3.0,
+        "common_objects": 400,
+        "alignment_48": -0.6519786037694718,
+        "alignment_65": -0.653229089442754,
+        "alignment_change_65_minus_48": -0.0012504856732822311,
+        "conditional_object_se": 0.02005853692517824,
+        "original_alignment": -0.6612641599576566,
+        "negative_T_fraction": [
+          0.87375,
+          0.8725
+        ],
+        "median_inferred_noise_sigma": [
+          0.33861104564761113,
+          0.3428529902013115
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.8757080398562412,
+            "nonnegative_T_contribution": 0.22372943608676968
+          },
+          {
+            "negative_T_contribution": -0.8741559273827194,
+            "nonnegative_T_contribution": 0.22092683793996587
+          }
+        ]
+      },
+      "7": {
+        "radius_low": 3.1,
+        "common_objects": 399,
+        "alignment_48": -0.4739315427959598,
+        "alignment_65": -0.4458061786332506,
+        "alignment_change_65_minus_48": 0.028125364162709166,
+        "conditional_object_se": 0.01949812512352297,
+        "original_alignment": -0.4710976587234454,
+        "negative_T_fraction": [
+          0.7568922305764411,
+          0.7431077694235589
+        ],
+        "median_inferred_noise_sigma": [
+          0.34032448089024864,
+          0.34688378728485625
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.8273241711352239,
+            "nonnegative_T_contribution": 0.35339262833926427
+          },
+          {
+            "negative_T_contribution": -0.800804660001292,
+            "nonnegative_T_contribution": 0.3549984813680413
+          }
+        ]
+      },
+      "8": {
+        "radius_low": 3.2,
+        "common_objects": 400,
+        "alignment_48": -0.025788039785428114,
+        "alignment_65": -0.02489762129739995,
+        "alignment_change_65_minus_48": 0.0008904184880281635,
+        "conditional_object_se": 0.022048286321458596,
+        "original_alignment": 0.055562387855527536,
+        "negative_T_fraction": [
+          0.61125,
+          0.60875
+        ],
+        "median_inferred_noise_sigma": [
+          0.34226828241982843,
+          0.3444539558934775
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.545751732308746,
+            "nonnegative_T_contribution": 0.5199636925233179
+          },
+          {
+            "negative_T_contribution": -0.5479445259012511,
+            "nonnegative_T_contribution": 0.5230469046038512
+          }
+        ]
+      },
+      "9": {
+        "radius_low": 3.3,
+        "common_objects": 400,
+        "alignment_48": -0.03404376141998526,
+        "alignment_65": -0.016643292475579205,
+        "alignment_change_65_minus_48": 0.017400468944406056,
+        "conditional_object_se": 0.016556492105722475,
+        "original_alignment": 0.09392642096000048,
+        "negative_T_fraction": [
+          0.56125,
+          0.55125
+        ],
+        "median_inferred_noise_sigma": [
+          0.3446484307831855,
+          0.35020057373039243
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.4833364344222385,
+            "nonnegative_T_contribution": 0.44929267300225323
+          },
+          {
+            "negative_T_contribution": -0.4610368837487191,
+            "nonnegative_T_contribution": 0.4443935912731399
+          }
+        ]
+      },
+      "10": {
+        "radius_low": 3.4,
+        "common_objects": 400,
+        "alignment_48": 0.11137798252182853,
+        "alignment_65": 0.10700256215388315,
+        "alignment_change_65_minus_48": -0.0043754203679453735,
+        "conditional_object_se": 0.012615220682280475,
+        "original_alignment": 0.14682008617217918,
+        "negative_T_fraction": [
+          0.425,
+          0.4275
+        ],
+        "median_inferred_noise_sigma": [
+          0.3454142716362838,
+          0.354228124234681
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.4090941400036515,
+            "nonnegative_T_contribution": 0.5204721225254801
+          },
+          {
+            "negative_T_contribution": -0.4013377694661719,
+            "nonnegative_T_contribution": 0.5083403316200552
+          }
+        ]
+      },
+      "11": {
+        "radius_low": 3.5,
+        "common_objects": 400,
+        "alignment_48": 0.2392573433836997,
+        "alignment_65": 0.25191053970656485,
+        "alignment_change_65_minus_48": 0.012653196322865157,
+        "conditional_object_se": 0.014379944920028524,
+        "original_alignment": 0.3179933382682612,
+        "negative_T_fraction": [
+          0.34,
+          0.34
+        ],
+        "median_inferred_noise_sigma": [
+          0.3533603387897122,
+          0.35403276659912986
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.32502416718150906,
+            "nonnegative_T_contribution": 0.5642815105652086
+          },
+          {
+            "negative_T_contribution": -0.3134505978273798,
+            "nonnegative_T_contribution": 0.5653611375339446
+          }
+        ]
+      }
+    },
+    "galsbi_case1000": {
+      "0": {
+        "radius_low": 2.4,
+        "common_objects": 180,
+        "alignment_48": -0.463399882406633,
+        "alignment_65": -0.45747079492368964,
+        "alignment_change_65_minus_48": 0.0059290874829433515,
+        "conditional_object_se": 0.011760038011254335,
+        "original_alignment": -0.44240186726335423,
+        "negative_T_fraction": [
+          0.8944444444444445,
+          0.8944444444444445
+        ],
+        "median_inferred_noise_sigma": [
+          0.6530743260133514,
+          0.6693039318718366
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5083218687857711,
+            "nonnegative_T_contribution": 0.04492198637913849
+          },
+          {
+            "negative_T_contribution": -0.5010796112187155,
+            "nonnegative_T_contribution": 0.04360881629502564
+          }
+        ]
+      },
+      "1": {
+        "radius_low": 2.5,
+        "common_objects": 400,
+        "alignment_48": -0.4820495484696414,
+        "alignment_65": -0.4604888723629269,
+        "alignment_change_65_minus_48": 0.02156067610671447,
+        "conditional_object_se": 0.009122580616716287,
+        "original_alignment": -0.45712191620688586,
+        "negative_T_fraction": [
+          0.94125,
+          0.935
+        ],
+        "median_inferred_noise_sigma": [
+          0.6672699981443686,
+          0.6697151973862567
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5104761881543963,
+            "nonnegative_T_contribution": 0.0284266396847551
+          },
+          {
+            "negative_T_contribution": -0.4963992969349905,
+            "nonnegative_T_contribution": 0.035910424572063566
+          }
+        ]
+      },
+      "2": {
+        "radius_low": 2.6,
+        "common_objects": 400,
+        "alignment_48": -0.5226919002409698,
+        "alignment_65": -0.509589499419845,
+        "alignment_change_65_minus_48": 0.013102400821124793,
+        "conditional_object_se": 0.016718801044648124,
+        "original_alignment": -0.4778840793809045,
+        "negative_T_fraction": [
+          0.90125,
+          0.9
+        ],
+        "median_inferred_noise_sigma": [
+          0.6673057550608069,
+          0.6707039955258296
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5743239480834574,
+            "nonnegative_T_contribution": 0.051632047842487976
+          },
+          {
+            "negative_T_contribution": -0.5667991955759131,
+            "nonnegative_T_contribution": 0.05720969615606827
+          }
+        ]
+      },
+      "3": {
+        "radius_low": 2.7,
+        "common_objects": 400,
+        "alignment_48": -0.30996421715633937,
+        "alignment_65": -0.29713643139503776,
+        "alignment_change_65_minus_48": 0.012827785761301613,
+        "conditional_object_se": 0.01635249540076381,
+        "original_alignment": -0.30626740137063224,
+        "negative_T_fraction": [
+          0.7875,
+          0.77875
+        ],
+        "median_inferred_noise_sigma": [
+          0.6572560554730128,
+          0.6693586107860117
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5425027170107662,
+            "nonnegative_T_contribution": 0.23253849985442684
+          },
+          {
+            "negative_T_contribution": -0.5264896576594528,
+            "nonnegative_T_contribution": 0.22935322626441482
+          }
+        ]
+      },
+      "4": {
+        "radius_low": 2.8,
+        "common_objects": 400,
+        "alignment_48": -0.20988077187435866,
+        "alignment_65": -0.19993848299395584,
+        "alignment_change_65_minus_48": 0.009942288880402828,
+        "conditional_object_se": 0.01621032967843001,
+        "original_alignment": -0.1946593227685717,
+        "negative_T_fraction": [
+          0.67875,
+          0.6725
+        ],
+        "median_inferred_noise_sigma": [
+          0.6625261481499585,
+          0.6653068475690795
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5530524419338146,
+            "nonnegative_T_contribution": 0.34317167005945587
+          },
+          {
+            "negative_T_contribution": -0.5366387475918382,
+            "nonnegative_T_contribution": 0.33670026459788244
+          }
+        ]
+      },
+      "5": {
+        "radius_low": 2.9,
+        "common_objects": 399,
+        "alignment_48": 0.10776741952544454,
+        "alignment_65": 0.10065213069833276,
+        "alignment_change_65_minus_48": -0.007115288827111779,
+        "conditional_object_se": 0.013202586054376172,
+        "original_alignment": 0.13238927878051773,
+        "negative_T_fraction": [
+          0.5263157894736842,
+          0.5200501253132832
+        ],
+        "median_inferred_noise_sigma": [
+          0.6610254118593469,
+          0.6690851421552317
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.42783249712316923,
+            "nonnegative_T_contribution": 0.5355999166486137
+          },
+          {
+            "negative_T_contribution": -0.42666452535270216,
+            "nonnegative_T_contribution": 0.527316656051035
+          }
+        ]
+      },
+      "6": {
+        "radius_low": 3.0,
+        "common_objects": 400,
+        "alignment_48": 0.3606117154316999,
+        "alignment_65": 0.34776766389055197,
+        "alignment_change_65_minus_48": -0.012844051541147927,
+        "conditional_object_se": 0.017847633154279955,
+        "original_alignment": 0.4791666584932453,
+        "negative_T_fraction": [
+          0.38125,
+          0.36375
+        ],
+        "median_inferred_noise_sigma": [
+          0.6719289095218726,
+          0.6714667544662113
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.3391127361642775,
+            "nonnegative_T_contribution": 0.6997244515959775
+          },
+          {
+            "negative_T_contribution": -0.33182688057515775,
+            "nonnegative_T_contribution": 0.6795945444657094
+          }
+        ]
+      },
+      "7": {
+        "radius_low": 3.1,
+        "common_objects": 400,
+        "alignment_48": 0.5406214575011686,
+        "alignment_65": 0.5569573276987222,
+        "alignment_change_65_minus_48": 0.01633587019755356,
+        "conditional_object_se": 0.014874793940765128,
+        "original_alignment": 0.6393574001252033,
+        "negative_T_fraction": [
+          0.26,
+          0.24625
+        ],
+        "median_inferred_noise_sigma": [
+          0.6726305968038981,
+          0.6778594165161266
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.20788511941649354,
+            "nonnegative_T_contribution": 0.7485065769176623
+          },
+          {
+            "negative_T_contribution": -0.19849891761560082,
+            "nonnegative_T_contribution": 0.7554562453143232
+          }
+        ]
+      },
+      "8": {
+        "radius_low": 3.2,
+        "common_objects": 400,
+        "alignment_48": 0.622679760922239,
+        "alignment_65": 0.6047432030242883,
+        "alignment_change_65_minus_48": -0.017936557897950678,
+        "conditional_object_se": 0.010745221574111353,
+        "original_alignment": 0.5409202277999117,
+        "negative_T_fraction": [
+          0.18125,
+          0.18
+        ],
+        "median_inferred_noise_sigma": [
+          0.6604715676402334,
+          0.6788182066198081
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.12352881745014488,
+            "nonnegative_T_contribution": 0.7462085783723839
+          },
+          {
+            "negative_T_contribution": -0.12290769613125792,
+            "nonnegative_T_contribution": 0.7276508991555459
+          }
+        ]
+      },
+      "9": {
+        "radius_low": 3.3,
+        "common_objects": 400,
+        "alignment_48": 0.6203218128641671,
+        "alignment_65": 0.6257119004956301,
+        "alignment_change_65_minus_48": 0.005390087631462981,
+        "conditional_object_se": 0.012152624100556038,
+        "original_alignment": 0.5962028597767473,
+        "negative_T_fraction": [
+          0.125,
+          0.12375
+        ],
+        "median_inferred_noise_sigma": [
+          0.6775341504214003,
+          0.6793297009562207
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.07668872133028216,
+            "nonnegative_T_contribution": 0.6970105341944492
+          },
+          {
+            "negative_T_contribution": -0.06712100863420505,
+            "nonnegative_T_contribution": 0.6928329091298353
+          }
+        ]
+      },
+      "10": {
+        "radius_low": 3.4,
+        "common_objects": 400,
+        "alignment_48": 0.5812824530007894,
+        "alignment_65": 0.5677196594906677,
+        "alignment_change_65_minus_48": -0.013562793510121685,
+        "conditional_object_se": 0.01308357197809108,
+        "original_alignment": 0.5568813736404515,
+        "negative_T_fraction": [
+          0.085,
+          0.085
+        ],
+        "median_inferred_noise_sigma": [
+          0.6608451519021656,
+          0.66841128257136
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.04401991663204313,
+            "nonnegative_T_contribution": 0.6253023696328324
+          },
+          {
+            "negative_T_contribution": -0.041062372336102396,
+            "nonnegative_T_contribution": 0.6087820318267699
+          }
+        ]
+      },
+      "11": {
+        "radius_low": 3.5,
+        "common_objects": 400,
+        "alignment_48": 0.6061672253878754,
+        "alignment_65": 0.6104580302464305,
+        "alignment_change_65_minus_48": 0.004290804858555153,
+        "conditional_object_se": 0.01515461972102501,
+        "original_alignment": 0.6617418725378815,
+        "negative_T_fraction": [
+          0.07,
+          0.07625
+        ],
+        "median_inferred_noise_sigma": [
+          0.669192151017914,
+          0.6750872142779666
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.018722040055907004,
+            "nonnegative_T_contribution": 0.6248892654437825
+          },
+          {
+            "negative_T_contribution": -0.018469707364305032,
+            "nonnegative_T_contribution": 0.6289277376107358
+          }
+        ]
+      }
+    },
+    "galsbi_case1080": {
+      "0": {
+        "radius_low": 2.4,
+        "common_objects": 180,
+        "alignment_48": -0.37122593994301645,
+        "alignment_65": -0.33151359447844386,
+        "alignment_change_65_minus_48": 0.039712345464572585,
+        "conditional_object_se": 0.02451561373740831,
+        "original_alignment": -0.3529996172782546,
+        "negative_T_fraction": [
+          0.8583333333333333,
+          0.8527777777777777
+        ],
+        "median_inferred_noise_sigma": [
+          0.6707311201426445,
+          0.6668518309095492
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.3851208348444607,
+            "nonnegative_T_contribution": 0.01389489490144391
+          },
+          {
+            "negative_T_contribution": -0.35878341616601006,
+            "nonnegative_T_contribution": 0.027269821687565976
+          }
+        ]
+      },
+      "1": {
+        "radius_low": 2.5,
+        "common_objects": 400,
+        "alignment_48": -0.522227456211834,
+        "alignment_65": -0.489233653214141,
+        "alignment_change_65_minus_48": 0.032993802997693,
+        "conditional_object_se": 0.012337081499467707,
+        "original_alignment": -0.5099131259289444,
+        "negative_T_fraction": [
+          0.93,
+          0.9225
+        ],
+        "median_inferred_noise_sigma": [
+          0.6578578298152666,
+          0.671768542809886
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5332787902397499,
+            "nonnegative_T_contribution": 0.011051334027916077
+          },
+          {
+            "negative_T_contribution": -0.5032043906576603,
+            "nonnegative_T_contribution": 0.013970737443519142
+          }
+        ]
+      },
+      "2": {
+        "radius_low": 2.6,
+        "common_objects": 400,
+        "alignment_48": -0.47908474687826513,
+        "alignment_65": -0.43894578119363137,
+        "alignment_change_65_minus_48": 0.040138965684633765,
+        "conditional_object_se": 0.020599441325477405,
+        "original_alignment": -0.4289316533946805,
+        "negative_T_fraction": [
+          0.88,
+          0.87
+        ],
+        "median_inferred_noise_sigma": [
+          0.658579570996109,
+          0.6701483279979674
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.5993888025329666,
+            "nonnegative_T_contribution": 0.12030405565470159
+          },
+          {
+            "negative_T_contribution": -0.5580217139764433,
+            "nonnegative_T_contribution": 0.11907593278281209
+          }
+        ]
+      },
+      "3": {
+        "radius_low": 2.7,
+        "common_objects": 400,
+        "alignment_48": -0.4484428508698763,
+        "alignment_65": -0.4045360948297569,
+        "alignment_change_65_minus_48": 0.0439067560401194,
+        "conditional_object_se": 0.021435379122897103,
+        "original_alignment": -0.3946877085033046,
+        "negative_T_fraction": [
+          0.83375,
+          0.8175
+        ],
+        "median_inferred_noise_sigma": [
+          0.6591828482214714,
+          0.6732506797162607
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.6425186469806876,
+            "nonnegative_T_contribution": 0.1940757961108115
+          },
+          {
+            "negative_T_contribution": -0.6108409140128516,
+            "nonnegative_T_contribution": 0.2063048191830947
+          }
+        ]
+      },
+      "4": {
+        "radius_low": 2.8,
+        "common_objects": 400,
+        "alignment_48": -0.10183391720312154,
+        "alignment_65": -0.07599626305367593,
+        "alignment_change_65_minus_48": 0.02583765414944561,
+        "conditional_object_se": 0.016171729634556188,
+        "original_alignment": -0.027334846566698823,
+        "negative_T_fraction": [
+          0.665,
+          0.65375
+        ],
+        "median_inferred_noise_sigma": [
+          0.6583506450696717,
+          0.6592079642653143
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.515934829907164,
+            "nonnegative_T_contribution": 0.41410091270404253
+          },
+          {
+            "negative_T_contribution": -0.4973003078687137,
+            "nonnegative_T_contribution": 0.42130404481503775
+          }
+        ]
+      },
+      "5": {
+        "radius_low": 2.9,
+        "common_objects": 400,
+        "alignment_48": 0.18222078830132854,
+        "alignment_65": 0.2195132296516429,
+        "alignment_change_65_minus_48": 0.03729244135031437,
+        "conditional_object_se": 0.021541021666699876,
+        "original_alignment": 0.2408262207325454,
+        "negative_T_fraction": [
+          0.505,
+          0.48375
+        ],
+        "median_inferred_noise_sigma": [
+          0.6769950174234755,
+          0.6782402105210596
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.3953607480721542,
+            "nonnegative_T_contribution": 0.5775815363734826
+          },
+          {
+            "negative_T_contribution": -0.3723667730415334,
+            "nonnegative_T_contribution": 0.5918800026931762
+          }
+        ]
+      },
+      "6": {
+        "radius_low": 3.0,
+        "common_objects": 400,
+        "alignment_48": 0.42897160175234184,
+        "alignment_65": 0.4225761960266016,
+        "alignment_change_65_minus_48": -0.006395405725740211,
+        "conditional_object_se": 0.0157656963645902,
+        "original_alignment": 0.3084561234054885,
+        "negative_T_fraction": [
+          0.38625,
+          0.3925
+        ],
+        "median_inferred_noise_sigma": [
+          0.6701725513946445,
+          0.6747872482729709
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.29603746149784443,
+            "nonnegative_T_contribution": 0.7250090632501864
+          },
+          {
+            "negative_T_contribution": -0.2963889464983955,
+            "nonnegative_T_contribution": 0.7189651425249971
+          }
+        ]
+      },
+      "7": {
+        "radius_low": 3.1,
+        "common_objects": 400,
+        "alignment_48": 0.5784522969618775,
+        "alignment_65": 0.5822803977624488,
+        "alignment_change_65_minus_48": 0.003828100800571277,
+        "conditional_object_se": 0.009904634818398197,
+        "original_alignment": 0.5784656673847446,
+        "negative_T_fraction": [
+          0.2375,
+          0.23125
+        ],
+        "median_inferred_noise_sigma": [
+          0.6661758815805081,
+          0.6719717881124818
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.17881824601896312,
+            "nonnegative_T_contribution": 0.7572705429808403
+          },
+          {
+            "negative_T_contribution": -0.17235744826866883,
+            "nonnegative_T_contribution": 0.7546378460311175
+          }
+        ]
+      },
+      "8": {
+        "radius_low": 3.2,
+        "common_objects": 399,
+        "alignment_48": 0.5832787506848408,
+        "alignment_65": 0.5730587805360996,
+        "alignment_change_65_minus_48": -0.010219970148741209,
+        "conditional_object_se": 0.014006372214748453,
+        "original_alignment": 0.6037801158837491,
+        "negative_T_fraction": [
+          0.18421052631578946,
+          0.17919799498746866
+        ],
+        "median_inferred_noise_sigma": [
+          0.6678862223073975,
+          0.6748229712511866
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.14122120176419203,
+            "nonnegative_T_contribution": 0.7244999524490328
+          },
+          {
+            "negative_T_contribution": -0.141160148913056,
+            "nonnegative_T_contribution": 0.714218929449155
+          }
+        ]
+      },
+      "9": {
+        "radius_low": 3.3,
+        "common_objects": 400,
+        "alignment_48": 0.5623624579123446,
+        "alignment_65": 0.5830260043841823,
+        "alignment_change_65_minus_48": 0.020663546471837657,
+        "conditional_object_se": 0.01568512053953876,
+        "original_alignment": 0.5630778762191155,
+        "negative_T_fraction": [
+          0.16625,
+          0.16375
+        ],
+        "median_inferred_noise_sigma": [
+          0.6701397961703095,
+          0.6703070209162016
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.09965541495166783,
+            "nonnegative_T_contribution": 0.6620178728640128
+          },
+          {
+            "negative_T_contribution": -0.08833615661660502,
+            "nonnegative_T_contribution": 0.6713621610007876
+          }
+        ]
+      },
+      "10": {
+        "radius_low": 3.4,
+        "common_objects": 400,
+        "alignment_48": 0.6258014196618553,
+        "alignment_65": 0.6352556287775154,
+        "alignment_change_65_minus_48": 0.009454209115660084,
+        "conditional_object_se": 0.010486986728611166,
+        "original_alignment": 0.67985312837301,
+        "negative_T_fraction": [
+          0.12375,
+          0.115
+        ],
+        "median_inferred_noise_sigma": [
+          0.6676933824006627,
+          0.6733767370903679
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.07313478367490397,
+            "nonnegative_T_contribution": 0.6989362033367593
+          },
+          {
+            "negative_T_contribution": -0.06518938332047342,
+            "nonnegative_T_contribution": 0.700445012097989
+          }
+        ]
+      },
+      "11": {
+        "radius_low": 3.5,
+        "common_objects": 400,
+        "alignment_48": 0.5317121308722966,
+        "alignment_65": 0.5238344535956583,
+        "alignment_change_65_minus_48": -0.00787767727663835,
+        "conditional_object_se": 0.013104521287798977,
+        "original_alignment": 0.5677592065969311,
+        "negative_T_fraction": [
+          0.07875,
+          0.075
+        ],
+        "median_inferred_noise_sigma": [
+          0.6861540990669941,
+          0.6831571137807249
+        ],
+        "T_branch_alignment_contributions": [
+          {
+            "negative_T_contribution": -0.04377062234547032,
+            "nonnegative_T_contribution": 0.575482753217767
+          },
+          {
+            "negative_T_contribution": -0.04833892828187041,
+            "nonnegative_T_contribution": 0.5721733818775285
+          }
+        ]
+      }
+    }
+  }
+}

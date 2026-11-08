@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "definition": "Synthetic implementation check, not scientific evidence",
+  "checks": [
+    "Known fixed coefficients reproduce both directions of all four observed edges",
+    "Zero neighbour coefficients imply zero change",
+    "Forward-inverse roundtrip"
+  ]
+}

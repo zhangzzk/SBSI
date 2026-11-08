@@ -1,0 +1,202 @@
+{
+  "cases": [
+    {
+      "case": 1000,
+      "sample": 8000,
+      "pool": 141652,
+      "response_old_repeat0_repeat1": [
+        0.8918794268946527,
+        0.9140092990890769,
+        0.9226558048411534
+      ],
+      "legs": [
+        {
+          "leg": 0,
+          "selected_counts": [
+            7839,
+            7838,
+            7838
+          ],
+          "usability_changed_from_old": [
+            1,
+            1
+          ],
+          "finite_shape_change_rms": [
+            0.21777245588930252,
+            0.2155922365896494
+          ]
+        },
+        {
+          "leg": 1,
+          "selected_counts": [
+            7851,
+            7851,
+            7850
+          ],
+          "usability_changed_from_old": [
+            0,
+            1
+          ],
+          "finite_shape_change_rms": [
+            0.22487784285801066,
+            0.21777249010214306
+          ]
+        }
+      ]
+    },
+    {
+      "case": 1040,
+      "sample": 8000,
+      "pool": 141076,
+      "response_old_repeat0_repeat1": [
+        1.0153318831577698,
+        0.8771258050957659,
+        0.9443590953209331
+      ],
+      "legs": [
+        {
+          "leg": 0,
+          "selected_counts": [
+            7848,
+            7850,
+            7850
+          ],
+          "usability_changed_from_old": [
+            2,
+            2
+          ],
+          "finite_shape_change_rms": [
+            0.2111374094278707,
+            0.21705572969906808
+          ]
+        },
+        {
+          "leg": 1,
+          "selected_counts": [
+            7839,
+            7839,
+            7837
+          ],
+          "usability_changed_from_old": [
+            0,
+            2
+          ],
+          "finite_shape_change_rms": [
+            0.21830238421729795,
+            0.20964693953010546
+          ]
+        }
+      ]
+    },
+    {
+      "case": 1080,
+      "sample": 8000,
+      "pool": 141920,
+      "response_old_repeat0_repeat1": [
+        0.8250906868002719,
+        0.852795275011452,
+        1.0082688399061557
+      ],
+      "legs": [
+        {
+          "leg": 0,
+          "selected_counts": [
+            7847,
+            7843,
+            7844
+          ],
+          "usability_changed_from_old": [
+            4,
+            3
+          ],
+          "finite_shape_change_rms": [
+            0.22568433605283356,
+            0.22628207279618903
+          ]
+        },
+        {
+          "leg": 1,
+          "selected_counts": [
+            7856,
+            7858,
+            7856
+          ],
+          "usability_changed_from_old": [
+            2,
+            2
+          ],
+          "finite_shape_change_rms": [
+            0.22575519453626589,
+            0.21883517332846839
+          ]
+        }
+      ]
+    },
+    {
+      "case": 1120,
+      "sample": 8000,
+      "pool": 142711,
+      "response_old_repeat0_repeat1": [
+        0.9007204457880804,
+        0.8885514348103356,
+        0.9106579080985687
+      ],
+      "legs": [
+        {
+          "leg": 0,
+          "selected_counts": [
+            7846,
+            7846,
+            7847
+          ],
+          "usability_changed_from_old": [
+            2,
+            1
+          ],
+          "finite_shape_change_rms": [
+            0.21848861651852955,
+            0.21906369634908934
+          ]
+        },
+        {
+          "leg": 1,
+          "selected_counts": [
+            7850,
+            7852,
+            7853
+          ],
+          "usability_changed_from_old": [
+            2,
+            3
+          ],
+          "finite_shape_change_rms": [
+            0.21930449046412817,
+            0.22357353360401444
+          ]
+        }
+      ]
+    }
+  ],
+  "definition": "Response=(selected mean g1 plus - selected mean g1 minus)/.04. Horvitz-Thompson weighted sampled union. Differences are on the same sampled IDs and original pixels.",
+  "limitations": "Four cases; two seeded repetitions plus original entropy-seeded fit. Fitter-noise projection uses first-order ratio influence and independent per-object optimizer streams; it excludes image noise, flow integration, scene variance and systematics. Sample change SE conditions on the fitted catalogues; paired case bootstrap describes only these four scenes.",
+  "differences": {
+    "repeat0_minus_original": {
+      "value": -0.024918836699330704,
+      "paired_four_case_bootstrap_se": 0.03334436841042433,
+      "conditional_subsampling_se": 0.04263271600139596,
+      "estimated_single_fit_full_catalogue_se": 0.0073698411531088245
+    },
+    "repeat1_minus_original": {
+      "value": 0.038327755832793464,
+      "paired_four_case_bootstrap_se": 0.04660941834396495,
+      "conditional_subsampling_se": 0.04156301005607429,
+      "estimated_single_fit_full_catalogue_se": 0.00718471304693958
+    },
+    "repeat1_minus_repeat0": {
+      "value": 0.06324659253212417,
+      "paired_four_case_bootstrap_se": 0.028861605949385187,
+      "conditional_subsampling_se": 0.04302356561789998,
+      "estimated_single_fit_full_catalogue_se": 0.00743742637760133
+    }
+  }
+}

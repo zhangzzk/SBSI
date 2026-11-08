@@ -1,0 +1,14 @@
+{
+  "four_remaining": {
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Invalid job id specified for job 17807965\n",
+    "state": ""
+  },
+  "full_remaining": {
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "Invalid job id specified for job 17807972\n",
+    "state": ""
+  }
+}

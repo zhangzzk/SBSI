@@ -1,0 +1,21 @@
+{
+  "checked_utc": "2026-11-04T14:59:49.506501+00:00",
+  "first_cases": [
+    {
+      "case": 1000,
+      "seconds": 320.63441510801204,
+      "parents": 883944,
+      "finite_outputs": true,
+      "simulation_exact_replay": true
+    },
+    {
+      "case": 1040,
+      "seconds": 321.76495210599387,
+      "parents": 883991,
+      "finite_outputs": true,
+      "simulation_exact_replay": true
+    }
+  ],
+  "status": "two cip workers completed first case; inter worker8 loaded model and running, worker12 queued; full result pending",
+  "scheduled_status_job": "17730548"
+}

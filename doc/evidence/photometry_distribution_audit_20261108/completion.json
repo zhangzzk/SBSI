@@ -1,0 +1,40 @@
+{
+  "status": "complete",
+  "jobs": {
+    "evaluate": 17833751,
+    "report": 17833754,
+    "dependency": "afterok:17833751",
+    "max_gpus": 1,
+    "max_cpus": 4,
+    "broad_array_still_held": 17788286,
+    "automated_followup": "disabled",
+    "state": "All three jobs COMPLETED 0:0; canonical replay and all report gates passed",
+    "evaluate_state": "COMPLETED 0:0; 3m27s; both 500k-row splits complete",
+    "plot": 17833774,
+    "plot_dependency": "afterok:17833754",
+    "report_state": "COMPLETED 0:0; 4m36s",
+    "plot_state": "COMPLETED 0:0; 6s; both PNGs visually inspected"
+  },
+  "outputs_sha256": {
+    "report.json": "ac7416609f6a5f15139b70ca98ee4ad982edfe220032fb91f5fc92a97b8f5b18",
+    "results.md": "05a3c986f05fd1653055dde4a0baddae7c5cbab85e7c056d4d86382fa736798a",
+    "findings.md": "af0e77457f93188c654add0f06fc00366a7bba6fdd961eb490f5e0c502f473a4",
+    "localization.png": "76143f217b2025a8f3a988a529fd84225636bb3225877c3b0daef01fc971c3c3",
+    "localization.pdf": "f258704c6598fb71bd87b1148de6cd898c2a914d641d750dcf71f67031c4c135",
+    "distribution_checks.png": "55dbdbe8cd99fda87db109e3990e0090fa41172d2842dfde1ecb294c999e21cc",
+    "distribution_checks.pdf": "5fb98a71c545f343b4d7287cac98b4d2647c1bf7bfbf27f1c4078f0f0dd75206",
+    "plot.py": "e1101968e416fe6f3429869b3b3bb7c378319e6235f99b5956726a48ee98ccd3",
+    "run_plot.sh": "a0403c4c4e4225e87dc3b16ea373eaf8d4e3ec2b45c86d82a7a906131c0908c2",
+    "jobs.json": "69516774610606d3967dfe2a42220313da5cdec2109ac91289a718e46bd892d1"
+  },
+  "checks": [
+    "canonical mass and weighted score replay: four arms, both splits",
+    "exact photometry-only versus joint draws",
+    "row versus case reductions",
+    "marginal decomposition closure",
+    "25-cell normalized score closure, including all jackknife replicates",
+    "IID rank null fixtures",
+    "zero missing contexts, ties and numerical photometry underflows",
+    "both rendered plots visually inspected"
+  ]
+}

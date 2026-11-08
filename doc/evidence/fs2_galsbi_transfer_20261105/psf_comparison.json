@@ -1,0 +1,78 @@
+{
+  "fs2": {
+    "psf_path": "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case40_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+    "shape": [
+      48,
+      48
+    ],
+    "sum": 0.9999999556555395,
+    "finite_stamp_second_moment_arcsec2": 0.7444315058631793,
+    "pixelized_half_light_arcsec": 0.5099019513592785,
+    "analytic_moffat_half_light_arcsec": 0.5267824664816263,
+    "untruncated_analytic_moffat_second_moment_arcsec2": 1.6263466033851086,
+    "gaussian_fits": [
+      {
+        "psf_pars": [
+          0.9525714255317715,
+          0.10000000000000005,
+          0.10000000000000005,
+          0.24687437124736633,
+          -4.594420157943937e-19,
+          0.24687437124736636
+        ],
+        "T": 0.49374874249473266,
+        "galaxy_fit_exception": null
+      },
+      {
+        "psf_pars": [
+          0.9525714255317715,
+          0.10000000000000006,
+          0.10000000000000003,
+          0.24687437124736633,
+          -1.2016517800298028e-18,
+          0.24687437124736636
+        ],
+        "T": 0.49374874249473266,
+        "galaxy_fit_exception": null
+      }
+    ]
+  },
+  "galsbi": {
+    "psf_path": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1000_0.02/real0/images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits",
+    "shape": [
+      48,
+      48
+    ],
+    "sum": 0.9999999956835737,
+    "finite_stamp_second_moment_arcsec2": 0.6085565168299186,
+    "pixelized_half_light_arcsec": 0.5099019513592785,
+    "analytic_moffat_half_light_arcsec": 0.4852462311055413,
+    "untruncated_analytic_moffat_second_moment_arcsec2": 0.8446462476651457,
+    "gaussian_fits": [
+      {
+        "psf_pars": [
+          0.9594171500040153,
+          0.09999999999999995,
+          0.10000000000000007,
+          0.20889751784185664,
+          -5.275652259723829e-19,
+          0.2088975178418564
+        ],
+        "T": 0.417795035683713,
+        "galaxy_fit_exception": null
+      },
+      {
+        "psf_pars": [
+          0.9594171500040153,
+          0.09999999999999996,
+          0.10000000000000006,
+          0.20889751784185664,
+          3.0513366207558622e-18,
+          0.20889751784185645
+        ],
+        "T": 0.4177950356837131,
+        "galaxy_fit_exception": null
+      }
+    ]
+  }
+}

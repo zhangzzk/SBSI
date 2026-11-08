@@ -1,0 +1,62 @@
+{
+  "prepare": "17788350",
+  "prepare_failed": "17788090",
+  "train": "17788119",
+  "training_report": "17788251",
+  "constant_pilot": "17788252",
+  "constant_remaining": "17788286",
+  "constant_pilot_report": "17788287",
+  "constant_report": "17788351",
+  "check": "17788449",
+  "training_max_gpus": 3,
+  "combined_gpu_ceiling": 6,
+  "drain_dependencies": [],
+  "source_sha256": {
+    "findings.md": "a420cd90b9e97677784f69cafc5f8eee983c429f827dab55a9312cfa4a8f481c",
+    "report_constant.py": "8b382c66790be4a9ba0bea3ce26b4ca9441e2e6555012714cf93e70d4d0f4ca3",
+    "run_report.sh": "f68c3cea054411a064ae3827421920a239881d77ad1f293ba832b9a51b87e441",
+    "manifest.json": "28333caaed56f66b0a0ee60e44a94ec38f238b5f0e7f47e04ec7169d3d14223d",
+    "check.py": "e2e602fe0688ae25a97c5feb14e7c0f7b5fcbed6902eaf88d1a8a1e0cfe9ec6a",
+    "prepare.py": "67d5e1dafe0645e0eddb5e20af27dc667fb96e2dbde4532eef3c62e28abd6ceb",
+    "evaluate_constant.py": "e35e97992359d9dc2f6c676a7d1a641341bcb8789c172230df1df8119195d4e7",
+    "run_prepare.sh": "0689b9a2e8e6da53fc2fcf1092aabc239c72848fd19240a514ce13e595466264",
+    "train.py": "1e2dde7eb544f359259609bfc021de237cfad653947f57208ee9fe69218cce46",
+    "release_scan.py": "e9cc1831535867ea319909914c22a0bdffebb211f267bdd652483eac7368cad8",
+    "run_train.sh": "15e5a8ba2f3ed55527680470b83965ab9774a3bea1b01e7ab19bde4b5b67be2d",
+    "rule.md": "9227b1990135e6740f78fcec23e350ac5e5d303e23e6c88ad78b034ca93e3099",
+    "report_training.py": "09a08d615b489572771167619a5634ee340d92ea6dbc6de451240fb5bf2a44ce",
+    "run_constant.sh": "906b8489afabe656e5826f02d91d93c01bc792a7c97bc696e59e2e7db719466f"
+  },
+  "release_scan": "17788490",
+  "drain_note": "All originally running scan tasks exited; training depends only on successful preparation. Broad scan cancelled after device-dependent replay failures.",
+  "resources_amendment": "A40-16GB with24GB host memory; full A40 allocation would wait hours; tensor footprint fits16GB and three workers passed gradients",
+  "portable_draw_verification": [
+    "17788989",
+    "17788990",
+    "17789022"
+  ],
+  "release_scan_cancelled": "17788490",
+  "interim_report": "17803908",
+  "reporting_amendment": "Optional interim phase uses only cases complete in every arm and both axes, selected by completion receipts before reading numerical results; full40-case protocol unchanged.",
+  "reporting_source_sha256": {
+    "report_constant.py": "2b495531bd858a73652797ce8411f31c1f050bf42b0956c82d96b31479466f2c",
+    "run_report.sh": "f81a938c519f715edf24ef7b9aee0c07a35e6e69d0bb953f4756b70665f0f38c"
+  },
+  "followup_check": "17803918",
+  "interim_report_status": "COMPLETED exit0;19 matched cases;full40-case evaluation unchanged",
+  "constant_evaluation_pause": {
+    "utc": "2026-11-06T16:15:27.449172+00:00",
+    "array": "17788286",
+    "state": "JobHeldUser for pending tasks",
+    "pending_tasks": "221-399",
+    "running_tasks_allowed_to_finish": [
+      "17788286_217",
+      "17788286_218",
+      "17788286_219",
+      "17788286_220"
+    ],
+    "owner_request": "Pause earlier evaluations while focused diagnostics continue",
+    "automatic_restore_cancelled": "17804373",
+    "resume_requires_owner_request": true
+  }
+}

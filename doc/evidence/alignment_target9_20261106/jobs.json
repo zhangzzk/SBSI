@@ -1,0 +1,28 @@
+{
+  "pilot": "17787232",
+  "remaining": "17787261",
+  "pilot_report": "17787262",
+  "report": "17787293",
+  "check": "17787294",
+  "depends_on_radius_scan": null,
+  "gpu_ceiling": 6,
+  "source_sha256": {
+    "run.sh": "19e97d2111fea4e584a7608ee9da5ffec7d854707b6854fcb6e2c3596f55b50b",
+    "run_report.sh": "9d6b6e045fb7aa35c0a8f6e03c79aad20709e34954bf7c38e09072877e5845b7",
+    "evaluate.py": "a7f0da72d8192e0818b6f3b0382d866ceb6798d7eabf8a6e122e50a651469f1a",
+    "manifest.json": "a1a36c19ee003104ac1182ae3ee03d38de666821f2d7513f73ba8527c6091bec",
+    "report.py": "63493071b916e9eae74943a2b30c8a2fc52f39f1e82861febf1bc437a8a8ef7b",
+    "findings.md": "5dd4e051afc938c5d5ca6d3a09c0afff1038cee7becad638c4a7eb61923f9a3d",
+    "portable_draws.py": "7a7b916b4da5113f406c73ef56d7537927133109587df1c3767023d1103ad086",
+    "rule.md": "73ed424ea050eb60c8015fe3cfb5c4dd5da2b61cbc83871948c6d4db3367c292",
+    "verify_devices.py": "a266c5aca9ff404b8680c4f577cca255edbd09334f1bd6261a73fe4bf7a401e8",
+    "check.py": "2b535efb65dc685361855cb2dae98724cb7778ce4ccbca2ba6ec4642cf8823f0"
+  },
+  "additional_pilot_dependency": "17788119:17789022",
+  "dependency_reason": "Preserve six-GPU ceiling during matched continuation training",
+  "superseded_scan_dependency": "17786000",
+  "device_a40": "17788989",
+  "device_rtx": "17788990",
+  "device_compare": "17789022",
+  "latent_rng": "NumPy PCG64 on CPU, float32, antithetic"
+}

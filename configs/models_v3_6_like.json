@@ -1,0 +1,104 @@
+{
+  "format": "sbsi_model_set_v1",
+  "name": "V3.6-like",
+  "status": "retained development model; investigation stopped by owner 2026-09-20",
+  "configured_likelihood": false,
+  "source_manifest": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_candidate_manifest.json",
+    "sha256": "352a9cd9e0880440ba138794f0be5a567be89680f7a79a310a0ecd2ef3f62573"
+  },
+  "flow": {
+    "root": "SBSI_CACHE_DIR",
+    "path": "flow_shape_augmentation_20260918_v1/joint_probability_refinement_full/selected.pt",
+    "sha256": "5434cfafb94ecb169b8b6a012752191bb191b82a787b196de8ed6dac2f1501a5",
+    "selection": "common-descent probability-constrained refinement, original selected step2"
+  },
+  "classifier": {
+    "root": "SBSI_CACHE_DIR",
+    "path": "scene_classifier_geometry_20260918_v1/smooth_classifier_full/selected.pt",
+    "sha256": "ad975edf7020aacce00ee3efcc30353a87c5bc1eec030b2017f67369c3c78f3c",
+    "training_seed": 20260913,
+    "selected_epoch": 99,
+    "checkpoint_selection": "minimum mean-case tuning BCE",
+    "feature_contract": "8 original context features +5 state-major radial annuli +4 state-major Gaussian radial sums at scales0.5,1,2,4"
+  },
+  "emulator": {
+    "root": "BLENDEMU_RUNS_DIR",
+    "path": "disk_response_moment_20260918_v1/model/model.json",
+    "sha256": "194c1d11b67d6fd52039060270663e8e1cd610b478b9e9a66e34271701761fe7",
+    "metadata_path": "disk_response_moment_20260918_v1/model/metadata.json",
+    "metadata_sha256": "e9c28e921fa0430d4ef5feef9cb1d0954c4431b2258b5edfc0ed7c99fe59b589",
+    "backend": "disk_response_moment",
+    "composition": "mobius",
+    "response_coordinate": "disk_velocity"
+  },
+  "population": "generated secondary-role true r<26 parent, rendered identities; detection/usability independently modeled on each shear leg",
+  "primary_selection": {
+    "measured_flux_radius_arcsec_strictly_greater_than": 0.6,
+    "measured_flux_radius_pixels_strictly_greater_than": 3.0,
+    "MAG_AUTO_strictly_less_than": 25.8,
+    "independent_selection_per_leg": true
+  },
+  "joint_bias_definition": "100*(R_measured/(R_flow+R_blend)-1), percent",
+  "results": {
+    "fresh_g1": {
+      "m_percent": 0.3471677455221256,
+      "case_bootstrap_se_pp": 0.817219850999685,
+      "case_count": 4,
+      "axis": 1,
+      "h": 0.02,
+      "draws": 64,
+      "latent_seed": 7301,
+      "result": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_joint_fresh_g1.json",
+      "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_joint_fresh_g1_comparison.json"
+    },
+    "fresh_g2": {
+      "m_percent": -0.4434300133191016,
+      "case_bootstrap_se_pp": 0.7949244708125687,
+      "case_count": 4,
+      "axis": 2,
+      "h": 0.02,
+      "draws": 64,
+      "latent_seed": 7301,
+      "result": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_joint_fresh_g2.json",
+      "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_joint_fresh_g2_comparison.json"
+    },
+    "main": {
+      "m_percent": -0.1999793870473443,
+      "case_bootstrap_se_pp": 0.2636489700585995,
+      "case_count": 80,
+      "axis": 1,
+      "h": 0.02,
+      "draws": 64,
+      "latent_seed": 7301,
+      "result": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_joint_main.json",
+      "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_joint_main_comparison.json"
+    },
+    "independent": {
+      "m_percent": 0.4024740064903387,
+      "case_bootstrap_se_pp": 0.18866362909442963,
+      "case_count": 40,
+      "axis": 1,
+      "h": 0.05,
+      "draws": 64,
+      "latent_seed": 7301,
+      "result": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_joint_independent.json",
+      "receipt": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/scene_classifier_geometry_20260918_v1/smooth_joint_independent_comparison.json"
+    }
+  },
+  "independent_validation": {
+    "status": "cancelled by owner before evaluation",
+    "complete_scenes": 34,
+    "declared_scenes": 40,
+    "cases": "22000\u201322039",
+    "result_available": false
+  },
+  "limitations": [
+    "Existing results are development evidence; no untouched two-axis result was produced.",
+    "Case-bootstrap errors exclude training and finite-draw uncertainty.",
+    "Tested latent, classifier, flow-refinement and emulator repeats are retained separately; models are not averaged.",
+    "Full independent flow pretraining was not repeated.",
+    "Cross-response and absolute-density residuals remain documented.",
+    "The configured additive-response likelihood does not implement this disk composition or the state-dependent 17-input classifier."
+  ]
+}

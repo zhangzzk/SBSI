@@ -1,0 +1,5 @@
+{
+  "direct_scalar_checks": 60,
+  "comparison_sha256": "93fd6237fa9071bff726b018b44a1027b4e377e13c8fe6c8bbdac9d9bd366bbf",
+  "scope": "Weighted-model paired cut contrasts, mean and half-difference point/jackknife values; control cache receipts and historical replay checked in scheduled comparison."
+}

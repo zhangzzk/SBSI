@@ -1,0 +1,8 @@
+{
+  "old_hard_simulation_halftrace": 0.7277161635668159,
+  "new_simulation_halftrace": 0.7277161635668168,
+  "simulation_absolute_replay_error": 8.881784197001252e-16,
+  "new_measured_reference_model_halftrace": 0.7199842652475275,
+  "old_model_halftrace": 0.7197287891907289,
+  "note": "Model streams differ: previous 16 draws versus two independent banks of 16 in this audit. Own normalization differs from measured-reference; use same definition for replay."
+}

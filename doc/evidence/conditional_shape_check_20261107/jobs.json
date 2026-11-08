@@ -1,0 +1,10 @@
+{
+  "job": 17821432,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 37,
+  "gpus": 1,
+  "cpus": 4,
+  "audit": "audit.json",
+  "broad_array_still_held": 17788286
+}

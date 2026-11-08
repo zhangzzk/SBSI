@@ -1,0 +1,431 @@
+{
+  "utc": "2026-11-05T05:24:30.682970+00:00",
+  "jobs": {
+    "prepare": 17750383,
+    "mixed_images": 17750385,
+    "control_image": 17750387,
+    "model": 17750397,
+    "control_check": 17750442,
+    "reduce": 17750443,
+    "fit_audit": 17750449,
+    "fit_reduce": 17750462,
+    "two_hour_status": 17750478,
+    "environment_preflight": 17750489,
+    "final_status": 17750490,
+    "fit_flags": 17750506,
+    "fit_details": 17750514,
+    "fit_modes": 17750533,
+    "fit_parameters": 17750545,
+    "fit_parameters_reduce": 17750548
+  },
+  "queue": {
+    "returncode": 0,
+    "stdout": "               JOBID                           NAME        STATE         TIME NODELIST(REASON)\n            17750443              sbsi_split_reduce      PENDING         0:00 (Dependency)\n            17750490        sbsi_split_final_status      PENDING         0:00 (Dependency)\n          17750385_0              sbsi_split_images      RUNNING      2:17:18 met-cl-lx018\n          17750385_1              sbsi_split_images      RUNNING      2:17:18 th-cl-cappm18\n          17750385_2              sbsi_split_images      RUNNING      2:17:18 cip-cl-compute6\n          17750385_3              sbsi_split_images      RUNNING      2:17:18 cip-cl-compute7\n          17750385_4              sbsi_split_images      RUNNING      2:17:18 cip-cl-compute7\n          17750385_5              sbsi_split_images      RUNNING      2:17:18 cip-cl-computeb\n          17750385_6              sbsi_split_images      RUNNING      2:17:18 cip-cl-computeb\n          17750385_7              sbsi_split_images      RUNNING      2:17:18 th-cl-hua11\n            17750478              sbsi_split_status      RUNNING         0:01 met-cl-lx017\n",
+    "stderr": ""
+  },
+  "accounting": {
+    "returncode": 0,
+    "stdout": "JobID|JobName|State|ExitCode|Elapsed|MaxRSS\n17750383|sbsi_split_prep|COMPLETED|0:0|00:00:17|\n17750383.batch|batch|COMPLETED|0:0|00:00:17|0\n17750383.extern|extern|COMPLETED|0:0|00:00:17|0\n17750385_0|sbsi_split_images|RUNNING|0:0|02:17:19|\n17750385_0.batch|batch|RUNNING|0:0|02:17:19|\n17750385_0.extern|extern|RUNNING|0:0|02:17:19|\n17750385_1|sbsi_split_images|RUNNING|0:0|02:17:19|\n17750385_1.batch|batch|RUNNING|0:0|02:17:19|\n17750385_1.extern|extern|RUNNING|0:0|02:17:19|\n17750385_2|sbsi_split_images|RUNNING|0:0|02:17:19|\n17750385_2.batch|batch|RUNNING|0:0|02:17:19|\n17750385_2.extern|extern|RUNNING|0:0|02:17:19|\n17750385_3|sbsi_split_images|RUNNING|0:0|02:17:19|\n17750385_3.batch|batch|RUNNING|0:0|02:17:19|\n17750385_3.extern|extern|RUNNING|0:0|02:17:19|\n17750385_4|sbsi_split_images|RUNNING|0:0|02:17:19|\n17750385_4.batch|batch|RUNNING|0:0|02:17:19|\n17750385_4.extern|extern|RUNNING|0:0|02:17:19|\n17750385_5|sbsi_split_images|RUNNING|0:0|02:17:19|\n17750385_5.batch|batch|RUNNING|0:0|02:17:19|\n17750385_5.extern|extern|RUNNING|0:0|02:17:19|\n17750385_6|sbsi_split_images|RUNNING|0:0|02:17:19|\n17750385_6.batch|batch|RUNNING|0:0|02:17:19|\n17750385_6.extern|extern|RUNNING|0:0|02:17:19|\n17750385_7|sbsi_split_images|RUNNING|0:0|02:17:19|\n17750385_7.batch|batch|RUNNING|0:0|02:17:19|\n17750385_7.extern|extern|RUNNING|0:0|02:17:19|\n17750387|sbsi_split_control|COMPLETED|0:0|01:13:09|\n17750387.batch|batch|COMPLETED|0:0|01:13:09|2227412K\n17750387.extern|extern|COMPLETED|0:0|01:13:09|0\n17750397_0|sbsi_split_model|COMPLETED|0:0|00:05:46|\n17750397_0.batch|batch|COMPLETED|0:0|00:05:46|2878140K\n17750397_0.extern|extern|COMPLETED|0:0|00:05:46|0\n17750397_1|sbsi_split_model|COMPLETED|0:0|00:05:37|\n17750397_1.batch|batch|COMPLETED|0:0|00:05:37|6344392K\n17750397_1.extern|extern|COMPLETED|0:0|00:05:37|104K\n17750397_2|sbsi_split_model|COMPLETED|0:0|00:05:21|\n17750397_2.batch|batch|COMPLETED|0:0|00:05:21|2903708K\n17750397_2.extern|extern|COMPLETED|0:0|00:05:21|88K\n17750397_3|sbsi_split_model|COMPLETED|0:0|00:05:40|\n17750397_3.batch|batch|COMPLETED|0:0|00:05:40|2874252K\n17750397_3.extern|extern|COMPLETED|0:0|00:05:40|64K\n17750442|sbsi_split_control_check|COMPLETED|0:0|00:00:14|\n17750442.batch|batch|COMPLETED|0:0|00:00:14|0\n17750442.extern|extern|COMPLETED|0:0|00:00:14|0\n17750443|sbsi_split_reduce|PENDING|0:0|00:00:00|\n17750449_0|sbsi_fit_audit|COMPLETED|0:0|00:07:48|\n17750449_0.batch|batch|COMPLETED|0:0|00:07:48|496652K\n17750449_0.extern|extern|COMPLETED|0:0|00:07:48|0\n17750449_1|sbsi_fit_audit|COMPLETED|0:0|00:07:50|\n17750449_1.batch|batch|COMPLETED|0:0|00:07:50|492580K\n17750449_1.extern|extern|COMPLETED|0:0|00:07:50|0\n17750449_2|sbsi_fit_audit|COMPLETED|0:0|00:07:49|\n17750449_2.batch|batch|COMPLETED|0:0|00:07:49|492584K\n17750449_2.extern|extern|COMPLETED|0:0|00:07:49|0\n17750449_3|sbsi_fit_audit|COMPLETED|0:0|00:08:13|\n17750449_3.batch|batch|COMPLETED|0:0|00:08:13|493104K\n17750449_3.extern|extern|COMPLETED|0:0|00:08:13|0\n17750449_4|sbsi_fit_audit|COMPLETED|0:0|00:08:20|\n17750449_4.batch|batch|COMPLETED|0:0|00:08:20|492592K\n17750449_4.extern|extern|COMPLETED|0:0|00:08:20|0\n17750449_5|sbsi_fit_audit|COMPLETED|0:0|00:08:11|\n17750449_5.batch|batch|COMPLETED|0:0|00:08:11|493412K\n17750449_5.extern|extern|COMPLETED|0:0|00:08:11|0\n17750449_6|sbsi_fit_audit|COMPLETED|0:0|00:08:03|\n17750449_6.batch|batch|COMPLETED|0:0|00:08:03|493268K\n17750449_6.extern|extern|COMPLETED|0:0|00:08:03|0\n17750449_7|sbsi_fit_audit|COMPLETED|0:0|00:08:03|\n17750449_7.batch|batch|COMPLETED|0:0|00:08:03|492940K\n17750449_7.extern|extern|COMPLETED|0:0|00:08:03|0\n17750462|sbsi_fit_reduce|COMPLETED|0:0|00:00:01|\n17750462.batch|batch|COMPLETED|0:0|00:00:01|0\n17750462.extern|extern|COMPLETED|0:0|00:00:01|0\n17750478|sbsi_split_status|RUNNING|0:0|00:00:02|\n17750478.batch|batch|RUNNING|0:0|00:00:02|\n17750478.extern|extern|RUNNING|0:0|00:00:02|\n17750489|sbsi_split_preflight|COMPLETED|0:0|00:00:27|\n17750489.batch|batch|COMPLETED|0:0|00:00:27|0\n17750489.extern|extern|COMPLETED|0:0|00:00:27|0\n17750490|sbsi_split_final_status|PENDING|0:0|00:00:00|\n17750506|sbsi_fit_flags|COMPLETED|0:0|00:01:41|\n17750506.batch|batch|COMPLETED|0:0|00:01:41|295456K\n17750506.extern|extern|COMPLETED|0:0|00:01:41|0\n17750514|sbsi_fit_details|COMPLETED|0:0|00:00:02|\n17750514.batch|batch|COMPLETED|0:0|00:00:02|0\n17750514.extern|extern|COMPLETED|0:0|00:00:02|0\n17750533|sbsi_fit_modes|COMPLETED|0:0|00:00:29|\n17750533.batch|batch|COMPLETED|0:0|00:00:29|0\n17750533.extern|extern|COMPLETED|0:0|00:00:29|0\n17750545|sbsi_fit_parameters|COMPLETED|0:0|00:01:26|\n17750545.batch|batch|COMPLETED|0:0|00:01:26|295748K\n17750545.extern|extern|COMPLETED|0:0|00:01:26|0\n17750548|sbsi_fit_parameters_reduce|COMPLETED|0:0|00:00:01|\n17750548.batch|batch|COMPLETED|0:0|00:00:01|0\n17750548.extern|extern|COMPLETED|0:0|00:00:01|0\n",
+    "stderr": ""
+  },
+  "outputs": {
+    "control_report.json": {
+      "case": 1000,
+      "passed": true,
+      "checks": {
+        "images/original/tile180.0_-0.5_bandr_rot0.fits": {
+          "different_pixels": 0,
+          "max_abs_difference": 0.0,
+          "shape": [
+            18181,
+            18181
+          ]
+        },
+        "images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits": {
+          "different_pixels": 0,
+          "max_abs_difference": 0.0,
+          "shape": [
+            48,
+            48
+          ]
+        },
+        "catalogues/input/gals_info_tile180.0_-0.5.feather": {
+          "rows": 883944,
+          "exact": true
+        },
+        "catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather": {
+          "rows": 294441,
+          "exact": true
+        },
+        "catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather": {
+          "rows": 292879,
+          "exact": true
+        }
+      }
+    },
+    "fit_report.json": {
+      "cases": [
+        {
+          "case": 1000,
+          "sample": 8000,
+          "pool": 141652,
+          "response_old_repeat0_repeat1": [
+            0.8918794268946527,
+            0.9140092990890769,
+            0.9226558048411534
+          ],
+          "legs": [
+            {
+              "leg": 0,
+              "selected_counts": [
+                7839,
+                7838,
+                7838
+              ],
+              "usability_changed_from_old": [
+                1,
+                1
+              ],
+              "finite_shape_change_rms": [
+                0.21777245588930252,
+                0.2155922365896494
+              ]
+            },
+            {
+              "leg": 1,
+              "selected_counts": [
+                7851,
+                7851,
+                7850
+              ],
+              "usability_changed_from_old": [
+                0,
+                1
+              ],
+              "finite_shape_change_rms": [
+                0.22487784285801066,
+                0.21777249010214306
+              ]
+            }
+          ]
+        },
+        {
+          "case": 1040,
+          "sample": 8000,
+          "pool": 141076,
+          "response_old_repeat0_repeat1": [
+            1.0153318831577698,
+            0.8771258050957659,
+            0.9443590953209331
+          ],
+          "legs": [
+            {
+              "leg": 0,
+              "selected_counts": [
+                7848,
+                7850,
+                7850
+              ],
+              "usability_changed_from_old": [
+                2,
+                2
+              ],
+              "finite_shape_change_rms": [
+                0.2111374094278707,
+                0.21705572969906808
+              ]
+            },
+            {
+              "leg": 1,
+              "selected_counts": [
+                7839,
+                7839,
+                7837
+              ],
+              "usability_changed_from_old": [
+                0,
+                2
+              ],
+              "finite_shape_change_rms": [
+                0.21830238421729795,
+                0.20964693953010546
+              ]
+            }
+          ]
+        },
+        {
+          "case": 1080,
+          "sample": 8000,
+          "pool": 141920,
+          "response_old_repeat0_repeat1": [
+            0.8250906868002719,
+            0.852795275011452,
+            1.0082688399061557
+          ],
+          "legs": [
+            {
+              "leg": 0,
+              "selected_counts": [
+                7847,
+                7843,
+                7844
+              ],
+              "usability_changed_from_old": [
+                4,
+                3
+              ],
+              "finite_shape_change_rms": [
+                0.22568433605283356,
+                0.22628207279618903
+              ]
+            },
+            {
+              "leg": 1,
+              "selected_counts": [
+                7856,
+                7858,
+                7856
+              ],
+              "usability_changed_from_old": [
+                2,
+                2
+              ],
+              "finite_shape_change_rms": [
+                0.22575519453626589,
+                0.21883517332846839
+              ]
+            }
+          ]
+        },
+        {
+          "case": 1120,
+          "sample": 8000,
+          "pool": 142711,
+          "response_old_repeat0_repeat1": [
+            0.9007204457880804,
+            0.8885514348103356,
+            0.9106579080985687
+          ],
+          "legs": [
+            {
+              "leg": 0,
+              "selected_counts": [
+                7846,
+                7846,
+                7847
+              ],
+              "usability_changed_from_old": [
+                2,
+                1
+              ],
+              "finite_shape_change_rms": [
+                0.21848861651852955,
+                0.21906369634908934
+              ]
+            },
+            {
+              "leg": 1,
+              "selected_counts": [
+                7850,
+                7852,
+                7853
+              ],
+              "usability_changed_from_old": [
+                2,
+                3
+              ],
+              "finite_shape_change_rms": [
+                0.21930449046412817,
+                0.22357353360401444
+              ]
+            }
+          ]
+        }
+      ],
+      "definition": "Response=(selected mean g1 plus - selected mean g1 minus)/.04. Horvitz-Thompson weighted sampled union. Differences are on the same sampled IDs and original pixels.",
+      "limitations": "Four cases; two seeded repetitions plus original entropy-seeded fit. Fitter-noise projection uses first-order ratio influence and independent per-object optimizer streams; it excludes image noise, flow integration, scene variance and systematics. Sample change SE conditions on the fitted catalogues; paired case bootstrap describes only these four scenes.",
+      "differences": {
+        "repeat0_minus_original": {
+          "value": -0.024918836699330704,
+          "paired_four_case_bootstrap_se": 0.03334436841042433,
+          "conditional_subsampling_se": 0.04263271600139596,
+          "estimated_single_fit_full_catalogue_se": 0.0073698411531088245
+        },
+        "repeat1_minus_original": {
+          "value": 0.038327755832793464,
+          "paired_four_case_bootstrap_se": 0.04660941834396495,
+          "conditional_subsampling_se": 0.04156301005607429,
+          "estimated_single_fit_full_catalogue_se": 0.00718471304693958
+        },
+        "repeat1_minus_repeat0": {
+          "value": 0.06324659253212417,
+          "paired_four_case_bootstrap_se": 0.028861605949385187,
+          "conditional_subsampling_se": 0.04302356561789998,
+          "estimated_single_fit_full_catalogue_se": 0.00743742637760133
+        }
+      }
+    },
+    "fit_details_report.json": {
+      "seeded_replay_passed": true,
+      "flag_sample_rows": 1021,
+      "flags": {
+        "0": 2042
+      },
+      "flag_sample_both_success_fraction": 1.0,
+      "both_success_component_rms": 0.20835734146701945,
+      "nfev_quantiles": {
+        "min": 8.0,
+        "median": 51.0,
+        "p90": 130.0,
+        "max": 2443.0
+      },
+      "all_sample": {
+        "n": 62767,
+        "component_rms": 0.22004726110477077,
+        "vector_change_quantiles": {
+          "p25": 0.0006292672370574821,
+          "p50": 0.0036868348458708802,
+          "p75": 0.0208389343380115,
+          "p90": 0.24905925897091943,
+          "p99": 1.5413665505460712
+        },
+        "fraction_vector_change_gt_0.01": 0.35462902480602865,
+        "fraction_vector_change_gt_0.1": 0.12097121098666497,
+        "bins": [
+          {
+            "variable": "MAG_AUTO",
+            "lo": "-inf",
+            "hi": "23",
+            "n": 14525,
+            "component_rms": 0.25092527111600377,
+            "share_squared_g1_change": 0.3035690255284655
+          },
+          {
+            "variable": "MAG_AUTO",
+            "lo": "23",
+            "hi": "24",
+            "n": 17669,
+            "component_rms": 0.22658183090035114,
+            "share_squared_g1_change": 0.29982938146711274
+          },
+          {
+            "variable": "MAG_AUTO",
+            "lo": "24",
+            "hi": "24.5",
+            "n": 14161,
+            "component_rms": 0.2050212780383101,
+            "share_squared_g1_change": 0.1978936772920353
+          },
+          {
+            "variable": "MAG_AUTO",
+            "lo": "24.5",
+            "hi": "25",
+            "n": 16412,
+            "component_rms": 0.19472843840135018,
+            "share_squared_g1_change": 0.19870791571238647
+          },
+          {
+            "variable": "radius",
+            "lo": "3",
+            "hi": "3.2",
+            "n": 8886,
+            "component_rms": 0.3463185123224476,
+            "share_squared_g1_change": 0.35648644116266764
+          },
+          {
+            "variable": "radius",
+            "lo": "3.2",
+            "hi": "4",
+            "n": 32024,
+            "component_rms": 0.20675684445662898,
+            "share_squared_g1_change": 0.44854655782797415
+          },
+          {
+            "variable": "radius",
+            "lo": "4",
+            "hi": "6",
+            "n": 18990,
+            "component_rms": 0.16681573949074505,
+            "share_squared_g1_change": 0.17156014593311228
+          },
+          {
+            "variable": "radius",
+            "lo": "6",
+            "hi": "inf",
+            "n": 2867,
+            "component_rms": 0.16287201052132533,
+            "share_squared_g1_change": 0.02340685507624587
+          }
+        ]
+      }
+    },
+    "fit_parameters_report.json": {
+      "sample": "Uniform512 IDs from case1000 union selection, both legs; results conditional on per-leg cuts and both fits usable/successful. Same ID may appear in both legs.",
+      "n_selected_case_leg_rows": 1001,
+      "negative_T_fraction_across_fits": 0.07942057942057942,
+      "sign_switch_fraction": 0.052947052947052944,
+      "large_change_fraction": 0.10589410589410589,
+      "fraction_large_changes_with_T_sign_switch": 0.4811320754716981,
+      "share_squared_g1_change_from_T_sign_switch": 0.7551606631017018,
+      "legs": {
+        "0": {
+          "n": 500,
+          "negative_T_fraction_each_repeat": [
+            0.08,
+            0.078
+          ]
+        },
+        "1": {
+          "n": 501,
+          "negative_T_fraction_each_repeat": [
+            0.07984031936127745,
+            0.07984031936127745
+          ]
+        }
+      },
+      "selected_stress_examples": {
+        "selection": "16 largest changes among the 1021-case/leg seeded-replay sample; deliberately selected stress examples, not a population estimate",
+        "n": 16,
+        "T_sign_switches": 16,
+        "opposite_ellipticity_directions": 16,
+        "maximum_PSF_parameter_change": 5.551115123125783e-17
+      },
+      "interpretation": "Negative T is explicitly permitted by original prior. This identifies large optimizer scatter, not a proof of mean calibration bias; no positivity cut or changed fitter was applied. The original success flag and disk-ellipticity usability do not exclude these solutions."
+    },
+    "report.json": {
+      "pending": true
+    }
+  },
+  "log_tails": {
+    "control_17750387.log": "ol/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/control/sims/case1000_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/control/sims/case1000_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 883944\nCrossMatch : INFO - Number of detections 294441\nCrossMatch : INFO - Number of matched 292879\nCrossMatch : INFO - matched/detections 0.9946950322815097\nCrossMatch : INFO - Number of false detections 1562\nCrossMatch : INFO - false_detec/detections 0.005304967718490291\nCrossMatch : INFO - Number of missed inputs 591065\nCrossMatch : INFO - miss_input/input 0.6686679246649109\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/control/sims/case1000_0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.052191014952129786 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.05219345821274651 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/control/sims/case1000_0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1000 leg=0.02\nCOMPLETE case=1000 leg=0.02\n",
+    "control_check_17750442.log": "{\n  \"case\": 1000,\n  \"passed\": true,\n  \"checks\": {\n    \"images/original/tile180.0_-0.5_bandr_rot0.fits\": {\n      \"different_pixels\": 0,\n      \"max_abs_difference\": 0.0,\n      \"shape\": [\n        18181,\n        18181\n      ]\n    },\n    \"images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits\": {\n      \"different_pixels\": 0,\n      \"max_abs_difference\": 0.0,\n      \"shape\": [\n        48,\n        48\n      ]\n    },\n    \"catalogues/input/gals_info_tile180.0_-0.5.feather\": {\n      \"rows\": 883944,\n      \"exact\": true\n    },\n    \"catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\": {\n      \"rows\": 294441,\n      \"exact\": true\n    },\n    \"catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\": {\n      \"rows\": 292879,\n      \"exact\": true\n    }\n  }\n}\n",
+    "fit_17750449_0.log": "START 1000 0 sample 8000 pool 141652 image /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1000_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits\nPROGRESS 1000 0 0 8.38899269234389\nPROGRESS 1000 0 1000 77.68554813880473\nPROGRESS 1000 0 2000 139.42016767058522\nPROGRESS 1000 0 3000 196.06377964187413\nPROGRESS 1000 0 4000 248.19182831514627\nPROGRESS 1000 0 5000 301.7926493063569\nPROGRESS 1000 0 6000 351.68654186837375\nPROGRESS 1000 0 7000 399.73861348629\nCOMPLETE {\"case\": 1000, \"leg\": 0, \"sample\": 8000, \"pool_size\": 141652, \"original_function_sha256\": \"a126fd344a3266732b01f04d24815ad19844631e4a5dca353f71c943b74b4354\", \"seeded_copy_sha256\": \"8c8543b16837f9d47d50cdb2e1bd3b9ecb95ad96063e7bc35509fc85f51ae176\", \"exceptions\": [{\"KeyError\": 1}, {\"KeyError\": 1}], \"seconds\": 451.1751728290692, \"selection\": \"Uniform sample of union of per-leg detected radius>3 MAG_AUTO<25; no old shape cut\", \"randomness\": \"Independent fixed streams for each object, leg, replicate; original unseeded result retained\"}\n",
+    "fit_17750449_1.log": "START 1000 1 sample 8000 pool 141652 image /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1000_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits\nPROGRESS 1000 1 0 9.572322816587985\nPROGRESS 1000 1 1000 81.30932235345244\nPROGRESS 1000 1 2000 145.16265834029764\nPROGRESS 1000 1 3000 201.13967997580767\nPROGRESS 1000 1 4000 255.43540487252176\nPROGRESS 1000 1 5000 306.3453053031117\nPROGRESS 1000 1 6000 355.41718073375523\nPROGRESS 1000 1 7000 402.7955753346905\nCOMPLETE {\"case\": 1000, \"leg\": 1, \"sample\": 8000, \"pool_size\": 141652, \"original_function_sha256\": \"a126fd344a3266732b01f04d24815ad19844631e4a5dca353f71c943b74b4354\", \"seeded_copy_sha256\": \"8c8543b16837f9d47d50cdb2e1bd3b9ecb95ad96063e7bc35509fc85f51ae176\", \"exceptions\": [{}, {\"KeyError\": 1}], \"seconds\": 451.6279812287539, \"selection\": \"Uniform sample of union of per-leg detected radius>3 MAG_AUTO<25; no old shape cut\", \"randomness\": \"Independent fixed streams for each object, leg, replicate; original unseeded result retained\"}\n",
+    "fit_17750449_2.log": "START 1040 0 sample 8000 pool 141076 image /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1040_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits\nPROGRESS 1040 0 0 9.612246751785278\nPROGRESS 1040 0 1000 83.9346342748031\nPROGRESS 1040 0 2000 145.97387893218547\nPROGRESS 1040 0 3000 202.77457946538925\nPROGRESS 1040 0 4000 258.5030879518017\nPROGRESS 1040 0 5000 308.2212742753327\nPROGRESS 1040 0 6000 357.25342118088156\nPROGRESS 1040 0 7000 405.4568132990971\nCOMPLETE {\"case\": 1040, \"leg\": 0, \"sample\": 8000, \"pool_size\": 141076, \"original_function_sha256\": \"a126fd344a3266732b01f04d24815ad19844631e4a5dca353f71c943b74b4354\", \"seeded_copy_sha256\": \"8c8543b16837f9d47d50cdb2e1bd3b9ecb95ad96063e7bc35509fc85f51ae176\", \"exceptions\": [{\"KeyError\": 1}, {\"KeyError\": 1}], \"seconds\": 451.10955625772476, \"selection\": \"Uniform sample of union of per-leg detected radius>3 MAG_AUTO<25; no old shape cut\", \"randomness\": \"Independent fixed streams for each object, leg, replicate; original unseeded result retained\"}\n",
+    "fit_17750449_3.log": "START 1040 1 sample 8000 pool 141076 image /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1040_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits\nPROGRESS 1040 1 0 8.259665875695646\nPROGRESS 1040 1 1000 87.85396907664835\nPROGRESS 1040 1 2000 154.46115358639508\nPROGRESS 1040 1 3000 216.65159544628114\nPROGRESS 1040 1 4000 274.6965961214155\nPROGRESS 1040 1 5000 327.9961722595617\nPROGRESS 1040 1 6000 378.1087459549308\nPROGRESS 1040 1 7000 429.02593100070953\nCOMPLETE {\"case\": 1040, \"leg\": 1, \"sample\": 8000, \"pool_size\": 141076, \"original_function_sha256\": \"a126fd344a3266732b01f04d24815ad19844631e4a5dca353f71c943b74b4354\", \"seeded_copy_sha256\": \"8c8543b16837f9d47d50cdb2e1bd3b9ecb95ad96063e7bc35509fc85f51ae176\", \"exceptions\": [{\"KeyError\": 1}, {\"KeyError\": 2}], \"seconds\": 475.99635084252805, \"selection\": \"Uniform sample of union of per-leg detected radius>3 MAG_AUTO<25; no old shape cut\", \"randomness\": \"Independent fixed streams for each object, leg, replicate; original unseeded result retained\"}\n",
+    "fit_17750449_4.log": "START 1080 0 sample 8000 pool 141920 image /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1080_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits\nPROGRESS 1080 0 0 8.233985722064972\nPROGRESS 1080 0 1000 85.28628860041499\nPROGRESS 1080 0 2000 152.75311545748264\nPROGRESS 1080 0 3000 214.94127008598298\nPROGRESS 1080 0 4000 275.76442915108055\nPROGRESS 1080 0 5000 332.62177634611726\nPROGRESS 1080 0 6000 383.70877530798316\nPROGRESS 1080 0 7000 432.9420521436259\nCOMPLETE {\"case\": 1080, \"leg\": 0, \"sample\": 8000, \"pool_size\": 141920, \"original_function_sha256\": \"a126fd344a3266732b01f04d24815ad19844631e4a5dca353f71c943b74b4354\", \"seeded_copy_sha256\": \"8c8543b16837f9d47d50cdb2e1bd3b9ecb95ad96063e7bc35509fc85f51ae176\", \"exceptions\": [{\"KeyError\": 4}, {\"KeyError\": 3}], \"seconds\": 483.2063604183495, \"selection\": \"Uniform sample of union of per-leg detected radius>3 MAG_AUTO<25; no old shape cut\", \"randomness\": \"Independent fixed streams for each object, leg, replicate; original unseeded result retained\"}\n",
+    "fit_17750449_5.log": "START 1080 1 sample 8000 pool 141920 image /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1080_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits\nPROGRESS 1080 1 0 8.291991220787168\nPROGRESS 1080 1 1000 86.60127576161176\nPROGRESS 1080 1 2000 153.80487028043717\nPROGRESS 1080 1 3000 213.72396690025926\nPROGRESS 1080 1 4000 270.7688327226788\nPROGRESS 1080 1 5000 324.20762494485825\nPROGRESS 1080 1 6000 374.38377126771957\nPROGRESS 1080 1 7000 426.32883634604514\nCOMPLETE {\"case\": 1080, \"leg\": 1, \"sample\": 8000, \"pool_size\": 141920, \"original_function_sha256\": \"a126fd344a3266732b01f04d24815ad19844631e4a5dca353f71c943b74b4354\", \"seeded_copy_sha256\": \"8c8543b16837f9d47d50cdb2e1bd3b9ecb95ad96063e7bc35509fc85f51ae176\", \"exceptions\": [{}, {\"KeyError\": 2}], \"seconds\": 474.2675966890529, \"selection\": \"Uniform sample of union of per-leg detected radius>3 MAG_AUTO<25; no old shape cut\", \"randomness\": \"Independent fixed streams for each object, leg, replicate; original unseeded result retained\"}\n",
+    "fit_17750449_6.log": "START 1120 0 sample 8000 pool 142711 image /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1120_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits\nPROGRESS 1120 0 0 8.34632016159594\nPROGRESS 1120 0 1000 84.38287031836808\nPROGRESS 1120 0 2000 151.24716962967068\nPROGRESS 1120 0 3000 210.0309698935598\nPROGRESS 1120 0 4000 266.5263099586591\nPROGRESS 1120 0 5000 318.00640110019594\nPROGRESS 1120 0 6000 371.9649602761492\nPROGRESS 1120 0 7000 418.71184638980776\nCOMPLETE {\"case\": 1120, \"leg\": 0, \"sample\": 8000, \"pool_size\": 142711, \"original_function_sha256\": \"a126fd344a3266732b01f04d24815ad19844631e4a5dca353f71c943b74b4354\", \"seeded_copy_sha256\": \"8c8543b16837f9d47d50cdb2e1bd3b9ecb95ad96063e7bc35509fc85f51ae176\", \"exceptions\": [{\"KeyError\": 1}, {}], \"seconds\": 466.21362441871315, \"selection\": \"Uniform sample of union of per-leg detected radius>3 MAG_AUTO<25; no old shape cut\", \"randomness\": \"Independent fixed streams for each object, leg, replicate; original unseeded result retained\"}\n",
+    "fit_17750449_7.log": "START 1120 1 sample 8000 pool 142711 image /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/case1120_-0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits\nPROGRESS 1120 1 0 8.36016537155956\nPROGRESS 1120 1 1000 85.10049684066325\nPROGRESS 1120 1 2000 151.06723959557712\nPROGRESS 1120 1 3000 210.7682319022715\nPROGRESS 1120 1 4000 266.61682846583426\nPROGRESS 1120 1 5000 320.466230513528\nPROGRESS 1120 1 6000 370.96836859267205\nPROGRESS 1120 1 7000 418.4150339467451\nCOMPLETE {\"case\": 1120, \"leg\": 1, \"sample\": 8000, \"pool_size\": 142711, \"original_function_sha256\": \"a126fd344a3266732b01f04d24815ad19844631e4a5dca353f71c943b74b4354\", \"seeded_copy_sha256\": \"8c8543b16837f9d47d50cdb2e1bd3b9ecb95ad96063e7bc35509fc85f51ae176\", \"exceptions\": [{\"KeyError\": 1}, {}], \"seconds\": 466.2709312122315, \"selection\": \"Uniform sample of union of per-leg detected radius>3 MAG_AUTO<25; no old shape cut\", \"randomness\": \"Independent fixed streams for each object, leg, replicate; original unseeded result retained\"}\n",
+    "fit_details_17750514.log": "{\n  \"seeded_replay_passed\": true,\n  \"flag_sample_rows\": 1021,\n  \"flags\": {\n    \"0\": 2042\n  },\n  \"flag_sample_both_success_fraction\": 1.0,\n  \"both_success_component_rms\": 0.20835734146701945,\n  \"nfev_quantiles\": {\n    \"min\": 8.0,\n    \"median\": 51.0,\n    \"p90\": 130.0,\n    \"max\": 2443.0\n  },\n  \"all_sample\": {\n    \"n\": 62767,\n    \"component_rms\": 0.22004726110477077,\n    \"vector_change_quantiles\": {\n      \"p25\": 0.0006292672370574821,\n      \"p50\": 0.0036868348458708802,\n      \"p75\": 0.0208389343380115,\n      \"p90\": 0.24905925897091943,\n      \"p99\": 1.5413665505460712\n    },\n    \"fraction_vector_change_gt_0.01\": 0.35462902480602865,\n    \"fraction_vector_change_gt_0.1\": 0.12097121098666497,\n    \"bins\": [\n      {\n        \"variable\": \"MAG_AUTO\",\n        \"lo\": \"-inf\",\n        \"hi\": \"23\",\n        \"n\": 14525,\n        \"component_rms\": 0.25092527111600377,\n        \"share_squared_g1_change\": 0.3035690255284655\n      },\n      {\n        \"variable\": \"MAG_AUTO\",\n        \"lo\": \"23\",\n        \"hi\": \"24\",\n        \"n\": 17669,\n        \"component_rms\": 0.22658183090035114,\n        \"share_squared_g1_change\": 0.29982938146711274\n      },\n      {\n        \"variable\": \"MAG_AUTO\",\n        \"lo\": \"24\",\n        \"hi\": \"24.5\",\n        \"n\": 14161,\n        \"component_rms\": 0.2050212780383101,\n        \"share_squared_g1_change\": 0.1978936772920353\n      },\n      {\n        \"variable\": \"MAG_AUTO\",\n        \"lo\": \"24.5\",\n        \"hi\": \"25\",\n        \"n\": 16412,\n        \"component_rms\": 0.19472843840135018,\n        \"share_squared_g1_change\": 0.19870791571238647\n      },\n      {\n        \"variable\": \"radius\",\n        \"lo\": \"3\",\n        \"hi\": \"3.2\",\n        \"n\": 8886,\n        \"component_rms\": 0.3463185123224476,\n        \"share_squared_g1_change\": 0.35648644116266764\n      },\n      {\n        \"variable\": \"radius\",\n        \"lo\": \"3.2\",\n        \"hi\": \"4\",\n        \"n\": 32024,\n        \"component_rms\": 0.20675684445662898,\n        \"share_squared_g1_change\": 0.44854655782797415\n      },\n      {\n        \"variable\": \"radius\",\n        \"lo\": \"4\",\n        \"hi\": \"6\",\n        \"n\": 18990,\n        \"component_rms\": 0.16681573949074505,\n        \"share_squared_g1_change\": 0.17156014593311228\n      },\n      {\n        \"variable\": \"radius\",\n        \"lo\": \"6\",\n        \"hi\": \"inf\",\n        \"n\": 2867,\n        \"component_rms\": 0.16287201052132533,\n        \"share_squared_g1_change\": 0.02340685507624587\n      }\n    ]\n  }\n}\n",
+    "fit_flags_17750506.log": "PROGRESS 0 0 6.628306170925498\nPROGRESS 0 128 15.916307754814625\nPROGRESS 0 256 24.193878499791026\nPROGRESS 0 384 32.78582386113703\nPROGRESS 1 0 42.951932788826525\nPROGRESS 1 128 56.54740749951452\nPROGRESS 1 256 68.52267548814416\nPROGRESS 1 384 81.07745011802763\nCOMPLETE 1021 exact seeded replay 92.99364987015724\n",
+    "fit_modes_17750533.log": "COMPLETE 16\n",
+    "fit_parameters_17750545.log": "PROGRESS 0 0 6.809620346873999\nPROGRESS 0 128 16.14062296319753\nPROGRESS 0 256 24.34946990199387\nPROGRESS 0 384 32.82026404701173\nPROGRESS 1 0 42.41649107821286\nPROGRESS 1 128 51.60304314550012\nPROGRESS 1 256 60.10046893171966\nPROGRESS 1 384 69.10186387039721\nCOMPLETE 1021 exact seeded replay 78.18963573966175\n",
+    "fit_parameters_reduce_17750548.log": "{\n  \"sample\": \"Uniform512 IDs from case1000 union selection, both legs; results conditional on per-leg cuts and both fits usable/successful. Same ID may appear in both legs.\",\n  \"n_selected_case_leg_rows\": 1001,\n  \"negative_T_fraction_across_fits\": 0.07942057942057942,\n  \"sign_switch_fraction\": 0.052947052947052944,\n  \"large_change_fraction\": 0.10589410589410589,\n  \"fraction_large_changes_with_T_sign_switch\": 0.4811320754716981,\n  \"share_squared_g1_change_from_T_sign_switch\": 0.7551606631017018,\n  \"legs\": {\n    \"0\": {\n      \"n\": 500,\n      \"negative_T_fraction_each_repeat\": [\n        0.08,\n        0.078\n      ]\n    },\n    \"1\": {\n      \"n\": 501,\n      \"negative_T_fraction_each_repeat\": [\n        0.07984031936127745,\n        0.07984031936127745\n      ]\n    }\n  },\n  \"selected_stress_examples\": {\n    \"selection\": \"16 largest changes among the 1021-case/leg seeded-replay sample; deliberately selected stress examples, not a population estimate\",\n    \"n\": 16,\n    \"T_sign_switches\": 16,\n    \"opposite_ellipticity_directions\": 16,\n    \"maximum_PSF_parameter_change\": 5.551115123125783e-17\n  },\n  \"interpretation\": \"Negative T is explicitly permitted by original prior. This identifies large optimizer scatter, not a proof of mean calibration bias; no positivity cut or changed fitter was applied. The original success flag and disk-ellipticity usability do not exclude these solutions.\"\n}\n",
+    "fit_reduce_17750462.log": "   \"usability_changed_from_old\": [\n            2,\n            2\n          ],\n          \"finite_shape_change_rms\": [\n            0.22575519453626589,\n            0.21883517332846839\n          ]\n        }\n      ]\n    },\n    {\n      \"case\": 1120,\n      \"sample\": 8000,\n      \"pool\": 142711,\n      \"response_old_repeat0_repeat1\": [\n        0.9007204457880804,\n        0.8885514348103356,\n        0.9106579080985687\n      ],\n      \"legs\": [\n        {\n          \"leg\": 0,\n          \"selected_counts\": [\n            7846,\n            7846,\n            7847\n          ],\n          \"usability_changed_from_old\": [\n            2,\n            1\n          ],\n          \"finite_shape_change_rms\": [\n            0.21848861651852955,\n            0.21906369634908934\n          ]\n        },\n        {\n          \"leg\": 1,\n          \"selected_counts\": [\n            7850,\n            7852,\n            7853\n          ],\n          \"usability_changed_from_old\": [\n            2,\n            3\n          ],\n          \"finite_shape_change_rms\": [\n            0.21930449046412817,\n            0.22357353360401444\n          ]\n        }\n      ]\n    }\n  ],\n  \"definition\": \"Response=(selected mean g1 plus - selected mean g1 minus)/.04. Horvitz-Thompson weighted sampled union. Differences are on the same sampled IDs and original pixels.\",\n  \"limitations\": \"Four cases; two seeded repetitions plus original entropy-seeded fit. Fitter-noise projection uses first-order ratio influence and independent per-object optimizer streams; it excludes image noise, flow integration, scene variance and systematics. Sample change SE conditions on the fitted catalogues; paired case bootstrap describes only these four scenes.\",\n  \"differences\": {\n    \"repeat0_minus_original\": {\n      \"value\": -0.024918836699330704,\n      \"paired_four_case_bootstrap_se\": 0.03334436841042433,\n      \"conditional_subsampling_se\": 0.04263271600139596,\n      \"estimated_single_fit_full_catalogue_se\": 0.0073698411531088245\n    },\n    \"repeat1_minus_original\": {\n      \"value\": 0.038327755832793464,\n      \"paired_four_case_bootstrap_se\": 0.04660941834396495,\n      \"conditional_subsampling_se\": 0.04156301005607429,\n      \"estimated_single_fit_full_catalogue_se\": 0.00718471304693958\n    },\n    \"repeat1_minus_repeat0\": {\n      \"value\": 0.06324659253212417,\n      \"paired_four_case_bootstrap_se\": 0.028861605949385187,\n      \"conditional_subsampling_se\": 0.04302356561789998,\n      \"estimated_single_fit_full_catalogue_se\": 0.00743742637760133\n    }\n  }\n}\n",
+    "images_17750385_0.log": "en/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1000_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1000_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 883944\nCrossMatch : INFO - Number of detections 294366\nCrossMatch : INFO - Number of matched 292800\nCrossMatch : INFO - matched/detections 0.9946800921302053\nCrossMatch : INFO - Number of false detections 1566\nCrossMatch : INFO - false_detec/detections 0.005319907869794745\nCrossMatch : INFO - Number of missed inputs 591144\nCrossMatch : INFO - miss_input/input 0.6687572968423339\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1000_0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.09592069500022464 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.09592518475320604 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1000_0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1000 leg=0.02\n",
+    "images_17750385_1.log": "rs/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1000_-0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1000_-0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 883944\nCrossMatch : INFO - Number of detections 294357\nCrossMatch : INFO - Number of matched 292786\nCrossMatch : INFO - matched/detections 0.9946629432967451\nCrossMatch : INFO - Number of false detections 1571\nCrossMatch : INFO - false_detec/detections 0.0053370567032548916\nCrossMatch : INFO - Number of missed inputs 591158\nCrossMatch : INFO - miss_input/input 0.6687731349497253\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1000_-0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.07605372687180836 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.07605719056394365 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1000_-0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1000 leg=-0.02\n",
+    "images_17750385_2.log": "uen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1040_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1040_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 883991\nCrossMatch : INFO - Number of detections 293982\nCrossMatch : INFO - Number of matched 292753\nCrossMatch : INFO - matched/detections 0.995819471940459\nCrossMatch : INFO - Number of false detections 1229\nCrossMatch : INFO - false_detec/detections 0.004180528059541061\nCrossMatch : INFO - Number of missed inputs 591238\nCrossMatch : INFO - miss_input/input 0.6688280763039443\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1040_0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.05371799859735701 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.05371945725546943 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1040_0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1040 leg=0.02\n",
+    "images_17750385_3.log": "users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1040_-0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1040_-0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 883991\nCrossMatch : INFO - Number of detections 293864\nCrossMatch : INFO - Number of matched 292689\nCrossMatch : INFO - matched/detections 0.996001551738219\nCrossMatch : INFO - Number of false detections 1175\nCrossMatch : INFO - false_detec/detections 0.00399844826178096\nCrossMatch : INFO - Number of missed inputs 591302\nCrossMatch : INFO - miss_input/input 0.6689004752310826\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1040_-0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.05429051968786452 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.05429216206073761 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1040_-0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1040 leg=-0.02\n",
+    "images_17750385_4.log": "n/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1080_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1080_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 884738\nCrossMatch : INFO - Number of detections 294013\nCrossMatch : INFO - Number of matched 292823\nCrossMatch : INFO - matched/detections 0.9959525599208199\nCrossMatch : INFO - Number of false detections 1190\nCrossMatch : INFO - false_detec/detections 0.004047440079180172\nCrossMatch : INFO - Number of missed inputs 591915\nCrossMatch : INFO - miss_input/input 0.6690285711702222\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1080_0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.055224827726682024 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.05522638969951206 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1080_0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1080 leg=0.02\n",
+    "images_17750385_5.log": "users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1080_-0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1080_-0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 884738\nCrossMatch : INFO - Number of detections 293914\nCrossMatch : INFO - Number of matched 292705\nCrossMatch : INFO - matched/detections 0.9958865518485\nCrossMatch : INFO - Number of false detections 1209\nCrossMatch : INFO - false_detec/detections 0.0041134481515000985\nCrossMatch : INFO - Number of missed inputs 592033\nCrossMatch : INFO - miss_input/input 0.6691619439879377\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1080_-0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.05344645029968686 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.05344801326592763 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1080_-0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1080 leg=-0.02\n",
+    "images_17750385_6.log": "n/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1120_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1120_0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 886209\nCrossMatch : INFO - Number of detections 294478\nCrossMatch : INFO - Number of matched 292896\nCrossMatch : INFO - matched/detections 0.9946277820414429\nCrossMatch : INFO - Number of false detections 1582\nCrossMatch : INFO - false_detec/detections 0.005372217958557176\nCrossMatch : INFO - Number of missed inputs 593313\nCrossMatch : INFO - miss_input/input 0.6694955704579845\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1120_0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.05454948736561669 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.054551041589842905 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1120_0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1120 leg=0.02\n",
+    "images_17750385_7.log": "users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/noise.csv\n__main__ : INFO - Targeted tiles: ['180.0_-0.5']\n__main__ : INFO - ====== Task 3: detect objects === started ======\n__main__ : INFO - Band for detection: r\n__main__ : INFO - pixel scale: 0.2\n__main__ : INFO - image type: original\n__main__ : WARNING - seeing not used in SExtractor, do NOT trust CLASS_STAR!\n__main__ : INFO - Max number of processes for SExtractor: 1\nAstromatic : INFO - Running SEXtractor in single mode...\nAstromatic : INFO - Config file /home/z/Zekang.Zhang/MultiBand_ImSim/config/kids_sims.sex\nAstromatic : INFO - SEXtractor catalogue produced as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1120_-0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.sex\nAstromatic : INFO - Easy-use feather file built as /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1120_-0.02/real0/catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather\nAstromatic : INFO - SEXtractor finished.\n__main__ : INFO - Cross-match with the input catalogue...\nCrossMatch : INFO - Running position-based cross match with KD Tree...\nCrossMatch : INFO - CrossMatch using TAN projected distance\nCrossMatch : INFO -    max distance 2.5 pixel\nCrossMatch : INFO - Number of input 886209\nCrossMatch : INFO - Number of detections 294515\nCrossMatch : INFO - Number of matched 292918\nCrossMatch : INFO - matched/detections 0.9945775257626946\nCrossMatch : INFO - Number of false detections 1597\nCrossMatch : INFO - false_detec/detections 0.0054224742373054\nCrossMatch : INFO - Number of missed inputs 593291\nCrossMatch : INFO - miss_input/input 0.6694707456141835\nCrossMatch : INFO - Matched detections saved to /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1120_-0.02/real0/catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather\nCrossMatch : INFO - Finised position-based cross match with KD Tree.\n__main__ : INFO - ====== Task 3: detect objects === finished in 0.05215250704023573 h ======\n__main__ : INFO - ~~~~~~~~~~~~ MultiBand_ImSim v0.7.1 finished ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ total running time 0.05215384821097056 h ~~~~~~~~~~~~\n__main__ : INFO - ~~~~~~~~~~~~ All outputs saved in /project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/sims/case1120_-0.02/real0\n__main__ : INFO - ~~~~~~~~~~~~ Enjoy the science ~~~~~~~~~~~~\n\nRENDER_DETECT_COMPLETE case=1120 leg=-0.02\n",
+    "model_17750397_0.log": "START 1000 NVIDIA A40-16Q\ncase 1000 block 0 seconds 1.7540160669595934\ncase 1000 block 100 seconds 36.97151105297962\ncase 1000 block 200 seconds 72.39259755396051\ncase 1000 block 300 seconds 107.97057446499821\ncase 1000 block 400 seconds 143.3701603949885\ncase 1000 block 500 seconds 178.96486411895603\ncase 1000 block 600 seconds 214.393044602999\ncase 1000 block 700 seconds 249.6223039359902\ncase 1000 block 800 seconds 285.19288584397873\nCOMPLETE 1000 309.0981787960045\n",
+    "model_17750397_1.log": "START 1040 NVIDIA A40-16Q\ncase 1040 block 0 seconds 1.3361730719916523\ncase 1040 block 100 seconds 36.24921292020008\ncase 1040 block 200 seconds 70.04198212129995\ncase 1040 block 300 seconds 104.14368830109015\ncase 1040 block 400 seconds 138.13341718632728\ncase 1040 block 500 seconds 172.17192504927516\ncase 1040 block 600 seconds 206.1995094763115\ncase 1040 block 700 seconds 240.2062983470969\ncase 1040 block 800 seconds 274.0299055161886\nCOMPLETE 1040 297.0648885220289\n",
+    "model_17750397_2.log": "START 1080 NVIDIA A40-16Q\ncase 1080 block 0 seconds 0.8003564761020243\ncase 1080 block 100 seconds 34.75452337227762\ncase 1080 block 200 seconds 68.79566401010379\ncase 1080 block 300 seconds 102.91050994116813\ncase 1080 block 400 seconds 136.96647478314117\ncase 1080 block 500 seconds 171.00959413312376\ncase 1080 block 600 seconds 205.0642755171284\ncase 1080 block 700 seconds 238.8896136879921\ncase 1080 block 800 seconds 273.04290168592706\nCOMPLETE 1080 296.37084445310757\n",
+    "model_17750397_3.log": "START 1120 NVIDIA A40-16Q\ncase 1120 block 0 seconds 0.7940262869815342\ncase 1120 block 100 seconds 34.85704608896049\ncase 1120 block 200 seconds 70.45616622100351\ncase 1120 block 300 seconds 106.74978214397561\ncase 1120 block 400 seconds 142.9985419450095\ncase 1120 block 500 seconds 179.14667728799395\ncase 1120 block 600 seconds 215.30528751196107\ncase 1120 block 700 seconds 251.52613413898507\ncase 1120 block 800 seconds 287.78868405596586\nCOMPLETE 1120 315.8670386580052\n",
+    "preflight_17750489.log": "REDUCER_IMPORTS_OK\nCONTROL_IMPORTS_OK\n",
+    "prep_17750383.log": "PREPARED {'case': 1000, 'rows': 883944, 'group_counts': [441959, 441985], 'seed': 202611051001, 'original_catalogue_sha256': 'a46b00acdb6d8de871b88d9779e686e356821da5bdd365d77831a2f266c3b9bc', 'groups_sha256': 'fc1bf6ed8b851bf1dca4217ed31d4eea0e112fcb1115cb3703fbdb00e08c1468'}\nPREPARED {'case': 1040, 'rows': 883991, 'group_counts': [442524, 441467], 'seed': 202611051041, 'original_catalogue_sha256': '9b283b649562c0b7f2a84c60bd739381db680d1089f404e114ed4409d1a3c717', 'groups_sha256': '721fcd3aa8e91ecf4ec160972aa7ccfcc88632dfedaa32c3385f1f85858dba5f'}\nPREPARED {'case': 1080, 'rows': 884739, 'group_counts': [442290, 442449], 'seed': 202611051081, 'original_catalogue_sha256': '88cf1e05fb96eb4bd8399e4e9a5ed3dff115468af8a449e1a50a62dcc8dbebcf', 'groups_sha256': '6e078ebbca54a4b06a4b83c2c0895f99373e0cc283088d5bb747de88afd31a61'}\nPREPARED {'case': 1120, 'rows': 886209, 'group_counts': [443324, 442885], 'seed': 202611051121, 'original_catalogue_sha256': '1bdd000394bfa761a7158407e05c383de159712854f9483a925605b0a8747749', 'groups_sha256': 'fc60b7a66501231203ef5a407229167b428cd9e73746089092a86986305b8b06'}\n"
+  }
+}

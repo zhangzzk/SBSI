@@ -1,0 +1,18 @@
+{
+  "training_own_data_and_first_case": 17817062,
+  "dependent_persistent_workers": 17817064,
+  "dependent_report": 17817065,
+  "maximum_concurrent_gpus": 3,
+  "broad_array_still_held": 17788286,
+  "follow_up_loop": "disabled",
+  "output": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107",
+  "state": "complete: training, all eight field/axis evaluations and final report exited 0:0",
+  "probability_loss_weight": 220.30314835861844,
+  "completed_job_ids": [
+    "17817062",
+    "17817064_0",
+    "17817064_1",
+    "17817064_2",
+    "17817065"
+  ]
+}

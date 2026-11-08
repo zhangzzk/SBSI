@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "initial_log_density_exact": true,
+  "initial_physical_draws_exact": true,
+  "extra_weight_gradient_squared_norm": 49.22188115170715,
+  "nonzero_feature_effect": true,
+  "physical_density_max_error": 4.628951739249487e-06,
+  "inverse_and_jacobian": true,
+  "reload_exact": true,
+  "model_source_sha256": "7a6287d8ec1ccdda55829df09094470a5225415516697771343b82c9e89b8bde"
+}

@@ -1,0 +1,87 @@
+{
+  "utc": "2026-11-06T16:17:54.085791+00:00",
+  "source_sha256": {
+    "check.py": "0387187054b45457d44e04c50acf9743b4ba19e5438d309d29ef863c2679d896",
+    "decompose_constant.py": "ec314d247fb0666a9c434e6791128af6dc49993537df5b6174240f4e218d283e",
+    "evaluate.py": "cf015d1e7eb10e0c852dada48c34400901d87a62403e8e182cb54ec7817ac00e",
+    "evaluate_fourstate.py": "28fa0c26d932eea37e46fbc63db0cc25198aca30586de3c4345c2e022cad26b9",
+    "manifest.json": "e89ff981780d8f471f5d568796677916f4b01bee5e6dddaed2e287ddd410b931",
+    "release.py": "9d44e691010d8fbe3a4363aa3a9c101f82f75775e1ab833f306258ba9a9f42bd",
+    "report_fourstate.py": "8b4b53a4742c7ec00b0d8634e5e66196cd3005474c15a384a0114db3e9664ad6",
+    "report_standalone.py": "1c3f1dcb1f7939178c4fbe73c21065633625580fcfeeba1ae18ee526864e08de",
+    "rule.md": "4ca1767a5841950a45e3130377b9d37eb9323a641927bd1e56c99de6119a9415",
+    "run_cpu.sh": "2c0875e788164816bbd6738d43dd9f900cb05c48238cd7e5d23db18e71b8cc7a",
+    "run_evaluate.sh": "ad68a32c185686c8ac3b92548ab709bbfdc9ea3a04eec84557b72676773d70f3",
+    "run_fourstate.sh": "36a53b88bbfb7b0a10d377fbfba5a8c61807b24077729a86b4645d2dae7698e4",
+    "verify_v100.py": "1b714ce9dfc4c85906d6e4051e0d101182715fe0baf63190fd3c6a8d81d06376"
+  },
+  "constant_case_count": 19,
+  "standalone_case_count": 40,
+  "standalone_matched_pairs": 5817708,
+  "unmatched_usable_zero": 35353,
+  "unmatched_usable_shear": 32816,
+  "checks": [
+    "constant decomposition exact identities in all10000 resamples",
+    "constant sums replay existing interim report",
+    "standalone measured sums replay original baseline",
+    "standalone finite-pair shape/selection addition in all10000 resamples",
+    "all standalone jobs completed exit0"
+  ],
+  "fourstate_status": "baseline pilot passed; weak-nine raw-cache replay failed; amended strict same-device retry17804916 at READY/block0. Full four-case attribution pending.",
+  "job_ids": {
+    "evaluate": "17804090",
+    "release": "17804373",
+    "drain": [],
+    "active_at_update": [
+      "17788286_206",
+      "17788286_205",
+      "17788286_204",
+      "17788286_203"
+    ],
+    "constant_array": "17788286",
+    "constant_throttle": 4,
+    "diagnostic_throttle": 2,
+    "combined_gpu_ceiling": 6,
+    "throttle_note": "scontrol reported finished subtask error but scontrol show job and squeue verified throttle4 applied",
+    "standalone_report": "17804172",
+    "constant_decomposition": "17804158",
+    "fourstate_pilot": "17804351",
+    "fourstate_remaining": "17804352",
+    "fourstate_pilot_report": "17804353",
+    "fourstate_report": "17804354",
+    "release_after": "fourstate_remaining",
+    "temporary_constant_nice": 100,
+    "priority_note": "Give the short diagnostics priority over pending coherent workers within the existing user queue; retain array throttles4+2. No running job interrupted.",
+    "superseded_release": "17804091",
+    "check": "17804408",
+    "verify_a40": "17804825",
+    "verify_v100": "17804826",
+    "verify_compare": "17804827",
+    "device_probes_cancelled": [
+      "17804826",
+      "17804827"
+    ],
+    "device_probe_note": "V100 allocated GPUs unavailable for days; use strict same-device direct coherent replay plus separately bounded historical-cache physical response differences.",
+    "fourstate_pilot_failed": "17804351_1",
+    "fourstate_pilot_retry": "17804916",
+    "constant_evaluation_pause": {
+      "utc": "2026-11-06T16:15:27.449172+00:00",
+      "array": "17788286",
+      "state": "JobHeldUser for pending tasks",
+      "pending_tasks": "221-399",
+      "running_tasks_allowed_to_finish": [
+        "17788286_217",
+        "17788286_218",
+        "17788286_219",
+        "17788286_220"
+      ],
+      "owner_request": "Pause earlier evaluations while focused diagnostics continue",
+      "automatic_restore_cancelled": "17804373",
+      "resume_requires_owner_request": true
+    },
+    "verify_v100_followup": "17805079",
+    "verify_compare_followup": "17805080",
+    "verify_followup_reason": "Current coherent worker220 acquired a V100; queue short independent probe after it exits, without blocking focused diagnostics."
+  },
+  "earlier_evaluations": "Pending17788286 tasks221-399 held by owner request; active cases finish; automatic restore cancelled."
+}

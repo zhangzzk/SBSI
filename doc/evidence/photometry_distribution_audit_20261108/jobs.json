@@ -1,0 +1,15 @@
+{
+  "evaluate": 17833751,
+  "report": 17833754,
+  "dependency": "afterok:17833751",
+  "max_gpus": 1,
+  "max_cpus": 4,
+  "broad_array_still_held": 17788286,
+  "automated_followup": "disabled",
+  "state": "All three jobs COMPLETED 0:0; canonical replay and all report gates passed",
+  "evaluate_state": "COMPLETED 0:0; 3m27s; both 500k-row splits complete",
+  "plot": 17833774,
+  "plot_dependency": "afterok:17833754",
+  "report_state": "COMPLETED 0:0; 4m36s",
+  "plot_state": "COMPLETED 0:0; 6s; both PNGs visually inspected"
+}

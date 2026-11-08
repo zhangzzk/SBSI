@@ -1,0 +1,498 @@
+{
+  "definition": "Signed absolute response-error CONTRIBUTIONS to each experiment global selected-population response; not within-bin errors or m. Hard radius>3 pixels and MAG_AUTO<25. True size is circularized Re.",
+  "flow": "40 held-out training-family cases, original flow/selection; R11 and halftrace reported separately",
+  "emulator": "40 original development cases, h=.2 forward independently directed half-neighbour shears; projected halftrace per represented selected primary, including neighbour-count weighting. Baseline shape error and omitted selection response shown separately. Common usable labels; not the coherent constant-shear estimator.",
+  "bootstrap": "10000 paired whole-case resamples seed20260925 within each experiment; no cross-experiment pairing",
+  "groups": {
+    "all": {
+      "flow": {
+        "baseline_mass_fraction": 1.0,
+        "R11": {
+          "simulation": {
+            "value": 0.7222333960416464,
+            "se": 0.0034267501165460732
+          },
+          "model_generated_selection": {
+            "value": 0.7146018443422208,
+            "se": 0.0005655552493224437
+          },
+          "error_generated_selection": {
+            "value": 0.007631551699425532,
+            "se": 0.0034100153091893054
+          }
+        },
+        "R22": {
+          "simulation": {
+            "value": 0.7331989310919851,
+            "se": 0.003973846511317749
+          },
+          "model_generated_selection": {
+            "value": 0.7248557340392368,
+            "se": 0.0005837577416235965
+          },
+          "error_generated_selection": {
+            "value": 0.00834319705274833,
+            "se": 0.0038684545050524655
+          }
+        },
+        "halftrace": {
+          "simulation": {
+            "value": 0.7277161635668157,
+            "se": 0.002735080399528425
+          },
+          "model_generated_selection": {
+            "value": 0.7197287891907288,
+            "se": 0.000467902651689342
+          },
+          "error_generated_selection": {
+            "value": 0.007987374376086875,
+            "se": 0.002743721952996937
+          }
+        }
+      },
+      "emulator": {
+        "baseline_mass_fraction": 1.0,
+        "simulation_baseline_shape": {
+          "value": 0.07940370609478534,
+          "se": 0.0023095632265100817
+        },
+        "model_shape": {
+          "value": 0.08196004487585719,
+          "se": 0.0001741757198961926
+        },
+        "baseline_error": {
+          "value": -0.0025563387810718513,
+          "se": 0.0022934620465247853
+        },
+        "selection_response": {
+          "value": 0.0045187927836312465,
+          "se": 0.0005660540842731789
+        },
+        "selected_error": {
+          "value": 0.0019624540025593995,
+          "se": 0.002317542830951979
+        }
+      }
+    },
+    "size_015_04": {
+      "flow": {
+        "baseline_mass_fraction": 0.7583024580119657,
+        "R11": {
+          "simulation": {
+            "value": 0.5429711010568709,
+            "se": 0.0035935703920891675
+          },
+          "model_generated_selection": {
+            "value": 0.5323991393796272,
+            "se": 0.0005620168785677226
+          },
+          "error_generated_selection": {
+            "value": 0.010571961677243613,
+            "se": 0.0036209416653081162
+          }
+        },
+        "R22": {
+          "simulation": {
+            "value": 0.5510533184596917,
+            "se": 0.0035984364133179714
+          },
+          "model_generated_selection": {
+            "value": 0.5358515579627874,
+            "se": 0.000572588164183997
+          },
+          "error_generated_selection": {
+            "value": 0.01520176049690436,
+            "se": 0.0034443636075435166
+          }
+        },
+        "halftrace": {
+          "simulation": {
+            "value": 0.5470122097582812,
+            "se": 0.00251365497169686
+          },
+          "model_generated_selection": {
+            "value": 0.5341253486712073,
+            "se": 0.0004838453742360928
+          },
+          "error_generated_selection": {
+            "value": 0.01288686108707393,
+            "se": 0.0024639647870471127
+          }
+        }
+      },
+      "emulator": {
+        "baseline_mass_fraction": 0.7575607260490106,
+        "simulation_baseline_shape": {
+          "value": 0.06333724669061667,
+          "se": 0.0020615692625552506
+        },
+        "model_shape": {
+          "value": 0.06512990006043869,
+          "se": 0.00014363730174784528
+        },
+        "baseline_error": {
+          "value": -0.0017926533698220115,
+          "se": 0.002036009348881292
+        },
+        "selection_response": {
+          "value": 0.0034783152878323747,
+          "se": 0.0005109045530678963
+        },
+        "selected_error": {
+          "value": 0.0016856619180103671,
+          "se": 0.002083201616272029
+        }
+      }
+    },
+    "size_lt015": {
+      "flow": {
+        "baseline_mass_fraction": 0.06715706768543213,
+        "R11": {
+          "simulation": {
+            "value": 0.00928438397502923,
+            "se": 0.0009710053317068448
+          },
+          "model_generated_selection": {
+            "value": 0.009223610878810825,
+            "se": 7.993752702425887e-05
+          },
+          "error_generated_selection": {
+            "value": 6.077309621840485e-05,
+            "se": 0.0009646723610095141
+          }
+        },
+        "R22": {
+          "simulation": {
+            "value": 0.01280946164920432,
+            "se": 0.0013252528867713955
+          },
+          "model_generated_selection": {
+            "value": 0.01019639974022959,
+            "se": 6.591560947675237e-05
+          },
+          "error_generated_selection": {
+            "value": 0.0026130619089747304,
+            "se": 0.0013235007215250329
+          }
+        },
+        "halftrace": {
+          "simulation": {
+            "value": 0.011046922812116774,
+            "se": 0.00075340274191589
+          },
+          "model_generated_selection": {
+            "value": 0.009710005309520207,
+            "se": 5.800601545748054e-05
+          },
+          "error_generated_selection": {
+            "value": 0.0013369175025965668,
+            "se": 0.0007441135186216554
+          }
+        }
+      },
+      "emulator": {
+        "baseline_mass_fraction": 0.06461120473353667,
+        "simulation_baseline_shape": {
+          "value": 0.008740107852283793,
+          "se": 0.0007362853083244491
+        },
+        "model_shape": {
+          "value": 0.00958991539244617,
+          "se": 6.487012427593959e-05
+        },
+        "baseline_error": {
+          "value": -0.0008498075401623777,
+          "se": 0.000731429135362239
+        },
+        "selection_response": {
+          "value": 0.0010010997498414507,
+          "se": 0.0002756065849736812
+        },
+        "selected_error": {
+          "value": 0.0001512922096790735,
+          "se": 0.0006598112088631147
+        }
+      }
+    },
+    "size_015_025": {
+      "flow": {
+        "baseline_mass_fraction": 0.3535453759100411,
+        "R11": {
+          "simulation": {
+            "value": 0.16293803689265327,
+            "se": 0.0025855253634066455
+          },
+          "model_generated_selection": {
+            "value": 0.15656078607500998,
+            "se": 0.00030495588044160193
+          },
+          "error_generated_selection": {
+            "value": 0.006377250817643287,
+            "se": 0.0025971741574309423
+          }
+        },
+        "R22": {
+          "simulation": {
+            "value": 0.16445675636262835,
+            "se": 0.002676732312771291
+          },
+          "model_generated_selection": {
+            "value": 0.15691577998301154,
+            "se": 0.00029688502042630446
+          },
+          "error_generated_selection": {
+            "value": 0.007540976379616815,
+            "se": 0.002605154778337387
+          }
+        },
+        "halftrace": {
+          "simulation": {
+            "value": 0.16369739662764082,
+            "se": 0.001903662037783743
+          },
+          "model_generated_selection": {
+            "value": 0.15673828302901077,
+            "se": 0.0002519490476518634
+          },
+          "error_generated_selection": {
+            "value": 0.006959113598630051,
+            "se": 0.0018808689576739447
+          }
+        }
+      },
+      "emulator": {
+        "baseline_mass_fraction": 0.34936616856407976,
+        "simulation_baseline_shape": {
+          "value": 0.03727656961986232,
+          "se": 0.001911860997792584
+        },
+        "model_shape": {
+          "value": 0.03819759357175661,
+          "se": 9.134812767295277e-05
+        },
+        "baseline_error": {
+          "value": -0.0009210239518942925,
+          "se": 0.001900175783478212
+        },
+        "selection_response": {
+          "value": 0.002779650456376918,
+          "se": 0.0004177095167178841
+        },
+        "selected_error": {
+          "value": 0.0018586265044826245,
+          "se": 0.0019230766562883307
+        }
+      }
+    },
+    "size_025_04": {
+      "flow": {
+        "baseline_mass_fraction": 0.4047570821019246,
+        "R11": {
+          "simulation": {
+            "value": 0.38003306416421745,
+            "se": 0.002133133047634119
+          },
+          "model_generated_selection": {
+            "value": 0.3758383533046172,
+            "se": 0.000489312951777984
+          },
+          "error_generated_selection": {
+            "value": 0.00419471085960027,
+            "se": 0.002058841679433101
+          }
+        },
+        "R22": {
+          "simulation": {
+            "value": 0.3865965620970633,
+            "se": 0.0022266756704517883
+          },
+          "model_generated_selection": {
+            "value": 0.3789357779797761,
+            "se": 0.0004903385690512112
+          },
+          "error_generated_selection": {
+            "value": 0.007660784117287156,
+            "se": 0.0021199183533913515
+          }
+        },
+        "halftrace": {
+          "simulation": {
+            "value": 0.38331481313064036,
+            "se": 0.0015791926009924497
+          },
+          "model_generated_selection": {
+            "value": 0.37738706564219665,
+            "se": 0.0004142761615291331
+          },
+          "error_generated_selection": {
+            "value": 0.005927747488443713,
+            "se": 0.0014399361406794787
+          }
+        }
+      },
+      "emulator": {
+        "baseline_mass_fraction": 0.4081945574849308,
+        "simulation_baseline_shape": {
+          "value": 0.026060677070754355,
+          "se": 0.001223359207140951
+        },
+        "model_shape": {
+          "value": 0.026932306488682074,
+          "se": 8.822341790941745e-05
+        },
+        "baseline_error": {
+          "value": -0.000871629417927719,
+          "se": 0.0012211362352409225
+        },
+        "selection_response": {
+          "value": 0.0006986648314554569,
+          "se": 0.0002390594294315202
+        },
+        "selected_error": {
+          "value": -0.0001729645864722608,
+          "se": 0.001210656259639642
+        }
+      }
+    },
+    "size_04_07": {
+      "flow": {
+        "baseline_mass_fraction": 0.1446125567649391,
+        "R11": {
+          "simulation": {
+            "value": 0.1437265643216869,
+            "se": 0.0007696257247035121
+          },
+          "model_generated_selection": {
+            "value": 0.14578512941511412,
+            "se": 0.00029831998348556004
+          },
+          "error_generated_selection": {
+            "value": -0.0020585650934272226,
+            "se": 0.000659302700514571
+          }
+        },
+        "R22": {
+          "simulation": {
+            "value": 0.14329237704418799,
+            "se": 0.0008503046088075365
+          },
+          "model_generated_selection": {
+            "value": 0.15134217058340155,
+            "se": 0.0003147033899317014
+          },
+          "error_generated_selection": {
+            "value": -0.008049793539213562,
+            "se": 0.0006982269835654538
+          }
+        },
+        "halftrace": {
+          "simulation": {
+            "value": 0.14350947068293746,
+            "se": 0.0005070256600980022
+          },
+          "model_generated_selection": {
+            "value": 0.14856364999925784,
+            "se": 0.00025008576697544956
+          },
+          "error_generated_selection": {
+            "value": -0.0050541793163203785,
+            "se": 0.00042237200068676836
+          }
+        }
+      },
+      "emulator": {
+        "baseline_mass_fraction": 0.14717914541021873,
+        "simulation_baseline_shape": {
+          "value": 0.006297446010960422,
+          "se": 0.00040320233288247264
+        },
+        "model_shape": {
+          "value": 0.006409844594730153,
+          "se": 4.676680036185376e-05
+        },
+        "baseline_error": {
+          "value": -0.000112398583769731,
+          "se": 0.0003909845698651538
+        },
+        "selection_response": {
+          "value": 2.715722469978856e-05,
+          "se": 7.474526951364991e-05
+        },
+        "selected_error": {
+          "value": -8.524135906994284e-05,
+          "se": 0.0003739923307554722
+        }
+      }
+    },
+    "size_ge07": {
+      "flow": {
+        "baseline_mass_fraction": 0.029927917537663086,
+        "R11": {
+          "simulation": {
+            "value": 0.02625134668805952,
+            "se": 0.00024946483186774637
+          },
+          "model_generated_selection": {
+            "value": 0.027193964668668785,
+            "se": 0.00011947219107321646
+          },
+          "error_generated_selection": {
+            "value": -0.0009426179806092637,
+            "se": 0.00021613505878546738
+          }
+        },
+        "R22": {
+          "simulation": {
+            "value": 0.026043773938901064,
+            "se": 0.00016787167121478977
+          },
+          "model_generated_selection": {
+            "value": 0.027465605752818013,
+            "se": 8.997317645235942e-05
+          },
+          "error_generated_selection": {
+            "value": -0.0014218318139169496,
+            "se": 0.00017095138181969709
+          }
+        },
+        "halftrace": {
+          "simulation": {
+            "value": 0.02614756031348029,
+            "se": 0.00018271065736116045
+          },
+          "model_generated_selection": {
+            "value": 0.027329785210743397,
+            "se": 9.254697464683049e-05
+          },
+          "error_generated_selection": {
+            "value": -0.0011822248972631066,
+            "se": 0.00016412765796636943
+          }
+        }
+      },
+      "emulator": {
+        "baseline_mass_fraction": 0.030648923807234038,
+        "simulation_baseline_shape": {
+          "value": 0.0010289055409244531,
+          "se": 0.00014333662797254236
+        },
+        "model_shape": {
+          "value": 0.0008303848282421746,
+          "se": 1.3348461103493471e-05
+        },
+        "baseline_error": {
+          "value": 0.00019852071268227852,
+          "se": 0.00014158810618718147
+        },
+        "selection_response": {
+          "value": 1.2220521257632505e-05,
+          "se": 1.7759723993003133e-05
+        },
+        "selected_error": {
+          "value": 0.00021074123393991114,
+          "se": 0.00013776246686113058
+        }
+      }
+    }
+  }
+}

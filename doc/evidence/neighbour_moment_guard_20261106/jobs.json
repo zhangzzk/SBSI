@@ -1,0 +1,20 @@
+{
+  "jobs": {
+    "train_own_and_pilot": 17809953,
+    "persistent_evaluation": 17809957,
+    "report": 17809958,
+    "bounded_check": 17809959,
+    "older_broad_held": 17788286
+  },
+  "study_gpu_ceiling": 6,
+  "trial_peak_gpus": 3,
+  "training_workers": 1,
+  "evaluation_workers": 3,
+  "evaluation_tasks_per_worker": [
+    3,
+    2,
+    2
+  ],
+  "frozen_manifest_sha256": "278022b91ff36da0a9a334406ca36845db415ce857f4875dbaec3dc8e855b341",
+  "check_behavior": "Local snapshot only, no chat notification."
+}

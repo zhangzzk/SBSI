@@ -1,0 +1,276 @@
+{
+  "job": "17815927",
+  "source": "d658157db31940739f7f9c185034e4046e9574f489b90eae6bd1373d6a0cf0bf",
+  "reference": "559513be7f3189595c4aff7f319b03a63e210ea2ee30a1671c222785cf3ea82e",
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "sample": 2048,
+  "comparisons_per_role": 4096,
+  "central_cut": [
+    3.0,
+    25.0
+  ],
+  "counts": "Unweighted unique IDs, entries and exits within the stratified 2048 sample. Weighted summaries are full-parent event fractions; [estimate,four-case jackknife,conditional sampling SE]. No division by shear; not ellipticity responses.",
+  "results": {
+    "neighbour": {
+      "detected": {
+        "entries": 12,
+        "exits": 5,
+        "distinct": 12,
+        "case_distinct": [
+          2,
+          1,
+          4,
+          5
+        ],
+        "weighted_cross_fraction": [
+          0.0027645251028432143,
+          0.0005544070753711963,
+          0.000841288196334629
+        ],
+        "weighted_net_change": [
+          0.001138519435657928,
+          0.0010068995897951055,
+          0.0008437473028491815
+        ]
+      },
+      "usable_seed1": {
+        "entries": 12,
+        "exits": 5,
+        "distinct": 12,
+        "case_distinct": [
+          2,
+          1,
+          4,
+          5
+        ],
+        "weighted_cross_fraction": [
+          0.0027645251028432143,
+          0.0005544070753711963,
+          0.000841288196334629
+        ],
+        "weighted_net_change": [
+          0.001138519435657928,
+          0.0010068995897951055,
+          0.0008437473028491815
+        ]
+      },
+      "usable_seed2": {
+        "entries": 12,
+        "exits": 5,
+        "distinct": 12,
+        "case_distinct": [
+          2,
+          1,
+          4,
+          5
+        ],
+        "weighted_cross_fraction": [
+          0.0027645251028432143,
+          0.0005544070753711963,
+          0.000841288196334629
+        ],
+        "weighted_net_change": [
+          0.001138519435657928,
+          0.0010068995897951055,
+          0.0008437473028491815
+        ]
+      },
+      "detected_and_cut": {
+        "entries": 13,
+        "exits": 12,
+        "distinct": 17,
+        "case_distinct": [
+          2,
+          6,
+          5,
+          4
+        ],
+        "weighted_cross_fraction": [
+          0.00406475642854862,
+          0.0008951442083839248,
+          0.0010337262593539663
+        ],
+        "weighted_net_change": [
+          0.0001625838992017818,
+          0.0015790031374297456,
+          0.000986800780081093
+        ]
+      },
+      "usable_and_cut_seed1": {
+        "entries": 13,
+        "exits": 12,
+        "distinct": 17,
+        "case_distinct": [
+          2,
+          6,
+          5,
+          4
+        ],
+        "weighted_cross_fraction": [
+          0.00406475642854862,
+          0.0008951442083839248,
+          0.0010337262593539663
+        ],
+        "weighted_net_change": [
+          0.0001625838992017818,
+          0.0015790031374297456,
+          0.000986800780081093
+        ]
+      },
+      "usable_and_cut_seed2": {
+        "entries": 13,
+        "exits": 12,
+        "distinct": 17,
+        "case_distinct": [
+          2,
+          6,
+          5,
+          4
+        ],
+        "weighted_cross_fraction": [
+          0.00406475642854862,
+          0.0008951442083839248,
+          0.0010337262593539663
+        ],
+        "weighted_net_change": [
+          0.0001625838992017818,
+          0.0015790031374297456,
+          0.000986800780081093
+        ]
+      }
+    },
+    "primary": {
+      "detected": {
+        "entries": 4,
+        "exits": 3,
+        "distinct": 7,
+        "case_distinct": [
+          0,
+          0,
+          3,
+          4
+        ],
+        "weighted_cross_fraction": [
+          0.0011384322347424978,
+          0.0006700357889984355,
+          0.0004279257194449924
+        ],
+        "weighted_net_change": [
+          0.00016275774912811447,
+          0.0004093945998466258,
+          0.00043034074563471145
+        ]
+      },
+      "usable_seed1": {
+        "entries": 4,
+        "exits": 3,
+        "distinct": 7,
+        "case_distinct": [
+          0,
+          0,
+          3,
+          4
+        ],
+        "weighted_cross_fraction": [
+          0.0011384322347424978,
+          0.0006700357889984355,
+          0.0004279257194449924
+        ],
+        "weighted_net_change": [
+          0.00016275774912811447,
+          0.0004093945998466258,
+          0.00043034074563471145
+        ]
+      },
+      "usable_seed2": {
+        "entries": 4,
+        "exits": 3,
+        "distinct": 7,
+        "case_distinct": [
+          0,
+          0,
+          3,
+          4
+        ],
+        "weighted_cross_fraction": [
+          0.0011384322347424978,
+          0.0006700357889984355,
+          0.0004279257194449924
+        ],
+        "weighted_net_change": [
+          0.00016275774912811447,
+          0.0004093945998466258,
+          0.00043034074563471145
+        ]
+      },
+      "detected_and_cut": {
+        "entries": 16,
+        "exits": 7,
+        "distinct": 16,
+        "case_distinct": [
+          6,
+          4,
+          3,
+          3
+        ],
+        "weighted_cross_fraction": [
+          0.0037399341223796102,
+          0.0011703816436607216,
+          0.000981621116888904
+        ],
+        "weighted_net_change": [
+          0.0014635089688989347,
+          0.0006160692376371743,
+          0.0009338553305029501
+        ]
+      },
+      "usable_and_cut_seed1": {
+        "entries": 16,
+        "exits": 7,
+        "distinct": 16,
+        "case_distinct": [
+          6,
+          4,
+          3,
+          3
+        ],
+        "weighted_cross_fraction": [
+          0.0037399341223796102,
+          0.0011703816436607216,
+          0.000981621116888904
+        ],
+        "weighted_net_change": [
+          0.0014635089688989347,
+          0.0006160692376371743,
+          0.0009338553305029501
+        ]
+      },
+      "usable_and_cut_seed2": {
+        "entries": 16,
+        "exits": 7,
+        "distinct": 16,
+        "case_distinct": [
+          6,
+          4,
+          3,
+          3
+        ],
+        "weighted_cross_fraction": [
+          0.0037399341223796102,
+          0.0011703816436607216,
+          0.000981621116888904
+        ],
+        "weighted_net_change": [
+          0.0014635089688989347,
+          0.0006160692376371743,
+          0.0009338553305029501
+        ]
+      }
+    }
+  }
+}

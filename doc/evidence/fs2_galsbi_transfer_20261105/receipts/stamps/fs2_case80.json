@@ -1,0 +1,39 @@
+{
+  "family": "fs2",
+  "case": 80,
+  "sample": 3783,
+  "pool_counts": [
+    15,
+    32,
+    136,
+    525,
+    1249,
+    1987,
+    2390,
+    2414,
+    2322,
+    2046,
+    1707,
+    1454
+  ],
+  "columns": [
+    "g1",
+    "g2",
+    "T",
+    "flags",
+    "lnprob",
+    "noise_weight"
+  ],
+  "stamp_labels": [
+    "historical48_subpixel",
+    "centred65"
+  ],
+  "errors": {
+    "KeyError": 1
+  },
+  "science": "/project/ls-gruen/users/zekang.zhang/lsst_sims_fs2_25876_constant/case80_0.02/real0/images/original/tile180.0_-0.5_bandr_rot0.fits",
+  "source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+  "script_sha256": "73f3f9e4def0d89688bc414f76926fd3171e40397cee27e9b5c5cce80419deef",
+  "seconds": 310.1877581430599,
+  "seed_design": "paired across stamps, independent replicates; no T cut"
+}

@@ -1,0 +1,48 @@
+{
+  "arms": {
+    "baseline": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb",
+      "loader": "original",
+      "mean_score": false
+    },
+    "nine_weak": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+      "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e",
+      "loader": "original",
+      "mean_score": false
+    },
+    "neighbour_nine": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/neighbour/nine.pt",
+      "sha256": "f6600f8b6bbab242519095a494b1920471b22f62481b5904b561b1fc2b725f77",
+      "loader": "neighbour",
+      "mean_score": false
+    },
+    "latest": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/weighted/final.pt",
+      "sha256": "43673e5db42e90d976d45dc7de1e54682adb0fd18bea74c6602e8dd4630c8cbd",
+      "loader": "neighbour",
+      "mean_score": false
+    }
+  },
+  "sample_manifest": "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_flow_selection_20261106/manifest.json",
+  "prepared_sha256": "cbdd4e81e0f5fb93b05ffcb1a3e879708d1cd6f0060ccd9b3a3cbda55ee8ad58",
+  "rank_seed": 202611082201,
+  "raw_features": [
+    "true_e1",
+    "true_e2",
+    "sersic",
+    "true_magnitude",
+    "true_radius",
+    "crowding050",
+    "crowding100",
+    "crowding200",
+    "neighbour_score"
+  ],
+  "rows_per_split": 500000,
+  "draws_per_bank": 64,
+  "blocks": 1024,
+  "max_gpus": 1,
+  "broad_array_still_held": 17788286,
+  "automated_followup": "disabled"
+}

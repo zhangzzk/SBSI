@@ -35,6 +35,7 @@ from scipy.special import logsumexp
 import torch
 
 from .catalogue_blend import CatalogueBlendResponse
+from .flow_size_condition import CIRCULARIZED_FEATURE, circularized_radius
 from .scene_prior import ScenePrior
 from .shear_map import apply_shear_to_ellipticity
 
@@ -76,6 +77,7 @@ ZERO_SHEAR_REUSABLE_FLOW_FEATURES = frozenset(
         "sersic_n_input_p",
         "r_input_p",
         "Re_input_p",
+        CIRCULARIZED_FEATURE,
         "nbr_flux_near",
         "nbr_flux_far",
         "nbr_flux_max",
@@ -121,14 +123,16 @@ def _curve_derivatives(curve, *, delta: float, richardson: bool = True):
 class OutputCut:
     """Selection predicate on the measurement flow's output vector.
 
-    Bounds are half-open (``lower <= value < upper``), with ``None`` for an
-    open side.  The implementation deliberately uses operations shared by
+    Bounds default to half-open (``lower <= value < upper``); names in
+    ``strict_lower`` instead use ``lower < value``. ``None`` denotes an open
+    side. The implementation deliberately uses operations shared by
     NumPy and Torch so the observed-catalogue and population-normalization
     paths apply exactly the same cut.
     """
 
-    def __init__(self, target_names, abs_shape=None, bounds=()):
+    def __init__(self, target_names, abs_shape=None, bounds=(), *, strict_lower=()):
         self.target_names = list(target_names)
+        self.strict_lower = frozenset(strict_lower)
         self.abs_shape = None if abs_shape is None else float(abs_shape)
         if self.abs_shape is not None and self.abs_shape <= 0.0:
             raise ValueError(f"abs_shape must be positive, got {self.abs_shape}")
@@ -147,6 +151,8 @@ class OutputCut:
             self.bounds.append(
                 (name, self.target_names.index(name), lower, upper)
             )
+        if not self.strict_lower <= {name for name, _, lower, _ in self.bounds if lower is not None}:
+            raise ValueError("strict lower bounds require named finite lower cuts")
 
         if self.abs_shape is None and not self.bounds:
             raise ValueError("use None instead of an OutputCut that keeps everything")
@@ -165,9 +171,10 @@ class OutputCut:
                 values[..., self.j1] ** 2 + values[..., self.j2] ** 2
                 < self.abs_shape**2
             )
-        for _, index, lower, upper in self.bounds:
+        for name, index, lower, upper in self.bounds:
             masks = (
-                values[..., index] >= lower if lower is not None else None,
+                (values[..., index] > lower if name in self.strict_lower else values[..., index] >= lower)
+                if lower is not None else None,
                 values[..., index] < upper if upper is not None else None,
             )
             for mask in masks:
@@ -182,7 +189,7 @@ class OutputCut:
             return self.abs_shape
         parts = [] if self.abs_shape is None else [f"|xhat|<{self.abs_shape!r}"]
         parts.extend(
-            f"{name}:{lower!r}:{upper!r}"
+            f"{name}:{'>' if name in self.strict_lower else ''}{lower!r}:{upper!r}"
             for name, _, lower, upper in self.bounds
         )
         return ";".join(parts)
@@ -193,21 +200,25 @@ class OutputCut:
             if lower is None:
                 parts.append(f"{name} < {upper:g}")
             elif upper is None:
-                parts.append(f"{name} >= {lower:g}")
+                parts.append(f"{name} {'>' if name in self.strict_lower else '>='} {lower:g}")
             else:
-                parts.append(f"{lower:g} <= {name} < {upper:g}")
+                parts.append(f"{lower:g} {'<' if name in self.strict_lower else '<='} {name} < {upper:g}")
         return " and ".join(parts)
 
     @classmethod
     def from_specs(cls, target_names, abs_shape=None, specs=()):
-        """Build a cut from repeatable ``NAME:LOWER:UPPER`` CLI strings."""
+        """Build ``NAME:LOWER:UPPER`` cuts; prefix LOWER with > for strictness."""
 
         bounds = []
+        strict_lower = []
         for spec in specs or ():
             fields = str(spec).split(":")
             if len(fields) != 3:
                 raise ValueError(f"cut spec {spec!r} is not NAME:LO:HI")
             name, lower, upper = (field.strip() for field in fields)
+            if lower.startswith(">"):
+                strict_lower.append(name)
+                lower = lower[1:]
             bounds.append(
                 (
                     name,
@@ -215,7 +226,7 @@ class OutputCut:
                     None if upper in ("", "none", "inf") else upper,
                 )
             )
-        return cls(target_names, abs_shape=abs_shape, bounds=bounds)
+        return cls(target_names, abs_shape=abs_shape, bounds=bounds, strict_lower=strict_lower)
 
 
 class CatalogueSelection:
@@ -545,6 +556,38 @@ class CatalogueModelCache:
     def _key(g1: float, g2: float) -> tuple[float, float]:
         return (round(float(g1), 14), round(float(g2), 14))
 
+    def _augment_model_views(
+        self,
+        flow: pd.DataFrame,
+        detection: pd.DataFrame,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """Supply the small set of atom-aligned cross-model conditions."""
+
+        required = set(self.flow_features or ()) | set(self.detection_features)
+        if CIRCULARIZED_FEATURE in required:
+            flow = flow.copy()
+            flow[CIRCULARIZED_FEATURE] = circularized_radius(
+                self.prior.galaxies["Re"].to_numpy(dtype=float),
+                self.prior.galaxies["axis_ratio"].to_numpy(dtype=float),
+            )
+        if "R_blend" in self.detection_features:
+            if self.blend_response is None:
+                raise KeyError(
+                    "detection feature R_blend requires a blend-response cache"
+                )
+            detection = detection.copy()
+            detection["R_blend"] = self.blend_response.values
+        missing_from_detection = [
+            name
+            for name in self.detection_features
+            if name not in detection and name in flow
+        ]
+        if missing_from_detection:
+            detection = detection.copy()
+            for name in missing_from_detection:
+                detection[name] = flow[name]
+        return flow, detection
+
     def get(self, g1: float, g2: float) -> CatalogueModelView:
         key = self._key(g1, g2)
         if key not in self._views:
@@ -553,13 +596,21 @@ class CatalogueModelCache:
                     f"model cache has no view at shear {key} and no detector is loaded "
                     "to build it"
                 )
+            invariant_detection = (
+                set(self.detection_features) <= SHEAR_INVARIANT_DETECTION_FEATURES
+            )
+            detection_from_flow = (
+                bool(self.detection_features)
+                and self.flow_features is not None
+                and set(self.detection_features)
+                <= set(self.flow_features) | ({"R_blend"} if self.blend_response is not None else set())
+            )
             reusable = (
                 key != (0.0, 0.0)
                 and self.flow_features is not None
                 and set(self.flow_features) <= ZERO_SHEAR_REUSABLE_FLOW_FEATURES
                 and {"e1_input_p", "e2_input_p"} <= set(self.flow_features)
-                and set(self.detection_features)
-                <= SHEAR_INVARIANT_DETECTION_FEATURES
+                and (invariant_detection or detection_from_flow)
             )
             if reusable:
                 zero = self.get(0.0, 0.0)
@@ -575,8 +626,21 @@ class CatalogueModelCache:
                 )
                 flow["e1_input_p"] = e1
                 flow["e2_input_p"] = e2
-                detection = zero.detection
-                probability = zero.detection_probability
+                if invariant_detection:
+                    detection = zero.detection
+                    probability = zero.detection_probability
+                else:
+                    # The compact prior retains neighbour-complete zero views,
+                    # not the graph. Rebuild this classifier's inputs from the
+                    # sheared flow view, retaining its invariant crowding and
+                    # atom-aligned response, and reevaluate p(U | x, g).
+                    detection = flow.loc[:, [
+                        name for name in self.detection_features if name != "R_blend"
+                    ]].copy()
+                    if "R_blend" in self.detection_features:
+                        detection["R_blend"] = self.blend_response.values
+                    detection = detection.loc[:, self.detection_features]
+                    probability = predict_detection_probability(self.detector, detection)
                 blend_shift = (
                     np.zeros((len(flow), 2), dtype=np.float64)
                     if self.blend_response is None
@@ -585,6 +649,11 @@ class CatalogueModelCache:
                     )
                 )
             else:
+                if self.prior.metadata.get("neighbour_graph_usage") == "precomputed_in_shard_model_views_only":
+                    raise RuntimeError(
+                        "compact scene requires compatible neighbour-complete model views; "
+                        "its empty graph cannot rebuild model conditions"
+                    )
                 sheared = self.prior.shear(*key)
                 flow = sheared.flow_view(
                     conditions=self.conditions,
@@ -597,6 +666,7 @@ class CatalogueModelCache:
                     neighbour_selection=self.detection_neighbour_selection,
                     impact_exponent=self.detection_impact_exponent,
                 )
+                flow, detection = self._augment_model_views(flow, detection)
                 probability = predict_detection_probability(self.detector, detection)
                 if self.flow_features is not None:
                     missing = sorted(set(self.flow_features) - set(flow))
@@ -1099,11 +1169,15 @@ class CatalogueLikelihood:
             raise ValueError("observed targets are on the wrong device")
 
         device = tensor_view.context.device
+        # Physical-coordinate flows keep their targets and Jacobians in
+        # float64 while the neural-network contexts remain float32. Preserve
+        # that precision in both dense assignment and ragged index_copy_.
+        output_dtype = torch.promote_types(tensor_view.context.dtype, observed_targets.dtype)
         output = (
-            torch.empty(indices.shape, dtype=tensor_view.context.dtype, device=device)
+            torch.empty(indices.shape, dtype=output_dtype, device=device)
             if valid is None
             else torch.zeros(
-                indices.shape, dtype=tensor_view.context.dtype, device=device
+                indices.shape, dtype=output_dtype, device=device
             )
         )
         if valid is not None:
@@ -1131,7 +1205,7 @@ class CatalogueLikelihood:
                 )
                 proposal_all = torch.as_tensor(
                     np.ascontiguousarray(proposal[start:stop]),
-                    dtype=tensor_view.context.dtype,
+                    dtype=output_dtype,
                     device=device,
                 )
                 targets = observed_targets[start:stop]

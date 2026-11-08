@@ -1,0 +1,199 @@
+{
+  "statistic_scalars_checked": 20268,
+  "maximum_absolute_difference": 6.572520305780927e-14,
+  "outputs_verified": 160,
+  "source_report_sha256": "b7688d3143a04547ed5314a0978d65b6c2325b27fed34f83627e00d369212785",
+  "source_code_sha256": "4eda93fc176c7129a28b7abcdc7d389a267dbdf353807f18dc57bd6237a1d808",
+  "cohorts": {
+    "original_four": {
+      "1": {
+        "predicted_usability_generated_selection": {
+          "central_downward_cases": 4,
+          "central_change_range_pp": [
+            -0.12553132415589197,
+            -0.08981394338143378
+          ],
+          "individual_nine_cut_rms_improved": 3,
+          "case_count": 4
+        },
+        "true_usability_generated_selection": {
+          "central_downward_cases": 4,
+          "central_change_range_pp": [
+            -0.11506761940214272,
+            -0.07813710338759883
+          ],
+          "individual_nine_cut_rms_improved": 3,
+          "case_count": 4
+        },
+        "true_usability_true_selection": {
+          "central_downward_cases": 4,
+          "central_change_range_pp": [
+            -0.07724760218352777,
+            -0.06946078355862806
+          ],
+          "individual_nine_cut_rms_improved": 4,
+          "case_count": 4
+        }
+      },
+      "2": {
+        "predicted_usability_generated_selection": {
+          "central_downward_cases": 4,
+          "central_change_range_pp": [
+            -0.15386265939976163,
+            -0.08829524582023573
+          ],
+          "individual_nine_cut_rms_improved": 3,
+          "case_count": 4
+        },
+        "true_usability_generated_selection": {
+          "central_downward_cases": 4,
+          "central_change_range_pp": [
+            -0.15498680320089608,
+            -0.08346974531445728
+          ],
+          "individual_nine_cut_rms_improved": 3,
+          "case_count": 4
+        },
+        "true_usability_true_selection": {
+          "central_downward_cases": 4,
+          "central_change_range_pp": [
+            -0.07843296345559914,
+            -0.0748668295001087
+          ],
+          "individual_nine_cut_rms_improved": 4,
+          "case_count": 4
+        }
+      }
+    },
+    "additional_thirty_six": {
+      "1": {
+        "predicted_usability_generated_selection": {
+          "central_downward_cases": 36,
+          "central_change_range_pp": [
+            -0.16512395275498637,
+            -0.07954816204125414
+          ],
+          "individual_nine_cut_rms_improved": 28,
+          "case_count": 36
+        },
+        "true_usability_generated_selection": {
+          "central_downward_cases": 36,
+          "central_change_range_pp": [
+            -0.1824538367706907,
+            -0.07390263588133994
+          ],
+          "individual_nine_cut_rms_improved": 28,
+          "case_count": 36
+        },
+        "true_usability_true_selection": {
+          "central_downward_cases": 36,
+          "central_change_range_pp": [
+            -0.08059584790411911,
+            -0.06771055004242132
+          ],
+          "individual_nine_cut_rms_improved": 34,
+          "case_count": 36
+        }
+      },
+      "2": {
+        "predicted_usability_generated_selection": {
+          "central_downward_cases": 36,
+          "central_change_range_pp": [
+            -0.14727869260519055,
+            -0.07510120366069906
+          ],
+          "individual_nine_cut_rms_improved": 18,
+          "case_count": 36
+        },
+        "true_usability_generated_selection": {
+          "central_downward_cases": 36,
+          "central_change_range_pp": [
+            -0.15716922394748423,
+            -0.07435511681190832
+          ],
+          "individual_nine_cut_rms_improved": 20,
+          "case_count": 36
+        },
+        "true_usability_true_selection": {
+          "central_downward_cases": 36,
+          "central_change_range_pp": [
+            -0.07977118328716948,
+            -0.07039052961790304
+          ],
+          "individual_nine_cut_rms_improved": 36,
+          "case_count": 36
+        }
+      }
+    },
+    "all_forty": {
+      "1": {
+        "predicted_usability_generated_selection": {
+          "central_downward_cases": 40,
+          "central_change_range_pp": [
+            -0.16512395275498637,
+            -0.07954816204125414
+          ],
+          "individual_nine_cut_rms_improved": 31,
+          "case_count": 40
+        },
+        "true_usability_generated_selection": {
+          "central_downward_cases": 40,
+          "central_change_range_pp": [
+            -0.1824538367706907,
+            -0.07390263588133994
+          ],
+          "individual_nine_cut_rms_improved": 31,
+          "case_count": 40
+        },
+        "true_usability_true_selection": {
+          "central_downward_cases": 40,
+          "central_change_range_pp": [
+            -0.08059584790411911,
+            -0.06771055004242132
+          ],
+          "individual_nine_cut_rms_improved": 38,
+          "case_count": 40
+        }
+      },
+      "2": {
+        "predicted_usability_generated_selection": {
+          "central_downward_cases": 40,
+          "central_change_range_pp": [
+            -0.15386265939976163,
+            -0.07510120366069906
+          ],
+          "individual_nine_cut_rms_improved": 21,
+          "case_count": 40
+        },
+        "true_usability_generated_selection": {
+          "central_downward_cases": 40,
+          "central_change_range_pp": [
+            -0.15716922394748423,
+            -0.07435511681190832
+          ],
+          "individual_nine_cut_rms_improved": 23,
+          "case_count": 40
+        },
+        "true_usability_true_selection": {
+          "central_downward_cases": 40,
+          "central_change_range_pp": [
+            -0.07977118328716948,
+            -0.07039052961790304
+          ],
+          "individual_nine_cut_rms_improved": 40,
+          "case_count": 40
+        }
+      }
+    }
+  },
+  "matching_totals_unique_case_axis_legs": {
+    "cross_rows": 46853911,
+    "shape_rows": 47082594,
+    "cross_without_shape": 0,
+    "shape_without_cross": 228683,
+    "parent_rows": 141566764,
+    "parent_usable": 46847830,
+    "parent_absent_crossmatch": 94712853,
+    "usable_zero_shape_rows": 0
+  }
+}

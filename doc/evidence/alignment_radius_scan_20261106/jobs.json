@@ -1,0 +1,23 @@
+{
+  "pilot": "17785984",
+  "remaining": "17786000",
+  "pilot_report": "17786001",
+  "report": "17786002",
+  "gpu_ceiling": 6,
+  "source_sha256": {
+    "run.sh": "d3430aad32a011e34c6232d2b1a25996a21f97bbbf6a04f8113747fc34f46e71",
+    "findings.md": "d938adc12c3160a85dca8311030e37c7551170e601f02b9e6267cc069ce8adbf",
+    "report.py": "52d512c2dff8228af7a158ca4799255e07bc747975edd1922ea255d62fdc679c",
+    "run_report.sh": "697e285497d3641b02bc8dee8493004d9d1ec477483d73727d6bb99f6066e53c",
+    "manifest.json": "5f47b7012d8c9711004fdf9bf781029266c733337b57d7159f4aff0798fc38a5",
+    "check.py": "8141e06a682ab806f205fb1b8c81a6c57cf9c4793780dcba2312106586905c8a",
+    "rule.md": "6b2233c574fe814a6bc89e37a7ce8cc1abfff56fa3ade9c6a6ba6173c6c99b45",
+    "evaluate.py": "01eaddc27b92dd17b537f102e2094b560ac02a23fc2e2b9fc5561aff6d31fea9"
+  },
+  "check": "17786134",
+  "temporary_throttle": 3,
+  "throttle_reason": "Share three plus three GPUs with continuation17788119",
+  "stopped_remaining": "17786000",
+  "cancelled_full_report": "17786002",
+  "reason": "Cross-GPU cached-draw replay failed; do not relax tolerance. Prioritize owner target grid with portable latent banks; preserve completed outputs."
+}

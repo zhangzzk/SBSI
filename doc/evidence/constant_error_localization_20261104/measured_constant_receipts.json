@@ -1,0 +1,130 @@
+[
+  {
+    "case": 1000,
+    "seconds": 20.718708858825266,
+    "catalogues": [
+      {
+        "cross_without_shape": 0,
+        "selected": 139070,
+        "missing_parent_cross": 591065
+      },
+      {
+        "cross_without_shape": 0,
+        "selected": 139032,
+        "missing_parent_cross": 591210
+      }
+    ]
+  },
+  {
+    "case": 1001,
+    "seconds": 20.33007343392819,
+    "catalogues": [
+      {
+        "cross_without_shape": 0,
+        "selected": 139717,
+        "missing_parent_cross": 593209
+      },
+      {
+        "cross_without_shape": 0,
+        "selected": 139799,
+        "missing_parent_cross": 593146
+      }
+    ]
+  },
+  {
+    "case": 1040,
+    "seconds": 20.24623749917373,
+    "catalogues": [
+      {
+        "cross_without_shape": 0,
+        "selected": 138542,
+        "missing_parent_cross": 591234
+      },
+      {
+        "cross_without_shape": 0,
+        "selected": 138474,
+        "missing_parent_cross": 591331
+      }
+    ]
+  },
+  {
+    "case": 1041,
+    "seconds": 19.97021513013169,
+    "catalogues": [
+      {
+        "cross_without_shape": 0,
+        "selected": 139575,
+        "missing_parent_cross": 592237
+      },
+      {
+        "cross_without_shape": 0,
+        "selected": 139504,
+        "missing_parent_cross": 592233
+      }
+    ]
+  },
+  {
+    "case": 1080,
+    "seconds": 19.80264382995665,
+    "catalogues": [
+      {
+        "cross_without_shape": 0,
+        "selected": 139293,
+        "missing_parent_cross": 591912
+      },
+      {
+        "cross_without_shape": 0,
+        "selected": 139312,
+        "missing_parent_cross": 591926
+      }
+    ]
+  },
+  {
+    "case": 1081,
+    "seconds": 20.097244447097182,
+    "catalogues": [
+      {
+        "cross_without_shape": 0,
+        "selected": 139928,
+        "missing_parent_cross": 591769
+      },
+      {
+        "cross_without_shape": 0,
+        "selected": 140024,
+        "missing_parent_cross": 591781
+      }
+    ]
+  },
+  {
+    "case": 1120,
+    "seconds": 20.299443004187196,
+    "catalogues": [
+      {
+        "cross_without_shape": 0,
+        "selected": 140061,
+        "missing_parent_cross": 593321
+      },
+      {
+        "cross_without_shape": 0,
+        "selected": 140031,
+        "missing_parent_cross": 593345
+      }
+    ]
+  },
+  {
+    "case": 1121,
+    "seconds": 20.086008003912866,
+    "catalogues": [
+      {
+        "cross_without_shape": 0,
+        "selected": 139020,
+        "missing_parent_cross": 592973
+      },
+      {
+        "cross_without_shape": 0,
+        "selected": 139117,
+        "missing_parent_cross": 592921
+      }
+    ]
+  }
+]

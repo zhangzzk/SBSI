@@ -1,0 +1,35 @@
+{
+  "updated_utc": "2026-11-07T18:04:26.227875+00:00",
+  "verify": {
+    "job_id": 17818793,
+    "status": "COMPLETED",
+    "exit_code": "0:0"
+  },
+  "pilot": {
+    "job_id": 17818806,
+    "status": "COMPLETED",
+    "device": "NVIDIA GeForce RTX 2080 Ti",
+    "exit_code": "0:0"
+  },
+  "workers": {
+    "job_id": 17818807,
+    "array": "0-2%3",
+    "dependency": "afterok:17818806",
+    "status": "COMPLETED",
+    "exit_code": "0:0"
+  },
+  "report": {
+    "job_id": 17818808,
+    "dependency": "afterok:17818807",
+    "status": "COMPLETED",
+    "exit_code": "0:0"
+  },
+  "training_launched": false,
+  "interpretation": {
+    "job_id": 17820925,
+    "status": "COMPLETED",
+    "exit_code": "0:0",
+    "reported_statistics_checked": 1512
+  },
+  "results_available": true
+}

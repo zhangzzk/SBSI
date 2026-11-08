@@ -1,0 +1,71 @@
+{
+  "definition": "Each group contributes to its own experiment global response error; do not add or subtract across families as an error budget",
+  "groups": {
+    "all": {
+      "joint_error_contribution": {
+        "value": 0.021850319754129852,
+        "se": 0.005688871845742403
+      },
+      "joint_simulation_mass_fraction": 1.0,
+      "flow_R11_error_contribution": {
+        "value": 0.007631551699425532,
+        "se": 0.0034100153091893054
+      }
+    },
+    "size_015_04_crowd_lt01": {
+      "joint_error_contribution": {
+        "value": 0.017174045796949356,
+        "se": 0.004149033830523725
+      },
+      "joint_simulation_mass_fraction": 0.47947369990971517,
+      "flow_R11_error_contribution": {
+        "value": 0.016224986179327827,
+        "se": 0.003109299424560498
+      }
+    },
+    "outside_core": {
+      "joint_error_contribution": {
+        "value": 0.0046762739571804945,
+        "se": 0.0024197356041973845
+      },
+      "joint_simulation_mass_fraction": 0.5205263000902849,
+      "flow_R11_error_contribution": {
+        "value": -0.00859343447990249,
+        "se": 0.0016458620084738053
+      }
+    },
+    "size_015_04": {
+      "joint_error_contribution": {
+        "value": 0.02152621079865042,
+        "se": 0.007451418091017302
+      },
+      "joint_simulation_mass_fraction": 0.7577057141304289,
+      "flow_R11_error_contribution": {
+        "value": 0.010571961677243613,
+        "se": 0.0036209416653081162
+      }
+    },
+    "crowd_lt01": {
+      "joint_error_contribution": {
+        "value": 0.017527156197934483,
+        "se": 0.0020151520963904396
+      },
+      "joint_simulation_mass_fraction": 0.655401489426708,
+      "flow_R11_error_contribution": {
+        "value": 0.013954141662543051,
+        "se": 0.0029952094227472604
+      }
+    },
+    "crowd_01_03": {
+      "joint_error_contribution": {
+        "value": 0.004804446586535238,
+        "se": 0.0020723030665187937
+      },
+      "joint_simulation_mass_fraction": 0.2043148965703819,
+      "flow_R11_error_contribution": {
+        "value": -0.00908970739851292,
+        "se": 0.0012631162145826979
+      }
+    }
+  }
+}

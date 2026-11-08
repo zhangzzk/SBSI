@@ -1,0 +1,5 @@
+{
+  "ast_passed": true,
+  "independent_bank_score_exact_expectation_passed": true,
+  "shared_bank_variance_bias_detected": true
+}

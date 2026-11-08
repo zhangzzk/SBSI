@@ -1,0 +1,42 @@
+{
+  "utc": "2026-11-05T22:46:23.060016+00:00",
+  "prepared": true,
+  "c8_cases": 40,
+  "c8_replay": "ORIGINAL_AXIS1_C8_REPLAY_PASSED\nC8_DONE 1000\nC8_DONE 1040\nC8_DONE 1080\nC8_DONE 1120\n",
+  "pilot_input_catalogues": {
+    "1000_0.02": {
+      "exists": true,
+      "bytes": 69903642
+    },
+    "1000_-0.02": {
+      "exists": true,
+      "bytes": 69903642
+    },
+    "1040_0.02": {
+      "exists": true,
+      "bytes": 69907210
+    },
+    "1040_-0.02": {
+      "exists": true,
+      "bytes": 69907210
+    },
+    "1080_0.02": {
+      "exists": true,
+      "bytes": 69966906
+    },
+    "1080_-0.02": {
+      "exists": true,
+      "bytes": 69966906
+    },
+    "1120_0.02": {
+      "exists": true,
+      "bytes": 70082826
+    },
+    "1120_-0.02": {
+      "exists": true,
+      "bytes": 70082826
+    }
+  },
+  "resources_job": "17772184",
+  "status_job": "17772183"
+}

@@ -49,6 +49,10 @@ TAG=${TAG:?set TAG}
 BUILD_SELECTION_NORMALIZATION_QUADRATIC=${BUILD_SELECTION_NORMALIZATION_QUADRATIC:-1}
 SCORE_ROOT_BFGS=${SCORE_ROOT_BFGS:-0}
 INFERENCE_CONFIG=${INFERENCE_CONFIG:-$repo/configs/inference_v1_2.json}
+LIKELIHOOD_CONFIG=${LIKELIHOOD_CONFIG:-$repo/configs/likelihood.json}
+MEASUREMENT_MODEL=${MEASUREMENT_MODEL:-/project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/measurement_flow_mixed_g0_g005_E_s501_swaavg.pt}
+MODEL_CACHE=${MODEL_CACHE:-$compact/model_cache}
+PROPOSAL_CACHE=${PROPOSAL_CACHE:-$compact/proposal_cache}
 
 run="$root/$TAG"
 # RESUME=1 keeps completed stages.  A pass over the full window costs real GPU
@@ -100,11 +104,11 @@ PREFLIGHT
 
 common=(
   --inference-config "$INFERENCE_CONFIG"
-  --likelihood-config "$repo/configs/likelihood.json"
+  --likelihood-config "$LIKELIHOOD_CONFIG"
   --scene-store "$compact/scene_store"
-  --measurement-model /project/ls-gruen/users/zekang.zhang/sbsi_caches/mixed_shear_cde/measurement_flow_mixed_g0_g005_E_s501_swaavg.pt
-  --model-cache "$compact/model_cache"
-  --proposal-cache "$compact/proposal_cache"
+  --measurement-model "$MEASUREMENT_MODEL"
+  --model-cache "$MODEL_CACHE"
+  --proposal-cache "$PROPOSAL_CACHE"
   --mock-input "$source_mock"
   --device cuda
 )
@@ -368,6 +372,7 @@ for index in range(1, passes + 1):
 summary = {
     "injected_shear": pass0["injected_shear"],
     "pipeline_release": pass0.get("pipeline_release"),
+    "likelihood_release": pass0.get("likelihood_release"),
     "n_objects": pass0["n_observations"],
     "n_gpus": n_gpus,
     "normalization_distribution": "one disjoint active-atom shard per GPU",

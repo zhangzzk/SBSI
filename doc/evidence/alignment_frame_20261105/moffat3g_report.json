@@ -1,0 +1,453 @@
+{
+  "psf_family": "moffat3g",
+  "definition": "A=sum(e_measured dot e_intrinsic)/sum(|e_intrinsic|^2); equally weighted fixed contexts and four paired seeds. No inferred population weighting or sampling-error bars.",
+  "limitations": "No added noise means sigma=0, while fitter weights still come from border MAD of the finite stamp. Isolated centred65 galaxies, no detection/FLUX_RADIUS cuts, no applied shear. This is not a calibration-bias estimate.",
+  "all": [
+    {
+      "psf": "fs2_r",
+      "noise_sigma": 0.0,
+      "attempted": 864,
+      "usable": 719,
+      "alignment": 1.0359289015310607,
+      "negative_T_fraction": 0.0,
+      "negative_dot_fraction": 0.0
+    },
+    {
+      "psf": "fs2_r",
+      "noise_sigma": 0.3115,
+      "attempted": 864,
+      "usable": 719,
+      "alignment": 0.8007273869576962,
+      "negative_T_fraction": 0.006954102920723227,
+      "negative_dot_fraction": 0.09596662030598054
+    },
+    {
+      "psf": "fs2_r",
+      "noise_sigma": 0.6159,
+      "attempted": 864,
+      "usable": 719,
+      "alignment": 0.63915719602742,
+      "negative_T_fraction": 0.0458970792767733,
+      "negative_dot_fraction": 0.14464534075104313
+    },
+    {
+      "psf": "galsbi_i",
+      "noise_sigma": 0.0,
+      "attempted": 864,
+      "usable": 703,
+      "alignment": 0.9700923039878909,
+      "negative_T_fraction": 0.0,
+      "negative_dot_fraction": 0.0
+    },
+    {
+      "psf": "galsbi_i",
+      "noise_sigma": 0.3115,
+      "attempted": 864,
+      "usable": 703,
+      "alignment": 0.7947743513362506,
+      "negative_T_fraction": 0.002844950213371266,
+      "negative_dot_fraction": 0.09246088193456614
+    },
+    {
+      "psf": "galsbi_i",
+      "noise_sigma": 0.6159,
+      "attempted": 864,
+      "usable": 703,
+      "alignment": 0.6540302417071923,
+      "negative_T_fraction": 0.034139402560455195,
+      "negative_dot_fraction": 0.1337126600284495
+    }
+  ],
+  "by_radius": {
+    "0.15": [
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.0,
+        "attempted": 288,
+        "usable": 243,
+        "alignment": 1.177069127437816,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.0
+      },
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.3115,
+        "attempted": 288,
+        "usable": 243,
+        "alignment": 0.8098644714373656,
+        "negative_T_fraction": 0.01646090534979424,
+        "negative_dot_fraction": 0.12345679012345678
+      },
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.6159,
+        "attempted": 288,
+        "usable": 243,
+        "alignment": 0.6325375510015854,
+        "negative_T_fraction": 0.053497942386831275,
+        "negative_dot_fraction": 0.16872427983539096
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.0,
+        "attempted": 288,
+        "usable": 237,
+        "alignment": 1.0451263680394407,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.0
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.3115,
+        "attempted": 288,
+        "usable": 237,
+        "alignment": 0.8043975926228825,
+        "negative_T_fraction": 0.008438818565400843,
+        "negative_dot_fraction": 0.11392405063291139
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.6159,
+        "attempted": 288,
+        "usable": 237,
+        "alignment": 0.6421186363984057,
+        "negative_T_fraction": 0.04219409282700422,
+        "negative_dot_fraction": 0.15611814345991562
+      }
+    ],
+    "0.2": [
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.0,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.99266973035466,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.0
+      },
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.3115,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.7852782720781728,
+        "negative_T_fraction": 0.004201680672268907,
+        "negative_dot_fraction": 0.10084033613445378
+      },
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.6159,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.6025747076215262,
+        "negative_T_fraction": 0.05042016806722689,
+        "negative_dot_fraction": 0.15546218487394958
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.0,
+        "attempted": 288,
+        "usable": 228,
+        "alignment": 0.9555023748095441,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.0
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.3115,
+        "attempted": 288,
+        "usable": 228,
+        "alignment": 0.7731689793249296,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.09649122807017543
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.6159,
+        "attempted": 288,
+        "usable": 228,
+        "alignment": 0.618851544254814,
+        "negative_T_fraction": 0.03508771929824561,
+        "negative_dot_fraction": 0.15350877192982457
+      }
+    ],
+    "0.25": [
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.0,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.9330537291061985,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.0
+      },
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.3115,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.8069011665846514,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.06302521008403361
+      },
+      {
+        "psf": "fs2_r",
+        "noise_sigma": 0.6159,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.6831584665637755,
+        "negative_T_fraction": 0.03361344537815126,
+        "negative_dot_fraction": 0.1092436974789916
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.0,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.9081704978994065,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.0
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.3115,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.8059869670376034,
+        "negative_T_fraction": 0.0,
+        "negative_dot_fraction": 0.06722689075630252
+      },
+      {
+        "psf": "galsbi_i",
+        "noise_sigma": 0.6159,
+        "attempted": 288,
+        "usable": 238,
+        "alignment": 0.7002531249041797,
+        "negative_T_fraction": 0.025210084033613446,
+        "negative_dot_fraction": 0.09243697478991597
+      }
+    ]
+  },
+  "paired": {
+    "PSF_only_no_added_noise": {
+      "paired_usable": 591,
+      "alignment_change": -0.0670407107962428,
+      "alignment_sign_flips": 0,
+      "T_sign_flips": 0
+    },
+    "PSF_only_r_noise": {
+      "paired_usable": 591,
+      "alignment_change": -0.005751497956030228,
+      "alignment_sign_flips": 6,
+      "T_sign_flips": 0
+    },
+    "noise_only_r_PSF": {
+      "paired_usable": 719,
+      "alignment_change": -0.1615701909302761,
+      "alignment_sign_flips": 59,
+      "T_sign_flips": 28
+    },
+    "noise_only_i_PSF": {
+      "paired_usable": 703,
+      "alignment_change": -0.1407441096290584,
+      "alignment_sign_flips": 53,
+      "T_sign_flips": 22
+    },
+    "both_r_to_i": {
+      "paired_usable": 591,
+      "alignment_change": -0.13702341016585756,
+      "alignment_sign_flips": 41,
+      "T_sign_flips": 19
+    }
+  },
+  "receipts": [
+    {
+      "job": "17758148",
+      "task": 0,
+      "contexts": 54,
+      "fits_attempted": 1296,
+      "parameter_columns": [
+        "circularized_Re_arcsec",
+        "sersic_n",
+        "intrinsic_g_amplitude",
+        "sky_angle_deg",
+        "magnitude"
+      ],
+      "fit_columns": [
+        "g1",
+        "g2",
+        "T",
+        "flags",
+        "lnprob",
+        "mean_weight",
+        "flux"
+      ],
+      "noise_sigma": [
+        0.0,
+        0.3115,
+        0.6159
+      ],
+      "psf_family": "moffat",
+      "psf_fit_components": 3,
+      "psf_fwhm_beta": [
+        [
+          0.73,
+          2.224
+        ],
+        [
+          0.71,
+          2.458
+        ]
+      ],
+      "gaussian_psf_T": null,
+      "errors": {
+        "BootPSFFailure: 'no good psf fits'": 216
+      },
+      "seconds": 111.09972322266549,
+      "source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+      "script_sha256": "1d55fd0115a4390a923ad9e4f9cc5894e6be753dbd7abcda5b0ac6ae6f9deb50",
+      "limitations": "isolated, geometric-centred65, no SExtractor detection/FLUX_RADIUS selection; equally weighted grid, not either empirical population"
+    },
+    {
+      "job": "17758149",
+      "task": 1,
+      "contexts": 54,
+      "fits_attempted": 1296,
+      "parameter_columns": [
+        "circularized_Re_arcsec",
+        "sersic_n",
+        "intrinsic_g_amplitude",
+        "sky_angle_deg",
+        "magnitude"
+      ],
+      "fit_columns": [
+        "g1",
+        "g2",
+        "T",
+        "flags",
+        "lnprob",
+        "mean_weight",
+        "flux"
+      ],
+      "noise_sigma": [
+        0.0,
+        0.3115,
+        0.6159
+      ],
+      "psf_family": "moffat",
+      "psf_fit_components": 3,
+      "psf_fwhm_beta": [
+        [
+          0.73,
+          2.224
+        ],
+        [
+          0.71,
+          2.458
+        ]
+      ],
+      "gaussian_psf_T": null,
+      "errors": {
+        "BootPSFFailure: 'no good psf fits'": 249
+      },
+      "seconds": 138.97627160232514,
+      "source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+      "script_sha256": "1d55fd0115a4390a923ad9e4f9cc5894e6be753dbd7abcda5b0ac6ae6f9deb50",
+      "limitations": "isolated, geometric-centred65, no SExtractor detection/FLUX_RADIUS selection; equally weighted grid, not either empirical population"
+    },
+    {
+      "job": "17758150",
+      "task": 2,
+      "contexts": 54,
+      "fits_attempted": 1296,
+      "parameter_columns": [
+        "circularized_Re_arcsec",
+        "sersic_n",
+        "intrinsic_g_amplitude",
+        "sky_angle_deg",
+        "magnitude"
+      ],
+      "fit_columns": [
+        "g1",
+        "g2",
+        "T",
+        "flags",
+        "lnprob",
+        "mean_weight",
+        "flux"
+      ],
+      "noise_sigma": [
+        0.0,
+        0.3115,
+        0.6159
+      ],
+      "psf_family": "moffat",
+      "psf_fit_components": 3,
+      "psf_fwhm_beta": [
+        [
+          0.73,
+          2.224
+        ],
+        [
+          0.71,
+          2.458
+        ]
+      ],
+      "gaussian_psf_T": null,
+      "errors": {
+        "BootPSFFailure: 'no good psf fits'": 201
+      },
+      "seconds": 135.2738732844591,
+      "source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+      "script_sha256": "1d55fd0115a4390a923ad9e4f9cc5894e6be753dbd7abcda5b0ac6ae6f9deb50",
+      "limitations": "isolated, geometric-centred65, no SExtractor detection/FLUX_RADIUS selection; equally weighted grid, not either empirical population"
+    },
+    {
+      "job": "17758135",
+      "task": 3,
+      "contexts": 54,
+      "fits_attempted": 1296,
+      "parameter_columns": [
+        "circularized_Re_arcsec",
+        "sersic_n",
+        "intrinsic_g_amplitude",
+        "sky_angle_deg",
+        "magnitude"
+      ],
+      "fit_columns": [
+        "g1",
+        "g2",
+        "T",
+        "flags",
+        "lnprob",
+        "mean_weight",
+        "flux"
+      ],
+      "noise_sigma": [
+        0.0,
+        0.3115,
+        0.6159
+      ],
+      "psf_family": "moffat",
+      "psf_fit_components": 3,
+      "psf_fwhm_beta": [
+        [
+          0.73,
+          2.224
+        ],
+        [
+          0.71,
+          2.458
+        ]
+      ],
+      "gaussian_psf_T": null,
+      "errors": {
+        "BootPSFFailure: 'no good psf fits'": 252
+      },
+      "seconds": 136.84823163505644,
+      "source_sha256": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+      "script_sha256": "1d55fd0115a4390a923ad9e4f9cc5894e6be753dbd7abcda5b0ac6ae6f9deb50",
+      "limitations": "isolated, geometric-centred65, no SExtractor detection/FLUX_RADIUS selection; equally weighted grid, not either empirical population"
+    }
+  ]
+}

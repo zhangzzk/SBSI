@@ -1,0 +1,5 @@
+{
+  "utc": "2026-11-05T15:33:18.633044+00:00",
+  "queue": "             JOBID                       NAME     STATE       TIME NODELIST(REASON)\n  17764099_[0-1%2]       alignment_factorized   PENDING       0:00 (Priority)\n  17764100_[0-1%2]        factorized_evaluate   PENDING       0:00 (Dependency)\n          17764102           factorized_check   PENDING       0:00 (BeginTime)\n          17764101          factorized_report   PENDING       0:00 (Dependency)\n",
+  "note": "Pending priority; startup not yet observed. Bounded2h status audit queued."
+}

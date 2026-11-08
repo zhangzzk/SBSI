@@ -1,0 +1,23 @@
+{
+  "evaluate": "17771754",
+  "pilot": "17771755",
+  "full": "17771756",
+  "utc": "2026-11-05T22:10:37.791971+00:00",
+  "source_sha256": {
+    "report.py": "57ad196f7b30b28c09e5e9db8371a25aa23ed9bdab588b8587cef9e4816516fa",
+    "rule.md": "39f007c28e895c32dfd22b264e592aeb464efcda1c0a11019cde9627b7645464",
+    "manifest.json": "3f62beee88dafc28e324080e8f7c37243beaa9bed17f3522ef87a2a37bb35fb2",
+    "run.sh": "22d7f4910355240917fcc81e7228b3c6dbb363336d00e2493c166ca23e22067a",
+    "run_report.sh": "44afed21f0e77285c3b614b6b2ad99798d19cfb2ffa9ff9e8ac0810d82398333",
+    "evaluate.py": "5f17f49db0df178cea8a30a1de0bde33c097a635dbba952225fdb61920a21dba",
+    "check.py": "f4f5762fb3449148dc77ebaa27334ae0740b229623b986df3c7481a34464d7e8",
+    "run_check.sh": "5a0e64c9d20f2e1767f336457410afa2b9de25be2ded3c81edac4f322815e017"
+  },
+  "check": "17771762",
+  "throttle_amendment": {
+    "utc": "2026-11-05T22:13:53.516105+00:00",
+    "array_cap": 6,
+    "conditioned_jobs": "17771721_0 and17771721_1 both completed exit0",
+    "reason": "Reuse freed slots within existing six-GPU authorization; scientific settings unchanged."
+  }
+}

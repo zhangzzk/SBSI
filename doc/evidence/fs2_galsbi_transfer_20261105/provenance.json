@@ -1,0 +1,19 @@
+{
+  "sha256": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/flow_refinement_check.py": "43ae752c087f31403c8dbd48d8a66b5602cc6a460530275bdff90b77e563a91a",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/profile_report.py": "a31376b9b84f6f4454ceac48825f300c5f34e051088f70391781f2365d44225f",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/refinement_report.py": "c8b08dab53e1062b6761fc2f1bc862e54e405e96c6773a331d6378d90fc747f2",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/reduce_flow.py": "ff6afcda347d80024e47f923e17ae0a751d39dcacbbc3b382fe9e5d8b927a3a1",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/flow_compare.py": "f0088d645fc06961cfe3554b30285e32470f16f347e09bce71de785639b63f02",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/stamp_report.py": "4b0d5a2d0ed6f7b2173769e6b22e4cf74b4e325aba5d5a51e47d3b045dea54ca",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/joint_split_check.py": "d4da115b42f7a3a838aeec620745862d23cfdf695202a8e1baf25d38137461a9",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/flow_compare_v2.py": "c65fc17481949970294fd2efac5f0150a0f16ec6d7c72b57cdefc3965a0dfa02",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/audit_population_stamp_transfer.py": "73f3f9e4def0d89688bc414f76926fd3171e40397cee27e9b5c5cce80419deef",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/audit_transfer_psf.py": "5296b5ec9a9c990d595d46abd15c7dd37746e65202a20cd09d18ae37cb19ed66",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/run_flow.sh": "33bc3a67ad386570ffad0ffb240322f967092783e2a23de533903eb0bb73c49e",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/run_stamps.sh": "1bddb16279ef9cc475f1ba467d91e56261664c2432c4de7dc9c52bbff8f3a94f",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/fs2_galsbi_transfer_20261105/run_flow_v2.sh": "923166cc8d4d668077b2a69854b49db43a9cdaa94e1d85f73aef7a6076728e78",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/blendemu/shape.py": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969"
+  },
+  "validation": "AST, bash -n, strict JSON and local file links passed; reduce_flow.py --verify passed; all disjoint-bin/branch invariants passed in reductions."
+}

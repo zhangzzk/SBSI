@@ -1,0 +1,2006 @@
+{
+  "train": [
+    {
+      "case": 136,
+      "left_rows": 147208,
+      "right_rows": 147155,
+      "matched_rows": 146310,
+      "left_unmatched": 898,
+      "right_unmatched": 845,
+      "response_pairs": 146310,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 149,
+      "left_rows": 146046,
+      "right_rows": 145977,
+      "matched_rows": 145194,
+      "left_unmatched": 852,
+      "right_unmatched": 783,
+      "response_pairs": 145194,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 11,
+      "left_rows": 146721,
+      "right_rows": 146592,
+      "matched_rows": 145814,
+      "left_unmatched": 907,
+      "right_unmatched": 778,
+      "response_pairs": 145814,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 80,
+      "left_rows": 146272,
+      "right_rows": 146182,
+      "matched_rows": 145376,
+      "left_unmatched": 896,
+      "right_unmatched": 806,
+      "response_pairs": 145376,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 135,
+      "left_rows": 146439,
+      "right_rows": 146338,
+      "matched_rows": 145530,
+      "left_unmatched": 909,
+      "right_unmatched": 808,
+      "response_pairs": 145530,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 166,
+      "left_rows": 146464,
+      "right_rows": 146401,
+      "matched_rows": 145577,
+      "left_unmatched": 887,
+      "right_unmatched": 824,
+      "response_pairs": 145577,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 155,
+      "left_rows": 146309,
+      "right_rows": 146218,
+      "matched_rows": 145403,
+      "left_unmatched": 906,
+      "right_unmatched": 815,
+      "response_pairs": 145403,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 111,
+      "left_rows": 147082,
+      "right_rows": 147068,
+      "matched_rows": 146263,
+      "left_unmatched": 819,
+      "right_unmatched": 805,
+      "response_pairs": 146263,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 153,
+      "left_rows": 145562,
+      "right_rows": 145496,
+      "matched_rows": 144691,
+      "left_unmatched": 871,
+      "right_unmatched": 805,
+      "response_pairs": 144691,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 106,
+      "left_rows": 146685,
+      "right_rows": 146579,
+      "matched_rows": 145755,
+      "left_unmatched": 930,
+      "right_unmatched": 824,
+      "response_pairs": 145755,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 50,
+      "left_rows": 146466,
+      "right_rows": 146428,
+      "matched_rows": 145589,
+      "left_unmatched": 877,
+      "right_unmatched": 839,
+      "response_pairs": 145589,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 128,
+      "left_rows": 146576,
+      "right_rows": 146482,
+      "matched_rows": 145650,
+      "left_unmatched": 926,
+      "right_unmatched": 832,
+      "response_pairs": 145650,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 89,
+      "left_rows": 145747,
+      "right_rows": 145727,
+      "matched_rows": 144893,
+      "left_unmatched": 854,
+      "right_unmatched": 834,
+      "response_pairs": 144893,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 47,
+      "left_rows": 146649,
+      "right_rows": 146582,
+      "matched_rows": 145789,
+      "left_unmatched": 860,
+      "right_unmatched": 793,
+      "response_pairs": 145789,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 72,
+      "left_rows": 145907,
+      "right_rows": 145864,
+      "matched_rows": 145013,
+      "left_unmatched": 894,
+      "right_unmatched": 851,
+      "response_pairs": 145013,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 36,
+      "left_rows": 146407,
+      "right_rows": 146321,
+      "matched_rows": 145532,
+      "left_unmatched": 875,
+      "right_unmatched": 789,
+      "response_pairs": 145532,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 101,
+      "left_rows": 146925,
+      "right_rows": 146846,
+      "matched_rows": 146010,
+      "left_unmatched": 915,
+      "right_unmatched": 836,
+      "response_pairs": 146010,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 142,
+      "left_rows": 146564,
+      "right_rows": 146573,
+      "matched_rows": 145736,
+      "left_unmatched": 828,
+      "right_unmatched": 837,
+      "response_pairs": 145736,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 179,
+      "left_rows": 146356,
+      "right_rows": 146304,
+      "matched_rows": 145452,
+      "left_unmatched": 904,
+      "right_unmatched": 852,
+      "response_pairs": 145452,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 158,
+      "left_rows": 146378,
+      "right_rows": 146347,
+      "matched_rows": 145494,
+      "left_unmatched": 884,
+      "right_unmatched": 853,
+      "response_pairs": 145494,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 122,
+      "left_rows": 146396,
+      "right_rows": 146351,
+      "matched_rows": 145503,
+      "left_unmatched": 893,
+      "right_unmatched": 848,
+      "response_pairs": 145503,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 18,
+      "left_rows": 146576,
+      "right_rows": 146439,
+      "matched_rows": 145640,
+      "left_unmatched": 936,
+      "right_unmatched": 799,
+      "response_pairs": 145640,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 116,
+      "left_rows": 146124,
+      "right_rows": 146028,
+      "matched_rows": 145243,
+      "left_unmatched": 881,
+      "right_unmatched": 785,
+      "response_pairs": 145243,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 190,
+      "left_rows": 146232,
+      "right_rows": 146171,
+      "matched_rows": 145354,
+      "left_unmatched": 878,
+      "right_unmatched": 817,
+      "response_pairs": 145354,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 67,
+      "left_rows": 146395,
+      "right_rows": 146366,
+      "matched_rows": 145523,
+      "left_unmatched": 872,
+      "right_unmatched": 843,
+      "response_pairs": 145523,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 42,
+      "left_rows": 146544,
+      "right_rows": 146455,
+      "matched_rows": 145645,
+      "left_unmatched": 899,
+      "right_unmatched": 810,
+      "response_pairs": 145645,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 37,
+      "left_rows": 145930,
+      "right_rows": 145821,
+      "matched_rows": 145009,
+      "left_unmatched": 921,
+      "right_unmatched": 812,
+      "response_pairs": 145009,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 191,
+      "left_rows": 146154,
+      "right_rows": 146073,
+      "matched_rows": 145261,
+      "left_unmatched": 893,
+      "right_unmatched": 812,
+      "response_pairs": 145261,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 117,
+      "left_rows": 146556,
+      "right_rows": 146554,
+      "matched_rows": 145688,
+      "left_unmatched": 868,
+      "right_unmatched": 866,
+      "response_pairs": 145688,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 133,
+      "left_rows": 146580,
+      "right_rows": 146515,
+      "matched_rows": 145701,
+      "left_unmatched": 879,
+      "right_unmatched": 814,
+      "response_pairs": 145701,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 169,
+      "left_rows": 145943,
+      "right_rows": 145886,
+      "matched_rows": 145059,
+      "left_unmatched": 884,
+      "right_unmatched": 827,
+      "response_pairs": 145059,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 174,
+      "left_rows": 145763,
+      "right_rows": 145693,
+      "matched_rows": 144865,
+      "left_unmatched": 898,
+      "right_unmatched": 828,
+      "response_pairs": 144865,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 44,
+      "left_rows": 145987,
+      "right_rows": 145922,
+      "matched_rows": 145101,
+      "left_unmatched": 886,
+      "right_unmatched": 821,
+      "response_pairs": 145101,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 164,
+      "left_rows": 147130,
+      "right_rows": 147047,
+      "matched_rows": 146230,
+      "left_unmatched": 900,
+      "right_unmatched": 817,
+      "response_pairs": 146230,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 35,
+      "left_rows": 146024,
+      "right_rows": 145921,
+      "matched_rows": 145131,
+      "left_unmatched": 893,
+      "right_unmatched": 790,
+      "response_pairs": 145131,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 17,
+      "left_rows": 147083,
+      "right_rows": 147034,
+      "matched_rows": 146206,
+      "left_unmatched": 877,
+      "right_unmatched": 828,
+      "response_pairs": 146206,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 12,
+      "left_rows": 146447,
+      "right_rows": 146375,
+      "matched_rows": 145569,
+      "left_unmatched": 878,
+      "right_unmatched": 806,
+      "response_pairs": 145569,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 197,
+      "left_rows": 146522,
+      "right_rows": 146456,
+      "matched_rows": 145633,
+      "left_unmatched": 889,
+      "right_unmatched": 823,
+      "response_pairs": 145633,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 86,
+      "left_rows": 146298,
+      "right_rows": 146257,
+      "matched_rows": 145462,
+      "left_unmatched": 836,
+      "right_unmatched": 795,
+      "response_pairs": 145462,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 49,
+      "left_rows": 146121,
+      "right_rows": 146038,
+      "matched_rows": 145219,
+      "left_unmatched": 902,
+      "right_unmatched": 819,
+      "response_pairs": 145219,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 189,
+      "left_rows": 145842,
+      "right_rows": 145813,
+      "matched_rows": 144998,
+      "left_unmatched": 844,
+      "right_unmatched": 815,
+      "response_pairs": 144998,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 97,
+      "left_rows": 146559,
+      "right_rows": 146466,
+      "matched_rows": 145661,
+      "left_unmatched": 898,
+      "right_unmatched": 805,
+      "response_pairs": 145661,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 118,
+      "left_rows": 146674,
+      "right_rows": 146667,
+      "matched_rows": 145816,
+      "left_unmatched": 858,
+      "right_unmatched": 851,
+      "response_pairs": 145816,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 73,
+      "left_rows": 145925,
+      "right_rows": 145856,
+      "matched_rows": 145025,
+      "left_unmatched": 900,
+      "right_unmatched": 831,
+      "response_pairs": 145025,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 156,
+      "left_rows": 145914,
+      "right_rows": 145900,
+      "matched_rows": 145022,
+      "left_unmatched": 892,
+      "right_unmatched": 878,
+      "response_pairs": 145022,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 95,
+      "left_rows": 146083,
+      "right_rows": 146031,
+      "matched_rows": 145190,
+      "left_unmatched": 893,
+      "right_unmatched": 841,
+      "response_pairs": 145190,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 140,
+      "left_rows": 146267,
+      "right_rows": 146252,
+      "matched_rows": 145446,
+      "left_unmatched": 821,
+      "right_unmatched": 806,
+      "response_pairs": 145446,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 108,
+      "left_rows": 146697,
+      "right_rows": 146595,
+      "matched_rows": 145813,
+      "left_unmatched": 884,
+      "right_unmatched": 782,
+      "response_pairs": 145813,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 105,
+      "left_rows": 146220,
+      "right_rows": 146234,
+      "matched_rows": 145346,
+      "left_unmatched": 874,
+      "right_unmatched": 888,
+      "response_pairs": 145346,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 28,
+      "left_rows": 146341,
+      "right_rows": 146334,
+      "matched_rows": 145505,
+      "left_unmatched": 836,
+      "right_unmatched": 829,
+      "response_pairs": 145505,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 119,
+      "left_rows": 146352,
+      "right_rows": 146243,
+      "matched_rows": 145462,
+      "left_unmatched": 890,
+      "right_unmatched": 781,
+      "response_pairs": 145462,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 170,
+      "left_rows": 145924,
+      "right_rows": 145936,
+      "matched_rows": 145078,
+      "left_unmatched": 846,
+      "right_unmatched": 858,
+      "response_pairs": 145078,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 176,
+      "left_rows": 145960,
+      "right_rows": 145980,
+      "matched_rows": 145134,
+      "left_unmatched": 826,
+      "right_unmatched": 846,
+      "response_pairs": 145134,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 0,
+      "left_rows": 146132,
+      "right_rows": 146087,
+      "matched_rows": 145238,
+      "left_unmatched": 894,
+      "right_unmatched": 849,
+      "response_pairs": 145238,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 16,
+      "left_rows": 146328,
+      "right_rows": 146282,
+      "matched_rows": 145478,
+      "left_unmatched": 850,
+      "right_unmatched": 804,
+      "response_pairs": 145478,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 194,
+      "left_rows": 146895,
+      "right_rows": 146835,
+      "matched_rows": 146015,
+      "left_unmatched": 880,
+      "right_unmatched": 820,
+      "response_pairs": 146015,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 196,
+      "left_rows": 145888,
+      "right_rows": 145837,
+      "matched_rows": 144984,
+      "left_unmatched": 904,
+      "right_unmatched": 853,
+      "response_pairs": 144984,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 85,
+      "left_rows": 145985,
+      "right_rows": 145911,
+      "matched_rows": 145096,
+      "left_unmatched": 889,
+      "right_unmatched": 815,
+      "response_pairs": 145096,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 74,
+      "left_rows": 146327,
+      "right_rows": 146288,
+      "matched_rows": 145510,
+      "left_unmatched": 817,
+      "right_unmatched": 778,
+      "response_pairs": 145510,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 29,
+      "left_rows": 147274,
+      "right_rows": 147255,
+      "matched_rows": 146430,
+      "left_unmatched": 844,
+      "right_unmatched": 825,
+      "response_pairs": 146430,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 2,
+      "left_rows": 146381,
+      "right_rows": 146370,
+      "matched_rows": 145497,
+      "left_unmatched": 884,
+      "right_unmatched": 873,
+      "response_pairs": 145497,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 163,
+      "left_rows": 146595,
+      "right_rows": 146494,
+      "matched_rows": 145695,
+      "left_unmatched": 900,
+      "right_unmatched": 799,
+      "response_pairs": 145695,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 3,
+      "left_rows": 146497,
+      "right_rows": 146479,
+      "matched_rows": 145601,
+      "left_unmatched": 896,
+      "right_unmatched": 878,
+      "response_pairs": 145601,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 63,
+      "left_rows": 146480,
+      "right_rows": 146393,
+      "matched_rows": 145571,
+      "left_unmatched": 909,
+      "right_unmatched": 822,
+      "response_pairs": 145571,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 192,
+      "left_rows": 146790,
+      "right_rows": 146747,
+      "matched_rows": 145944,
+      "left_unmatched": 846,
+      "right_unmatched": 803,
+      "response_pairs": 145944,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 48,
+      "left_rows": 145401,
+      "right_rows": 145379,
+      "matched_rows": 144536,
+      "left_unmatched": 865,
+      "right_unmatched": 843,
+      "response_pairs": 144536,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 8,
+      "left_rows": 146582,
+      "right_rows": 146558,
+      "matched_rows": 145709,
+      "left_unmatched": 873,
+      "right_unmatched": 849,
+      "response_pairs": 145709,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 1,
+      "left_rows": 146430,
+      "right_rows": 146444,
+      "matched_rows": 145622,
+      "left_unmatched": 808,
+      "right_unmatched": 822,
+      "response_pairs": 145622,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 24,
+      "left_rows": 146312,
+      "right_rows": 146234,
+      "matched_rows": 145409,
+      "left_unmatched": 903,
+      "right_unmatched": 825,
+      "response_pairs": 145409,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 150,
+      "left_rows": 147007,
+      "right_rows": 146981,
+      "matched_rows": 146157,
+      "left_unmatched": 850,
+      "right_unmatched": 824,
+      "response_pairs": 146157,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 171,
+      "left_rows": 145968,
+      "right_rows": 145936,
+      "matched_rows": 145078,
+      "left_unmatched": 890,
+      "right_unmatched": 858,
+      "response_pairs": 145078,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 43,
+      "left_rows": 147089,
+      "right_rows": 147058,
+      "matched_rows": 146254,
+      "left_unmatched": 835,
+      "right_unmatched": 804,
+      "response_pairs": 146254,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 20,
+      "left_rows": 147238,
+      "right_rows": 147128,
+      "matched_rows": 146333,
+      "left_unmatched": 905,
+      "right_unmatched": 795,
+      "response_pairs": 146333,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 88,
+      "left_rows": 145683,
+      "right_rows": 145630,
+      "matched_rows": 144801,
+      "left_unmatched": 882,
+      "right_unmatched": 829,
+      "response_pairs": 144801,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 5,
+      "left_rows": 145908,
+      "right_rows": 145852,
+      "matched_rows": 145003,
+      "left_unmatched": 905,
+      "right_unmatched": 849,
+      "response_pairs": 145003,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 30,
+      "left_rows": 146325,
+      "right_rows": 146338,
+      "matched_rows": 145466,
+      "left_unmatched": 859,
+      "right_unmatched": 872,
+      "response_pairs": 145466,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 173,
+      "left_rows": 146369,
+      "right_rows": 146383,
+      "matched_rows": 145547,
+      "left_unmatched": 822,
+      "right_unmatched": 836,
+      "response_pairs": 145547,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 168,
+      "left_rows": 146390,
+      "right_rows": 146361,
+      "matched_rows": 145551,
+      "left_unmatched": 839,
+      "right_unmatched": 810,
+      "response_pairs": 145551,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 61,
+      "left_rows": 146036,
+      "right_rows": 145979,
+      "matched_rows": 145110,
+      "left_unmatched": 926,
+      "right_unmatched": 869,
+      "response_pairs": 145110,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 121,
+      "left_rows": 146707,
+      "right_rows": 146621,
+      "matched_rows": 145812,
+      "left_unmatched": 895,
+      "right_unmatched": 809,
+      "response_pairs": 145812,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 70,
+      "left_rows": 146287,
+      "right_rows": 146257,
+      "matched_rows": 145461,
+      "left_unmatched": 826,
+      "right_unmatched": 796,
+      "response_pairs": 145461,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 82,
+      "left_rows": 145969,
+      "right_rows": 145912,
+      "matched_rows": 145082,
+      "left_unmatched": 887,
+      "right_unmatched": 830,
+      "response_pairs": 145082,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 56,
+      "left_rows": 146234,
+      "right_rows": 146112,
+      "matched_rows": 145318,
+      "left_unmatched": 916,
+      "right_unmatched": 794,
+      "response_pairs": 145318,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 139,
+      "left_rows": 145911,
+      "right_rows": 145814,
+      "matched_rows": 145011,
+      "left_unmatched": 900,
+      "right_unmatched": 803,
+      "response_pairs": 145011,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 6,
+      "left_rows": 146074,
+      "right_rows": 145999,
+      "matched_rows": 145213,
+      "left_unmatched": 861,
+      "right_unmatched": 786,
+      "response_pairs": 145213,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 92,
+      "left_rows": 146634,
+      "right_rows": 146545,
+      "matched_rows": 145689,
+      "left_unmatched": 945,
+      "right_unmatched": 856,
+      "response_pairs": 145689,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 15,
+      "left_rows": 146795,
+      "right_rows": 146787,
+      "matched_rows": 145956,
+      "left_unmatched": 839,
+      "right_unmatched": 831,
+      "response_pairs": 145956,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 107,
+      "left_rows": 146043,
+      "right_rows": 146007,
+      "matched_rows": 145152,
+      "left_unmatched": 891,
+      "right_unmatched": 855,
+      "response_pairs": 145152,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 39,
+      "left_rows": 147080,
+      "right_rows": 147017,
+      "matched_rows": 146166,
+      "left_unmatched": 914,
+      "right_unmatched": 851,
+      "response_pairs": 146166,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 125,
+      "left_rows": 146119,
+      "right_rows": 146124,
+      "matched_rows": 145286,
+      "left_unmatched": 833,
+      "right_unmatched": 838,
+      "response_pairs": 145286,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 26,
+      "left_rows": 146764,
+      "right_rows": 146691,
+      "matched_rows": 145878,
+      "left_unmatched": 886,
+      "right_unmatched": 813,
+      "response_pairs": 145878,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 188,
+      "left_rows": 145910,
+      "right_rows": 145822,
+      "matched_rows": 145035,
+      "left_unmatched": 875,
+      "right_unmatched": 787,
+      "response_pairs": 145035,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 27,
+      "left_rows": 145897,
+      "right_rows": 145874,
+      "matched_rows": 144989,
+      "left_unmatched": 908,
+      "right_unmatched": 885,
+      "response_pairs": 144989,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 148,
+      "left_rows": 146619,
+      "right_rows": 146574,
+      "matched_rows": 145778,
+      "left_unmatched": 841,
+      "right_unmatched": 796,
+      "response_pairs": 145778,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 7,
+      "left_rows": 146202,
+      "right_rows": 146158,
+      "matched_rows": 145361,
+      "left_unmatched": 841,
+      "right_unmatched": 797,
+      "response_pairs": 145361,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 64,
+      "left_rows": 146316,
+      "right_rows": 146316,
+      "matched_rows": 145460,
+      "left_unmatched": 856,
+      "right_unmatched": 856,
+      "response_pairs": 145460,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 34,
+      "left_rows": 146210,
+      "right_rows": 146151,
+      "matched_rows": 145287,
+      "left_unmatched": 923,
+      "right_unmatched": 864,
+      "response_pairs": 145287,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 165,
+      "left_rows": 146677,
+      "right_rows": 146651,
+      "matched_rows": 145798,
+      "left_unmatched": 879,
+      "right_unmatched": 853,
+      "response_pairs": 145798,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 100,
+      "left_rows": 146274,
+      "right_rows": 146237,
+      "matched_rows": 145375,
+      "left_unmatched": 899,
+      "right_unmatched": 862,
+      "response_pairs": 145375,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 198,
+      "left_rows": 146540,
+      "right_rows": 146484,
+      "matched_rows": 145671,
+      "left_unmatched": 869,
+      "right_unmatched": 813,
+      "response_pairs": 145671,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 134,
+      "left_rows": 145801,
+      "right_rows": 145769,
+      "matched_rows": 144906,
+      "left_unmatched": 895,
+      "right_unmatched": 863,
+      "response_pairs": 144906,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 31,
+      "left_rows": 146327,
+      "right_rows": 146279,
+      "matched_rows": 145470,
+      "left_unmatched": 857,
+      "right_unmatched": 809,
+      "response_pairs": 145470,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 103,
+      "left_rows": 146714,
+      "right_rows": 146712,
+      "matched_rows": 145836,
+      "left_unmatched": 878,
+      "right_unmatched": 876,
+      "response_pairs": 145836,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 127,
+      "left_rows": 146292,
+      "right_rows": 146179,
+      "matched_rows": 145373,
+      "left_unmatched": 919,
+      "right_unmatched": 806,
+      "response_pairs": 145373,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 161,
+      "left_rows": 146351,
+      "right_rows": 146241,
+      "matched_rows": 145456,
+      "left_unmatched": 895,
+      "right_unmatched": 785,
+      "response_pairs": 145456,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 14,
+      "left_rows": 146225,
+      "right_rows": 146105,
+      "matched_rows": 145317,
+      "left_unmatched": 908,
+      "right_unmatched": 788,
+      "response_pairs": 145317,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 123,
+      "left_rows": 146812,
+      "right_rows": 146745,
+      "matched_rows": 145937,
+      "left_unmatched": 875,
+      "right_unmatched": 808,
+      "response_pairs": 145937,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 146,
+      "left_rows": 146103,
+      "right_rows": 146069,
+      "matched_rows": 145229,
+      "left_unmatched": 874,
+      "right_unmatched": 840,
+      "response_pairs": 145229,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 94,
+      "left_rows": 146279,
+      "right_rows": 146254,
+      "matched_rows": 145411,
+      "left_unmatched": 868,
+      "right_unmatched": 843,
+      "response_pairs": 145411,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 32,
+      "left_rows": 146317,
+      "right_rows": 146304,
+      "matched_rows": 145428,
+      "left_unmatched": 889,
+      "right_unmatched": 876,
+      "response_pairs": 145428,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 193,
+      "left_rows": 146466,
+      "right_rows": 146432,
+      "matched_rows": 145633,
+      "left_unmatched": 833,
+      "right_unmatched": 799,
+      "response_pairs": 145633,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 40,
+      "left_rows": 145956,
+      "right_rows": 145937,
+      "matched_rows": 145090,
+      "left_unmatched": 866,
+      "right_unmatched": 847,
+      "response_pairs": 145090,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 60,
+      "left_rows": 146492,
+      "right_rows": 146416,
+      "matched_rows": 145572,
+      "left_unmatched": 920,
+      "right_unmatched": 844,
+      "response_pairs": 145572,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 93,
+      "left_rows": 146348,
+      "right_rows": 146235,
+      "matched_rows": 145442,
+      "left_unmatched": 906,
+      "right_unmatched": 793,
+      "response_pairs": 145442,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 132,
+      "left_rows": 146340,
+      "right_rows": 146335,
+      "matched_rows": 145454,
+      "left_unmatched": 886,
+      "right_unmatched": 881,
+      "response_pairs": 145454,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 54,
+      "left_rows": 146625,
+      "right_rows": 146553,
+      "matched_rows": 145703,
+      "left_unmatched": 922,
+      "right_unmatched": 850,
+      "response_pairs": 145703,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 71,
+      "left_rows": 146867,
+      "right_rows": 146803,
+      "matched_rows": 145976,
+      "left_unmatched": 891,
+      "right_unmatched": 827,
+      "response_pairs": 145976,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 53,
+      "left_rows": 146479,
+      "right_rows": 146405,
+      "matched_rows": 145574,
+      "left_unmatched": 905,
+      "right_unmatched": 831,
+      "response_pairs": 145574,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 109,
+      "left_rows": 146064,
+      "right_rows": 145977,
+      "matched_rows": 145177,
+      "left_unmatched": 887,
+      "right_unmatched": 800,
+      "response_pairs": 145177,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 195,
+      "left_rows": 146357,
+      "right_rows": 146336,
+      "matched_rows": 145490,
+      "left_unmatched": 867,
+      "right_unmatched": 846,
+      "response_pairs": 145490,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 104,
+      "left_rows": 146255,
+      "right_rows": 146127,
+      "matched_rows": 145351,
+      "left_unmatched": 904,
+      "right_unmatched": 776,
+      "response_pairs": 145351,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 144,
+      "left_rows": 146421,
+      "right_rows": 146390,
+      "matched_rows": 145504,
+      "left_unmatched": 917,
+      "right_unmatched": 886,
+      "response_pairs": 145504,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 76,
+      "left_rows": 146059,
+      "right_rows": 145970,
+      "matched_rows": 145204,
+      "left_unmatched": 855,
+      "right_unmatched": 766,
+      "response_pairs": 145204,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 182,
+      "left_rows": 146487,
+      "right_rows": 146503,
+      "matched_rows": 145645,
+      "left_unmatched": 842,
+      "right_unmatched": 858,
+      "response_pairs": 145645,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 172,
+      "left_rows": 146927,
+      "right_rows": 146840,
+      "matched_rows": 146065,
+      "left_unmatched": 862,
+      "right_unmatched": 775,
+      "response_pairs": 146065,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 157,
+      "left_rows": 145930,
+      "right_rows": 145899,
+      "matched_rows": 145060,
+      "left_unmatched": 870,
+      "right_unmatched": 839,
+      "response_pairs": 145060,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 143,
+      "left_rows": 146300,
+      "right_rows": 146253,
+      "matched_rows": 145388,
+      "left_unmatched": 912,
+      "right_unmatched": 865,
+      "response_pairs": 145388,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 102,
+      "left_rows": 146636,
+      "right_rows": 146488,
+      "matched_rows": 145727,
+      "left_unmatched": 909,
+      "right_unmatched": 761,
+      "response_pairs": 145727,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 184,
+      "left_rows": 145992,
+      "right_rows": 145878,
+      "matched_rows": 145088,
+      "left_unmatched": 904,
+      "right_unmatched": 790,
+      "response_pairs": 145088,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 124,
+      "left_rows": 146293,
+      "right_rows": 146267,
+      "matched_rows": 145424,
+      "left_unmatched": 869,
+      "right_unmatched": 843,
+      "response_pairs": 145424,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 112,
+      "left_rows": 146755,
+      "right_rows": 146731,
+      "matched_rows": 145874,
+      "left_unmatched": 881,
+      "right_unmatched": 857,
+      "response_pairs": 145874,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 57,
+      "left_rows": 146650,
+      "right_rows": 146584,
+      "matched_rows": 145783,
+      "left_unmatched": 867,
+      "right_unmatched": 801,
+      "response_pairs": 145783,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 9,
+      "left_rows": 146866,
+      "right_rows": 146802,
+      "matched_rows": 145953,
+      "left_unmatched": 913,
+      "right_unmatched": 849,
+      "response_pairs": 145953,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 147,
+      "left_rows": 146883,
+      "right_rows": 146805,
+      "matched_rows": 145995,
+      "left_unmatched": 888,
+      "right_unmatched": 810,
+      "response_pairs": 145995,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 19,
+      "left_rows": 146469,
+      "right_rows": 146383,
+      "matched_rows": 145591,
+      "left_unmatched": 878,
+      "right_unmatched": 792,
+      "response_pairs": 145591,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 46,
+      "left_rows": 146078,
+      "right_rows": 145975,
+      "matched_rows": 145142,
+      "left_unmatched": 936,
+      "right_unmatched": 833,
+      "response_pairs": 145142,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 52,
+      "left_rows": 146328,
+      "right_rows": 146310,
+      "matched_rows": 145489,
+      "left_unmatched": 839,
+      "right_unmatched": 821,
+      "response_pairs": 145489,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 126,
+      "left_rows": 145876,
+      "right_rows": 145795,
+      "matched_rows": 144956,
+      "left_unmatched": 920,
+      "right_unmatched": 839,
+      "response_pairs": 144956,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 55,
+      "left_rows": 146588,
+      "right_rows": 146564,
+      "matched_rows": 145761,
+      "left_unmatched": 827,
+      "right_unmatched": 803,
+      "response_pairs": 145761,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 162,
+      "left_rows": 146736,
+      "right_rows": 146687,
+      "matched_rows": 145848,
+      "left_unmatched": 888,
+      "right_unmatched": 839,
+      "response_pairs": 145848,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 59,
+      "left_rows": 146316,
+      "right_rows": 146245,
+      "matched_rows": 145439,
+      "left_unmatched": 877,
+      "right_unmatched": 806,
+      "response_pairs": 145439,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 58,
+      "left_rows": 146407,
+      "right_rows": 146399,
+      "matched_rows": 145578,
+      "left_unmatched": 829,
+      "right_unmatched": 821,
+      "response_pairs": 145578,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 45,
+      "left_rows": 146398,
+      "right_rows": 146290,
+      "matched_rows": 145473,
+      "left_unmatched": 925,
+      "right_unmatched": 817,
+      "response_pairs": 145473,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 90,
+      "left_rows": 146889,
+      "right_rows": 146818,
+      "matched_rows": 145998,
+      "left_unmatched": 891,
+      "right_unmatched": 820,
+      "response_pairs": 145998,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 177,
+      "left_rows": 146535,
+      "right_rows": 146415,
+      "matched_rows": 145569,
+      "left_unmatched": 966,
+      "right_unmatched": 846,
+      "response_pairs": 145569,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 186,
+      "left_rows": 146410,
+      "right_rows": 146383,
+      "matched_rows": 145536,
+      "left_unmatched": 874,
+      "right_unmatched": 847,
+      "response_pairs": 145536,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 187,
+      "left_rows": 146142,
+      "right_rows": 146104,
+      "matched_rows": 145291,
+      "left_unmatched": 851,
+      "right_unmatched": 813,
+      "response_pairs": 145291,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 65,
+      "left_rows": 146328,
+      "right_rows": 146296,
+      "matched_rows": 145441,
+      "left_unmatched": 887,
+      "right_unmatched": 855,
+      "response_pairs": 145441,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 152,
+      "left_rows": 146453,
+      "right_rows": 146445,
+      "matched_rows": 145621,
+      "left_unmatched": 832,
+      "right_unmatched": 824,
+      "response_pairs": 145621,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 175,
+      "left_rows": 146526,
+      "right_rows": 146516,
+      "matched_rows": 145669,
+      "left_unmatched": 857,
+      "right_unmatched": 847,
+      "response_pairs": 145669,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 178,
+      "left_rows": 146807,
+      "right_rows": 146730,
+      "matched_rows": 145900,
+      "left_unmatched": 907,
+      "right_unmatched": 830,
+      "response_pairs": 145900,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 160,
+      "left_rows": 147080,
+      "right_rows": 146973,
+      "matched_rows": 146176,
+      "left_unmatched": 904,
+      "right_unmatched": 797,
+      "response_pairs": 146176,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 199,
+      "left_rows": 146985,
+      "right_rows": 146911,
+      "matched_rows": 146089,
+      "left_unmatched": 896,
+      "right_unmatched": 822,
+      "response_pairs": 146089,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 181,
+      "left_rows": 146788,
+      "right_rows": 146723,
+      "matched_rows": 145913,
+      "left_unmatched": 875,
+      "right_unmatched": 810,
+      "response_pairs": 145913,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 83,
+      "left_rows": 146175,
+      "right_rows": 146083,
+      "matched_rows": 145296,
+      "left_unmatched": 879,
+      "right_unmatched": 787,
+      "response_pairs": 145296,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 77,
+      "left_rows": 146434,
+      "right_rows": 146368,
+      "matched_rows": 145536,
+      "left_unmatched": 898,
+      "right_unmatched": 832,
+      "response_pairs": 145536,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 79,
+      "left_rows": 145946,
+      "right_rows": 145824,
+      "matched_rows": 144979,
+      "left_unmatched": 967,
+      "right_unmatched": 845,
+      "response_pairs": 144979,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 167,
+      "left_rows": 146186,
+      "right_rows": 146173,
+      "matched_rows": 145309,
+      "left_unmatched": 877,
+      "right_unmatched": 864,
+      "response_pairs": 145309,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 159,
+      "left_rows": 146013,
+      "right_rows": 145857,
+      "matched_rows": 145074,
+      "left_unmatched": 939,
+      "right_unmatched": 783,
+      "response_pairs": 145074,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 87,
+      "left_rows": 146631,
+      "right_rows": 146565,
+      "matched_rows": 145753,
+      "left_unmatched": 878,
+      "right_unmatched": 812,
+      "response_pairs": 145753,
+      "excluded_zero_shear_pairs": 0
+    }
+  ],
+  "validation": [
+    {
+      "case": 4,
+      "left_rows": 146476,
+      "right_rows": 146452,
+      "matched_rows": 145669,
+      "left_unmatched": 807,
+      "right_unmatched": 783,
+      "response_pairs": 145669,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 96,
+      "left_rows": 146107,
+      "right_rows": 146192,
+      "matched_rows": 145305,
+      "left_unmatched": 802,
+      "right_unmatched": 887,
+      "response_pairs": 145305,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 145,
+      "left_rows": 146638,
+      "right_rows": 146559,
+      "matched_rows": 145752,
+      "left_unmatched": 886,
+      "right_unmatched": 807,
+      "response_pairs": 145752,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 81,
+      "left_rows": 146701,
+      "right_rows": 146649,
+      "matched_rows": 145812,
+      "left_unmatched": 889,
+      "right_unmatched": 837,
+      "response_pairs": 145812,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 62,
+      "left_rows": 145914,
+      "right_rows": 145782,
+      "matched_rows": 145029,
+      "left_unmatched": 885,
+      "right_unmatched": 753,
+      "response_pairs": 145029,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 120,
+      "left_rows": 146956,
+      "right_rows": 146876,
+      "matched_rows": 146064,
+      "left_unmatched": 892,
+      "right_unmatched": 812,
+      "response_pairs": 146064,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 151,
+      "left_rows": 145940,
+      "right_rows": 145875,
+      "matched_rows": 145035,
+      "left_unmatched": 905,
+      "right_unmatched": 840,
+      "response_pairs": 145035,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 131,
+      "left_rows": 146015,
+      "right_rows": 145968,
+      "matched_rows": 145116,
+      "left_unmatched": 899,
+      "right_unmatched": 852,
+      "response_pairs": 145116,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 21,
+      "left_rows": 146514,
+      "right_rows": 146349,
+      "matched_rows": 145522,
+      "left_unmatched": 992,
+      "right_unmatched": 827,
+      "response_pairs": 145522,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 66,
+      "left_rows": 146431,
+      "right_rows": 146286,
+      "matched_rows": 145524,
+      "left_unmatched": 907,
+      "right_unmatched": 762,
+      "response_pairs": 145524,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 22,
+      "left_rows": 146644,
+      "right_rows": 146644,
+      "matched_rows": 145783,
+      "left_unmatched": 861,
+      "right_unmatched": 861,
+      "response_pairs": 145783,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 130,
+      "left_rows": 146619,
+      "right_rows": 146555,
+      "matched_rows": 145734,
+      "left_unmatched": 885,
+      "right_unmatched": 821,
+      "response_pairs": 145734,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 10,
+      "left_rows": 146241,
+      "right_rows": 146145,
+      "matched_rows": 145342,
+      "left_unmatched": 899,
+      "right_unmatched": 803,
+      "response_pairs": 145342,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 68,
+      "left_rows": 146417,
+      "right_rows": 146354,
+      "matched_rows": 145546,
+      "left_unmatched": 871,
+      "right_unmatched": 808,
+      "response_pairs": 145546,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 98,
+      "left_rows": 146078,
+      "right_rows": 146006,
+      "matched_rows": 145212,
+      "left_unmatched": 866,
+      "right_unmatched": 794,
+      "response_pairs": 145212,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 183,
+      "left_rows": 146537,
+      "right_rows": 146460,
+      "matched_rows": 145692,
+      "left_unmatched": 845,
+      "right_unmatched": 768,
+      "response_pairs": 145692,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 91,
+      "left_rows": 145999,
+      "right_rows": 145893,
+      "matched_rows": 145050,
+      "left_unmatched": 949,
+      "right_unmatched": 843,
+      "response_pairs": 145050,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 115,
+      "left_rows": 145315,
+      "right_rows": 145286,
+      "matched_rows": 144451,
+      "left_unmatched": 864,
+      "right_unmatched": 835,
+      "response_pairs": 144451,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 154,
+      "left_rows": 145990,
+      "right_rows": 145991,
+      "matched_rows": 145140,
+      "left_unmatched": 850,
+      "right_unmatched": 851,
+      "response_pairs": 145140,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 110,
+      "left_rows": 146820,
+      "right_rows": 146781,
+      "matched_rows": 145945,
+      "left_unmatched": 875,
+      "right_unmatched": 836,
+      "response_pairs": 145945,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 51,
+      "left_rows": 146680,
+      "right_rows": 146623,
+      "matched_rows": 145771,
+      "left_unmatched": 909,
+      "right_unmatched": 852,
+      "response_pairs": 145771,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 78,
+      "left_rows": 146374,
+      "right_rows": 146273,
+      "matched_rows": 145473,
+      "left_unmatched": 901,
+      "right_unmatched": 800,
+      "response_pairs": 145473,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 23,
+      "left_rows": 145800,
+      "right_rows": 145798,
+      "matched_rows": 144972,
+      "left_unmatched": 828,
+      "right_unmatched": 826,
+      "response_pairs": 144972,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 137,
+      "left_rows": 145951,
+      "right_rows": 145929,
+      "matched_rows": 145085,
+      "left_unmatched": 866,
+      "right_unmatched": 844,
+      "response_pairs": 145085,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 33,
+      "left_rows": 146058,
+      "right_rows": 145998,
+      "matched_rows": 145186,
+      "left_unmatched": 872,
+      "right_unmatched": 812,
+      "response_pairs": 145186,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 141,
+      "left_rows": 146593,
+      "right_rows": 146522,
+      "matched_rows": 145712,
+      "left_unmatched": 881,
+      "right_unmatched": 810,
+      "response_pairs": 145712,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 138,
+      "left_rows": 146278,
+      "right_rows": 146237,
+      "matched_rows": 145387,
+      "left_unmatched": 891,
+      "right_unmatched": 850,
+      "response_pairs": 145387,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 25,
+      "left_rows": 146557,
+      "right_rows": 146420,
+      "matched_rows": 145625,
+      "left_unmatched": 932,
+      "right_unmatched": 795,
+      "response_pairs": 145625,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 13,
+      "left_rows": 145923,
+      "right_rows": 145847,
+      "matched_rows": 145022,
+      "left_unmatched": 901,
+      "right_unmatched": 825,
+      "response_pairs": 145022,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 99,
+      "left_rows": 146353,
+      "right_rows": 146259,
+      "matched_rows": 145421,
+      "left_unmatched": 932,
+      "right_unmatched": 838,
+      "response_pairs": 145421,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 41,
+      "left_rows": 145995,
+      "right_rows": 145908,
+      "matched_rows": 145082,
+      "left_unmatched": 913,
+      "right_unmatched": 826,
+      "response_pairs": 145082,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 185,
+      "left_rows": 146728,
+      "right_rows": 146630,
+      "matched_rows": 145803,
+      "left_unmatched": 925,
+      "right_unmatched": 827,
+      "response_pairs": 145803,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 38,
+      "left_rows": 146322,
+      "right_rows": 146248,
+      "matched_rows": 145446,
+      "left_unmatched": 876,
+      "right_unmatched": 802,
+      "response_pairs": 145446,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 129,
+      "left_rows": 146063,
+      "right_rows": 146025,
+      "matched_rows": 145197,
+      "left_unmatched": 866,
+      "right_unmatched": 828,
+      "response_pairs": 145197,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 180,
+      "left_rows": 146848,
+      "right_rows": 146787,
+      "matched_rows": 145955,
+      "left_unmatched": 893,
+      "right_unmatched": 832,
+      "response_pairs": 145955,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 75,
+      "left_rows": 146808,
+      "right_rows": 146782,
+      "matched_rows": 145952,
+      "left_unmatched": 856,
+      "right_unmatched": 830,
+      "response_pairs": 145952,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 113,
+      "left_rows": 146376,
+      "right_rows": 146329,
+      "matched_rows": 145515,
+      "left_unmatched": 861,
+      "right_unmatched": 814,
+      "response_pairs": 145515,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 114,
+      "left_rows": 146436,
+      "right_rows": 146339,
+      "matched_rows": 145543,
+      "left_unmatched": 893,
+      "right_unmatched": 796,
+      "response_pairs": 145543,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 69,
+      "left_rows": 146195,
+      "right_rows": 146130,
+      "matched_rows": 145321,
+      "left_unmatched": 874,
+      "right_unmatched": 809,
+      "response_pairs": 145321,
+      "excluded_zero_shear_pairs": 0
+    },
+    {
+      "case": 84,
+      "left_rows": 146371,
+      "right_rows": 146337,
+      "matched_rows": 145517,
+      "left_unmatched": 854,
+      "right_unmatched": 820,
+      "response_pairs": 145517,
+      "excluded_zero_shear_pairs": 0
+    }
+  ]
+}

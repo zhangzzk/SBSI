@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "fixture": "Analytical synthetic data; not scientific evidence",
+  "checks": [
+    "full aggregation and bootstrap execute",
+    "known own/opposite/total errors",
+    "fixed-U flow opposite contrast zero",
+    "edge shape/selection closure"
+  ]
+}

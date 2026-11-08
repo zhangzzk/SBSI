@@ -1,0 +1,110 @@
+{
+  "source_experiment": "/home/z/Zekang.Zhang/SBSI/doc/evidence/photometry_learning_information_20261107",
+  "data_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/photometry_response_localization_20261107",
+  "model_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/photometry_learning_information_20261107",
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "tasks": [
+    {
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "case": 1120,
+      "axis": 2
+    }
+  ],
+  "arms": [
+    "control",
+    "weighted",
+    "neighbour",
+    "both"
+  ],
+  "contrasts": [
+    "weighted",
+    "neighbour",
+    "both"
+  ],
+  "cuts": [
+    "mag24.9_radius_gt0.56",
+    "mag25_radius_gt0.56",
+    "mag25.1_radius_gt0.56",
+    "mag24.9_radius_gt0.60",
+    "mag25_radius_gt0.60",
+    "mag25.1_radius_gt0.60",
+    "mag24.9_radius_gt0.64",
+    "mag25_radius_gt0.64",
+    "mag25.1_radius_gt0.64"
+  ],
+  "size_edges_arcsec": [
+    0.15,
+    0.25,
+    0.4,
+    0.7
+  ],
+  "neighbour_partition": "scene-specific quartiles of truth-only reference coefficient; same parent partition for both shear legs and all arms",
+  "event_labels": [
+    "both selected",
+    "radius-only switch",
+    "flux-only switch",
+    "joint switch",
+    "neither selected"
+  ],
+  "terms": [
+    "cut_membership",
+    "output_value",
+    "normalization"
+  ],
+  "components": [
+    "flow_e1",
+    "flow_e2",
+    "emulator_e1",
+    "emulator_e2"
+  ],
+  "worker_tasks": [
+    [
+      1,
+      4,
+      7
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      3,
+      6
+    ]
+  ],
+  "draws": 64,
+  "block": 1024,
+  "export_root": "/home/z/Zekang.Zhang/Documents/Codex/2026-11-07/size-and-flux-supplied-to-model/outputs/response_localization"
+}

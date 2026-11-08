@@ -1,0 +1,22 @@
+{
+  "recorded_at": "2026-09-25T08:56:10.606076+00:00",
+  "owner_decision": "Keep C8 for now and proceed to emulator simplification.",
+  "status": "provisional development baseline by owner decision",
+  "classifier": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_classifier_f8_inputs_20260925_v1/C8_20260913/selected.pt",
+  "classifier_sha256": "231bbbdf1f885ab22ccfca2525ae46b6bdfd068474c42ebac24973feb861cb6a",
+  "primary_seed": 20260913,
+  "seed_convention": "First predeclared seed; second seed retained as replicate, not a best-bias selection.",
+  "fixed": {
+    "flow": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/v36_f8_20260924_v1/joint/joint_probability_refinement_full/selected.pt",
+    "flow_sha256": "bd51dbbbeeb72763f6982a958cb8f3a0b2d3906d4f78935d9d959fa85a17797e",
+    "fixed_components": {
+      "flow_control_sha256": "1433b7217fb77f41f42cbacd97aed317d8db32d74ffe19a17927c56f194ae107",
+      "classifier_sha256": "13cd6a81ecff1ed98596ec770bcfaf99505c139b6dbfe76cef164df9028a52d0",
+      "disk_emulator_sha256": "194c1d11b67d6fd52039060270663e8e1cd610b478b9e9a66e34271701761fe7"
+    },
+    "production_accepted": false
+  },
+  "previous_non_degradation_screen_pass": false,
+  "independent_acceptance": false,
+  "production_preset_changed": false
+}

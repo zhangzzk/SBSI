@@ -1,0 +1,182 @@
+{
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "sim_roots": {
+    "1": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+    "2": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims"
+  },
+  "cuts": [
+    [
+      "mag24.9_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.1
+    ]
+  ],
+  "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+  "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+  "teacher": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/weighted/final.pt",
+    "sha256": "43673e5db42e90d976d45dc7de1e54682adb0fd18bea74c6602e8dd4630c8cbd"
+  },
+  "prepared_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/prepared",
+  "original_prepared_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/prepared",
+  "prepared_receipt_sha256": "cbdd4e81e0f5fb93b05ffcb1a3e879708d1cd6f0060ccd9b3a3cbda55ee8ad58",
+  "measurement_sums": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/selected_seed_calibration_20261108/case_sums.npz",
+  "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+  "arms": [
+    {
+      "name": "no_score",
+      "depth": 5,
+      "score": false
+    },
+    {
+      "name": "shallow",
+      "depth": 3,
+      "score": true
+    },
+    {
+      "name": "shallow_no_score",
+      "depth": 3,
+      "score": false
+    }
+  ],
+  "training": {
+    "steps": 4096,
+    "rows": 1024,
+    "chunk": 256,
+    "draws": 4,
+    "seed": 202611081600,
+    "learning_rate": 0.0001,
+    "response_weight": 0.1,
+    "validation_rows": 32768
+  },
+  "pilot_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "tasks": [
+    {
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "case": 1120,
+      "axis": 2
+    }
+  ],
+  "worker_tasks": [
+    [
+      1,
+      4,
+      7
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      3,
+      6
+    ]
+  ],
+  "tolerances": {
+    "per_component_cut_pp": 0.1,
+    "rms_pp": 0.05
+  },
+  "max_gpus": 3,
+  "authorized_gpu_ceiling": 6,
+  "broad_array_still_held": 17788286,
+  "automated_followup": "disabled"
+}

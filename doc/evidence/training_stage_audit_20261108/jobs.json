@@ -1,0 +1,9 @@
+{
+  "report": 17833559,
+  "gpu_jobs": 0,
+  "broad_array_still_held": 17788286,
+  "automated_followup": "disabled",
+  "state": "COMPLETED 0:0; 7 seconds",
+  "scalar_diagonal_checks": 2016,
+  "report_sha256": "c8afe524bb9a0a54714a54bf0e9170165560324b81e971884750914586b7415d"
+}

@@ -1,0 +1,117 @@
+{
+  "provenance": {
+    "manifest_sha256": "3c0c897b6585e0c7f06f49c40454582c7d1147adcfdf73e977b9bca3675864db",
+    "source_sha256": "40ac3294094568da3439ee89616b5e950644f9efe4766704eacc1ce427697199",
+    "sources": {
+      "initial": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/neighbour/nll.pt",
+        "sha256": "12ca78567660b72ae594dd18527c75d2ff66aa551c91e98f7530804e2c19c507",
+        "loader": "neighbour",
+        "mean_score": false
+      },
+      "control": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_moment_guard_20261106/control/final.pt",
+        "sha256": "6fc0c373fc9cc71e8a8ccc772d22e279495af8725f7e1647bcd53c6933f4c65b"
+      },
+      "weighted": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_moment_guard_20261106/weighted/final.pt",
+        "sha256": "427dec59f568804ded7360d37afcdb7097681b257c4be30c1e35fe73734e1c8e"
+      }
+    }
+  },
+  "standardizers_and_outer_transforms_exact": true,
+  "optimizer_steps": 0,
+  "arms": {
+    "initial": {
+      "sha256": "6c7838cb67fd4a4eb7bf65504c613ae96d3c9a43a5f3292d2c2ce4bf90abe32d",
+      "recipe": [
+        "initial",
+        "initial"
+      ],
+      "reload_exact": true,
+      "photo_source_exact": true,
+      "conditional_shape_log_density_max_abs": 0.0,
+      "joint_float32_logdet_roundoff_max_abs": 9.5367431640625e-07,
+      "identity_exact": true,
+      "seconds": 24.02917072904529
+    },
+    "control": {
+      "sha256": "8edbd153be22769528aa3749ec99f951ab436d8f3586bec67c124b0dc17365c6",
+      "recipe": [
+        "control",
+        "control"
+      ],
+      "reload_exact": true,
+      "photo_source_exact": true,
+      "conditional_shape_log_density_max_abs": 0.0,
+      "joint_float32_logdet_roundoff_max_abs": 9.5367431640625e-07,
+      "identity_exact": true,
+      "seconds": 21.0113008809858
+    },
+    "weighted": {
+      "sha256": "bdfab8d7efb7fb0a0ba7ceeba1cce153770900bc9e798f822b9e1b78d7c27104",
+      "recipe": [
+        "weighted",
+        "weighted"
+      ],
+      "reload_exact": true,
+      "photo_source_exact": true,
+      "conditional_shape_log_density_max_abs": 0.0,
+      "joint_float32_logdet_roundoff_max_abs": 9.5367431640625e-07,
+      "identity_exact": true,
+      "seconds": 21.011277219979092
+    },
+    "photo_control_shape_initial": {
+      "sha256": "a991d328fba97c06f47230b93992f810409212da9bb6a3159061dfbf2af2a40f",
+      "recipe": [
+        "control",
+        "initial"
+      ],
+      "reload_exact": true,
+      "photo_source_exact": true,
+      "conditional_shape_log_density_max_abs": 0.0,
+      "joint_float32_logdet_roundoff_max_abs": 9.5367431640625e-07,
+      "identity_exact": false,
+      "seconds": 23.860674866999034
+    },
+    "photo_initial_shape_control": {
+      "sha256": "803b9f7268c543759e8a091a7f93f3ae065fd63f1e760bd05ad6389f29212314",
+      "recipe": [
+        "initial",
+        "control"
+      ],
+      "reload_exact": true,
+      "photo_source_exact": true,
+      "conditional_shape_log_density_max_abs": 0.0,
+      "joint_float32_logdet_roundoff_max_abs": 9.5367431640625e-07,
+      "identity_exact": false,
+      "seconds": 21.958333111018874
+    },
+    "photo_weighted_shape_control": {
+      "sha256": "8fcfb72825fe0291c59aeae6c842cd3d9ff0462a39bf15080148226d44f7a751",
+      "recipe": [
+        "weighted",
+        "control"
+      ],
+      "reload_exact": true,
+      "photo_source_exact": true,
+      "conditional_shape_log_density_max_abs": 0.0,
+      "joint_float32_logdet_roundoff_max_abs": 9.5367431640625e-07,
+      "identity_exact": false,
+      "seconds": 21.97982560598757
+    },
+    "photo_control_shape_weighted": {
+      "sha256": "2fbe3be2e9c47881574929db26e3960893a29ba5155714edc56fddaf5f617c9c",
+      "recipe": [
+        "control",
+        "weighted"
+      ],
+      "reload_exact": true,
+      "photo_source_exact": true,
+      "conditional_shape_log_density_max_abs": 0.0,
+      "joint_float32_logdet_roundoff_max_abs": 9.5367431640625e-07,
+      "identity_exact": false,
+      "seconds": 21.313938685983885
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "case": 1040,
+  "seconds": 233.43618657096522,
+  "gpu": "NVIDIA A40-16Q",
+  "replay": "original true-flag sums and measured counts/shapes match saved outputs",
+  "catalogues": [
+    {
+      "cross_rows": 292757,
+      "shape_rows": 293923,
+      "cross_without_shape": 0,
+      "shape_without_cross": 1166,
+      "parent_rows": 883991,
+      "parent_usable": 292716,
+      "parent_absent_crossmatch": 591234,
+      "usable_zero_shape_rows": 0
+    },
+    {
+      "cross_rows": 292660,
+      "shape_rows": 293883,
+      "cross_without_shape": 0,
+      "shape_without_cross": 1223,
+      "parent_rows": 883991,
+      "parent_usable": 292618,
+      "parent_absent_crossmatch": 591331,
+      "usable_zero_shape_rows": 0
+    }
+  ]
+}

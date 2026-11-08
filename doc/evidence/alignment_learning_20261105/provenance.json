@@ -1,0 +1,12 @@
+{
+  "source_sha256": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_learning_20261105/reduce_pilot.py": "c64b5e8940711d5dfe98ded4b7b1e4e708fa028d38576232b8df168722ec4ca9",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_learning_20261105/plot.py": "39c674c9bfc36a79002f763ba89daf16e752f76c725092e2364f3267a3aaca27",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_learning_20261105/probe.py": "387a2dc47ac3f4ef926a2ee1b064e722f51a88a554ed25f40873eed1ffbf22ea",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_learning_20261105/learning_pilot.py": "e2897a04e6d1ba4a594170212b0a0ff20a0c53dca092f5ae9966f993e4e3f22a",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_learning_20261105/reduce.py": "8a9d694b16f4a5d8be6f46d3154f290630b009d4adb0f9e359844b774439a405",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_learning_20261105/run_pilot.sh": "dd031a20b2634374d1a0c352ce7ef2f758f18b6f5ce8b26784696acb812a6a4e",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_learning_20261105/run.sh": "9e3c9014a1eeec6ee70111a3463cf3250ef805ac771a71dadd3e6fdd2acb0110"
+  },
+  "validation": "AST, shell, strict JSON, local links, partition closure and prior measured-profile replay passed; figures inspected."
+}

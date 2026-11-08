@@ -1,0 +1,7 @@
+{
+  "unequal_case_weighting": true,
+  "known_conditional_score": true,
+  "paired_jackknife": true,
+  "selected_shape_normalization": true,
+  "unchanged_conditional_density": true
+}

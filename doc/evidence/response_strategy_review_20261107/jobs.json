@@ -1,0 +1,8 @@
+{
+  "audit": 17821064,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 11,
+  "replayed_statistics": 1120,
+  "follow_up": "../current_measured_photometry_20261107/jobs.json"
+}

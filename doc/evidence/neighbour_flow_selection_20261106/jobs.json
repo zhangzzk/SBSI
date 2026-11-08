@@ -1,0 +1,15 @@
+{
+  "persistent_worker": 17809769,
+  "gpus": 1,
+  "cpus": 4,
+  "host_memory_gb": 24,
+  "models_loaded_once": 6,
+  "splits_in_same_job": [
+    "train",
+    "validation"
+  ],
+  "old_broad_array_remains_held": 17788286,
+  "state": "COMPLETED",
+  "exit_code": "0:0",
+  "elapsed_seconds": 213
+}

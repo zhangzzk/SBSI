@@ -1,0 +1,28 @@
+{
+  "name": "like-1.0-galsbi",
+  "flow_arm": "control_nine",
+  "date": "2026-11-08",
+  "artifact_validation": "python -m sbsi validate-model like-1.0-galsbi: all paths and pinned hashes OK",
+  "checkpoint_metadata_checks": {
+    "use_score": false,
+    "arm": "control",
+    "guard_steps": 64,
+    "guard_weight": 0.001
+  },
+  "tests": {
+    "job": 17834679,
+    "state": "COMPLETED",
+    "exit_code": "0:0",
+    "passed": 382,
+    "skipped": 3,
+    "seconds": 74.24
+  },
+  "files_sha256": {
+    "configs/models_like_1_0_galsbi.json": "4df397be2dcbddf643216659d25bee076acff124101147a5860c98113714ad90",
+    "doc/LIKE_1_0_GALSBI.md": "ede7172b2d8cf5f3f8970765ccf2cef5de9ce8e77e6a931bfaa41faf51aec4b9",
+    "sbsi/models.py": "b3bff9b39497812747db03f4e05e0ec0987c83d6e5eacda4e2faebb7b90b65ca",
+    "tests/test_model_presets.py": "87ff6875be939d6ae3350e3c31565a0f6deda9ced907632e310232185a8140b3",
+    "logs/tests_17834679.out": "9873d19742f1f0cda0d5c5a54049c09274307d47916d4d314d9d47066cf9d496"
+  },
+  "scope": "Owner-selected working fiducial; no weight, likelihood, estimator, or scientific-population changes; research flow loader boundary retained."
+}

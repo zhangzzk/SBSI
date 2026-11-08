@@ -1,0 +1,311 @@
+{
+  "v36_f8_20260924_v1": {
+    "recipe": {
+      "batch_size": 8192,
+      "gradient_clip": 5.0,
+      "guard_epochs": 60,
+      "guard_pairs_per_step": 32768,
+      "guard_steps_per_epoch": 4,
+      "guard_training_chunk": 1024,
+      "guard_training_draws": 4,
+      "guard_weight": 1.0,
+      "learning_rate": 0.0001,
+      "measurement_conditions_used": false,
+      "minimum_learning_rate": 1e-07,
+      "nll_epochs": 140,
+      "rows_per_epoch": 4000000,
+      "seed": 611,
+      "validation_guard_draws": 8,
+      "validation_guard_groups": 4,
+      "validation_guard_pairs": 200000,
+      "validation_nll_rows": 500000
+    },
+    "model_config": {
+      "activation": "silu",
+      "context_dim": 16,
+      "disk_coordinate_means": [
+        -0.0002083258215296555,
+        0.002597230333184324
+      ],
+      "disk_coordinate_scales": [
+        0.4479090364268494,
+        0.46448823687798557
+      ],
+      "disk_map": "radial_tanh",
+      "disk_shape_means": [
+        -0.0001516503314096218,
+        0.0019760154612954543
+      ],
+      "disk_shape_scales": [
+        0.3340097019843103,
+        0.3401098353373455
+      ],
+      "flow_type": "physical_disk_affine",
+      "hidden_dim": 256,
+      "mean_hidden": 0,
+      "n_flows": 10,
+      "n_layers": 3,
+      "num_bins": 8,
+      "physical_coordinate_means": [
+        2.1048685410656227,
+        -5.224680585676886
+      ],
+      "physical_coordinate_scales": [
+        1.0742362265804726,
+        1.6334381411129906
+      ],
+      "physical_map": "softplus",
+      "physical_means": [
+        3.8937361651878195,
+        404.019693776252
+      ],
+      "physical_scales": [
+        1.7250679373623412,
+        15952.212910250866
+      ],
+      "physical_units": [
+        1.7250679373623412,
+        15952.212910250866
+      ],
+      "scale_limit": 3.0,
+      "tail_bound": 5.0,
+      "target_dim": 4
+    },
+    "features": [
+      "e1_input_p",
+      "e2_input_p",
+      "sersic_n_input_p",
+      "r_input_p",
+      "circularized_Re_input_p",
+      "nbr_close_050",
+      "nbr_close_100",
+      "nbr_close_200"
+    ],
+    "best_epoch": 139,
+    "schedule": [
+      {
+        "epoch": 1,
+        "lr": 0.0001,
+        "validation_nll": -3.3332200989115113
+      },
+      {
+        "epoch": 111,
+        "lr": 5e-05,
+        "validation_nll": -4.6799458951911435
+      },
+      {
+        "epoch": 122,
+        "lr": 2.5e-05,
+        "validation_nll": -4.694178570470077
+      },
+      {
+        "epoch": 129,
+        "lr": 1.25e-05,
+        "validation_nll": -4.714573928895745
+      }
+    ],
+    "first20_minimum": -4.33275204943298,
+    "last20_minimum": -4.728791508693841,
+    "best_record": {
+      "epoch": 139,
+      "learning_rate": 1.25e-05,
+      "train": {
+        "clipped_step_fraction": 1.0,
+        "gradient_norm_max": 123.47190856933594,
+        "gradient_norm_mean": 34.8645863279487,
+        "nll": -4.720949612595033,
+        "optimizer_steps": 489,
+        "rows": 4000000,
+        "seconds": 7.063261989038438
+      },
+      "validation": {
+        "clipped_step_fraction": 0.0,
+        "gradient_norm_max": 0.0,
+        "gradient_norm_mean": 0.0,
+        "nll": -4.728791508693841,
+        "optimizer_steps": 0,
+        "rows": 500000,
+        "seconds": 0.37926099519245327
+      }
+    },
+    "last_record": {
+      "epoch": 140,
+      "learning_rate": 1.25e-05,
+      "train": {
+        "clipped_step_fraction": 0.9979550102249489,
+        "gradient_norm_max": 117.26637268066406,
+        "gradient_norm_mean": 42.741674470999,
+        "nll": -4.722449392453181,
+        "optimizer_steps": 489,
+        "rows": 4000000,
+        "seconds": 7.068488496122882
+      },
+      "validation": {
+        "clipped_step_fraction": 0.0,
+        "gradient_norm_max": 0.0,
+        "gradient_norm_mean": 0.0,
+        "nll": -4.721542448655295,
+        "optimizer_steps": 0,
+        "rows": 500000,
+        "seconds": 0.380128086078912
+      }
+    }
+  },
+  "galsbi_f8c8_20261102": {
+    "recipe": {
+      "batch_size": 8192,
+      "gradient_clip": 5.0,
+      "guard_epochs": 60,
+      "guard_pairs_per_step": 32768,
+      "guard_steps_per_epoch": 4,
+      "guard_training_chunk": 1024,
+      "guard_training_draws": 4,
+      "guard_weight": 1.0,
+      "learning_rate": 0.0001,
+      "measurement_conditions_used": false,
+      "minimum_learning_rate": 1e-07,
+      "nll_epochs": 140,
+      "rows_per_epoch": 4000000,
+      "seed": 611,
+      "validation_guard_draws": 8,
+      "validation_guard_groups": 4,
+      "validation_guard_pairs": 200000,
+      "validation_nll_rows": 500000
+    },
+    "model_config": {
+      "activation": "silu",
+      "context_dim": 16,
+      "disk_coordinate_means": [
+        6.954200483972342e-05,
+        7.782952490125879e-05
+      ],
+      "disk_coordinate_scales": [
+        0.45804567329187235,
+        0.46840216453313543
+      ],
+      "disk_map": "radial_tanh",
+      "disk_shape_means": [
+        6.080508566640609e-05,
+        -1.0973008581051203e-05
+      ],
+      "disk_shape_scales": [
+        0.3255185205074768,
+        0.32767743047089903
+      ],
+      "flow_type": "physical_disk_affine",
+      "hidden_dim": 256,
+      "mean_hidden": 0,
+      "n_flows": 10,
+      "n_layers": 3,
+      "num_bins": 8,
+      "physical_coordinate_means": [
+        2.8810985051207374,
+        -4.311298878175641
+      ],
+      "physical_coordinate_scales": [
+        1.0374631553958398,
+        1.7129817382817107
+      ],
+      "physical_map": "softplus",
+      "physical_means": [
+        3.3857862891144124,
+        791.8790777619596
+      ],
+      "physical_scales": [
+        1.14624544212879,
+        11662.411349181728
+      ],
+      "physical_units": [
+        1.14624544212879,
+        11662.411349181728
+      ],
+      "scale_limit": 3.0,
+      "tail_bound": 5.0,
+      "target_dim": 4
+    },
+    "features": [
+      "e1_input_p",
+      "e2_input_p",
+      "sersic_n_input_p",
+      "r_input_p",
+      "circularized_Re_input_p",
+      "nbr_close_050",
+      "nbr_close_100",
+      "nbr_close_200"
+    ],
+    "best_epoch": 137,
+    "schedule": [
+      {
+        "epoch": 1,
+        "lr": 0.0001,
+        "validation_nll": -2.3331203539323893
+      },
+      {
+        "epoch": 27,
+        "lr": 5e-05,
+        "validation_nll": -3.391498251724834
+      },
+      {
+        "epoch": 45,
+        "lr": 2.5e-05,
+        "validation_nll": -3.5513043278476326
+      },
+      {
+        "epoch": 54,
+        "lr": 1.25e-05,
+        "validation_nll": -3.6133962414033074
+      },
+      {
+        "epoch": 97,
+        "lr": 6.25e-06,
+        "validation_nll": -3.673453215809992
+      }
+    ],
+    "first20_minimum": -3.4353452087264396,
+    "last20_minimum": -3.7009266673415113,
+    "best_record": {
+      "epoch": 137,
+      "learning_rate": 6.25e-06,
+      "train": {
+        "clipped_step_fraction": 1.0,
+        "gradient_norm_max": 209.6998291015625,
+        "gradient_norm_mean": 60.82718281268098,
+        "nll": -3.689524933874311,
+        "optimizer_steps": 489,
+        "rows": 4000000,
+        "seconds": 15.197298441984458
+      },
+      "validation": {
+        "clipped_step_fraction": 0.0,
+        "gradient_norm_max": 0.0,
+        "gradient_norm_mean": 0.0,
+        "nll": -3.7009266673415113,
+        "optimizer_steps": 0,
+        "rows": 500000,
+        "seconds": 0.8459263679978903
+      }
+    },
+    "last_record": {
+      "epoch": 140,
+      "learning_rate": 6.25e-06,
+      "train": {
+        "clipped_step_fraction": 1.0,
+        "gradient_norm_max": 220.4875030517578,
+        "gradient_norm_mean": 67.35899357122878,
+        "nll": -3.690292073152631,
+        "optimizer_steps": 489,
+        "rows": 4000000,
+        "seconds": 15.163780094007961
+      },
+      "validation": {
+        "clipped_step_fraction": 0.0,
+        "gradient_norm_max": 0.0,
+        "gradient_norm_mean": 0.0,
+        "nll": -3.6977492172900486,
+        "optimizer_steps": 0,
+        "rows": 500000,
+        "seconds": 0.8448158749961294
+      }
+    }
+  }
+}

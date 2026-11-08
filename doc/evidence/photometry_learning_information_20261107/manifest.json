@@ -1,0 +1,316 @@
+{
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "mag24.9_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.1
+    ],
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ]
+  ],
+  "target_cuts": [
+    "mag24.9_radius_gt0.56",
+    "mag25_radius_gt0.56",
+    "mag25.1_radius_gt0.56",
+    "mag24.9_radius_gt0.60",
+    "mag25_radius_gt0.60",
+    "mag25.1_radius_gt0.60",
+    "mag24.9_radius_gt0.64",
+    "mag25_radius_gt0.64",
+    "mag25.1_radius_gt0.64"
+  ],
+  "sim_roots": {
+    "1": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+    "2": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims"
+  },
+  "intrinsic_size_edges_arcsec": [
+    0.15,
+    0.25,
+    0.4,
+    0.7
+  ],
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "initial_checkpoint": {
+    "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+    "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+  },
+  "training": {
+    "steps": 64,
+    "learning_rate": 1e-05,
+    "nll_batch": 8192,
+    "pairs_per_group": 32768,
+    "draws": 4,
+    "chunk": 1024,
+    "clip": 5.0,
+    "relative_response_scale": 0.003,
+    "radius_softness": 0.05,
+    "magnitude_softness": 0.05,
+    "independent_pairs": true,
+    "checkpoint_rule": "fixed step64; no outcome-based selection",
+    "probe_pairs": 262144,
+    "probe_draws": 16,
+    "probe_groups": 2
+  },
+  "regularization_cuts": [
+    {
+      "name": "mag24.9_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 25.1
+    },
+    {
+      "name": "mag24.9_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 25.1
+    },
+    {
+      "name": "mag24.9_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 25.1
+    }
+  ],
+  "arms": [
+    "control",
+    "weighted",
+    "neighbour",
+    "both"
+  ],
+  "response_weight": 0.001,
+  "bootstrap_seed": 202611061020,
+  "constant_tasks": [
+    {
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "case": 1120,
+      "axis": 2
+    }
+  ],
+  "worker_tasks": [
+    [
+      1,
+      4,
+      7
+    ],
+    [
+      2,
+      5
+    ],
+    [
+      3,
+      6
+    ]
+  ],
+  "pilot_task": 0,
+  "prepared_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_conditioned_flow_20261106/prepared",
+  "original_prepared_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/prepared",
+  "selection_diagnostic_manifest": "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_flow_selection_20261106/manifest.json",
+  "freeze": "only photometry parameters; no static-neighbour moment; conditional shape density, classifier and emulator fixed",
+  "target_source": "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_moment_guard_20261106/targets.json",
+  "target_sha256": "32217b95fe6fafc7fca4edc693bbb6a02b4e5412eca839bbab58392eb9aff232",
+  "reference_sha256": {
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_moment_guard_20261106/train.py": "098451137d975c03eb73aea4caadea7f58e384d1efd00943e2aa540f6e57fb8a",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_moment_guard_20261106/moment.py": "053535656c094eb93d9e5b2947e785d096b96eb1fa7729f26a8ecc99f2d83438",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_moment_guard_20261106/common.py": "4113e808876f5d59ecac92ae49411e535c0dfd202ba8d8d91505a4741265c636",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_moment_guard_20261106/evaluate.py": "828afb17faf5a9d0fb6b4d17b28ed9b1165bdd6976d319b716c60c874762d2d5",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_moment_guard_20261106/own_evaluate.py": "fc72fabe698bcc0c1bd68230625ad89a1e41fec3dbb5919fdfb60c576affa858",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_moment_guard_20261106/report.py": "638c5e4967a25537d70df8b5e621b0fa780675e5c6f8216910fe56f73cf287a0",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_moment_guard_20261106/manifest.json": "278022b91ff36da0a9a334406ca36845db415ce857f4875dbaec3dc8e855b341",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_factor_swap_20261107/prepare.py": "40ac3294094568da3439ee89616b5e950644f9efe4766704eacc1ce427697199",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/frozen_shape_neighbour_20261107/train.py": "ac0076918cd50929594581f7a194ef2d2741de10309adbd93ca022b78d52cd41",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/frozen_shape_neighbour_20261107/report.py": "eb0563f4160be34914698e41cfabc1e5ddd3e44fb4400976dee30ed2f511875d",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/neighbour_conditioned_flow_20261106/model.py": "7a6287d8ec1ccdda55829df09094470a5225415516697771343b82c9e89b8bde",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_factorized_20261105/frame_model.py": "162af73b1b1e4e027ff9327c89ae5eebfca86a464e5f32b63446992330c7d3a1",
+    "/home/z/Zekang.Zhang/SBSI/doc/evidence/conditional_cut_probability_20261107/probability.py": "d9bac243f437b05bc287f763f0ca35573a4acc05148c3bf6d50d3851574ebefa"
+  },
+  "probability_loss": {
+    "gradient_fraction": 0.25,
+    "calibration_batches": 4,
+    "calibration_seed": 202611071101,
+    "training_seed": 202611071201,
+    "rows": 32768,
+    "draws_per_bank": 4,
+    "chunk": 1024,
+    "score": "per-row mean product of independent-bank soft-cut residuals",
+    "weight_rule": "0.25 * RMS baseline photo-gradient norm / RMS auxiliary photo-gradient norm at untouched start; training data only",
+    "same_rows_both_banks": true,
+    "radius_softness": 0.05,
+    "magnitude_softness": 0.05
+  },
+  "arm_definition": {
+    "control": {
+      "neighbour_input": false,
+      "probability_loss": false
+    },
+    "weighted": {
+      "neighbour_input": false,
+      "probability_loss": true
+    },
+    "neighbour": {
+      "neighbour_input": true,
+      "probability_loss": false
+    },
+    "both": {
+      "neighbour_input": true,
+      "probability_loss": true
+    }
+  },
+  "initialization": "Original nine-weak model, function-preserving zero-weight extra score channel; shape factor frozen. Input-off arms freeze new photometry input weights at zero.",
+  "export_root": "/home/z/Zekang.Zhang/Documents/Codex/2026-11-07/size-and-flux-supplied-to-model/outputs/flow_experiment"
+}

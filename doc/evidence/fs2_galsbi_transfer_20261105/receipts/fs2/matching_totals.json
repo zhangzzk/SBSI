@@ -1,0 +1,9 @@
+{
+  "left_rows": 6283377,
+  "right_rows": 6280286,
+  "matched_rows": 6237191,
+  "left_unmatched": 46186,
+  "right_unmatched": 43095,
+  "response_pairs": 6237191,
+  "excluded_zero_shear_pairs": 0
+}

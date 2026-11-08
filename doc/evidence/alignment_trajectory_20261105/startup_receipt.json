@@ -1,0 +1,860 @@
+{
+  "utc": "2026-11-05T13:00:12.825896+00:00",
+  "status": "native replays progressing; continuation/evaluation/reports queued",
+  "families": {
+    "fs2": {
+      "latest_epoch": 56,
+      "max_abs_historical_validation_nll_difference": 0.0,
+      "diagnostics": [
+        {
+          "epoch": 0,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.5332433295777103,
+              0.48993813858285623
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              1571.09375,
+              2175.59375
+            ],
+            "small_joint_nll": 0.11921048116289458
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.5252967592715884,
+              0.4672422726461293
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              1573.46875,
+              2178.71875
+            ],
+            "small_joint_nll": 0.13330707487899393
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 1,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.8564790767489396,
+              0.7759848704143515
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              591.09375,
+              2687.28125
+            ],
+            "small_joint_nll": -3.5407612288636097
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.8623578891024503,
+              0.7559714746046944
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              594.46875,
+              2679.90625
+            ],
+            "small_joint_nll": -3.5424636048774905
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 2,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.8513857906520729,
+              0.7274659883439205
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              509.90625,
+              2487.4375
+            ],
+            "small_joint_nll": -3.678406438704318
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.8320534024172379,
+              0.7133004939281808
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              518.3125,
+              2462.625
+            ],
+            "small_joint_nll": -3.676810122180997
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 5,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.9747322655022839,
+              0.7208129079433019
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              705.4375,
+              2473.15625
+            ],
+            "small_joint_nll": -3.884220086867124
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.974742575747259,
+              0.7042568239762426
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              714.84375,
+              2455.5
+            ],
+            "small_joint_nll": -3.8806317853320405
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 10,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.6729672753376162,
+              0.5387661141592993
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              905.59375,
+              2662.9375
+            ],
+            "small_joint_nll": -4.034615648814578
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.666329594638143,
+              0.5203615522962954
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              915.6875,
+              2655.84375
+            ],
+            "small_joint_nll": -4.029640052250986
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 15,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.4469818366784628,
+              0.40389343833998276
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              864.28125,
+              2580.59375
+            ],
+            "small_joint_nll": -4.128340160908213
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.43413891550493416,
+              0.382406475313439
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              867.46875,
+              2574.625
+            ],
+            "small_joint_nll": -4.120386558558994
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 20,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.2849114117085425,
+              0.3111720458021293
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              843.3125,
+              2574.125
+            ],
+            "small_joint_nll": -4.218447583995393
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.28921547972946815,
+              0.2960658436058621
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              846.40625,
+              2565.15625
+            ],
+            "small_joint_nll": -4.212616605403029
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 25,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.20168129040278127,
+              0.263241078320488
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              856.375,
+              2596.84375
+            ],
+            "small_joint_nll": -4.248554039860927
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.21088903636072198,
+              0.24459713047776557
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              858.40625,
+              2588.71875
+            ],
+            "small_joint_nll": -4.242180499791326
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 30,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.1436307667402577,
+              0.22011026138310158
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              800.1875,
+              2530.0
+            ],
+            "small_joint_nll": -4.251408060401812
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.14721498214057005,
+              0.20079255323370837
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              811.9375,
+              2517.53125
+            ],
+            "small_joint_nll": -4.243341852381003
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 35,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.13465482187872618,
+              0.20502617539756507
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              835.53125,
+              2579.28125
+            ],
+            "small_joint_nll": -4.333954309203767
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.1448948820003218,
+              0.1941825765987955
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              848.0,
+              2567.53125
+            ],
+            "small_joint_nll": -4.328147882699345
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 40,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.11432861379060533,
+              0.18779133962016603
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              954.21875,
+              2787.53125
+            ],
+            "small_joint_nll": -4.345157259799821
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.11735272638231925,
+              0.1731351611287983
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              960.1875,
+              2768.21875
+            ],
+            "small_joint_nll": -4.339884548735199
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 50,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.11443669434799048,
+              0.1701417547582556
+            ],
+            "observed_count_bin8": [
+              938.0,
+              2807.0
+            ],
+            "generated_count_bin8": [
+              890.875,
+              2652.625
+            ],
+            "small_joint_nll": -4.390143211050241
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.12521962061375214,
+              0.15719148159698199
+            ],
+            "observed_count_bin8": [
+              906.0,
+              2723.0
+            ],
+            "generated_count_bin8": [
+              895.03125,
+              2635.59375
+            ],
+            "small_joint_nll": -4.38592951892128
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        }
+      ],
+      "gpu": "NVIDIA A40"
+    },
+    "galsbi": {
+      "latest_epoch": 57,
+      "max_abs_historical_validation_nll_difference": 0.0,
+      "diagnostics": [
+        {
+          "epoch": 0,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.332307600332687,
+              0.10666240219837939
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3037.59375,
+              3810.625
+            ],
+            "small_joint_nll": 1.2398993832809315
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.3296503444645255,
+              0.11194069665826323
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3035.5,
+              3808.78125
+            ],
+            "small_joint_nll": 1.2670233477714223
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 1,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.6478682180149635,
+              0.38148901658867584
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3741.75,
+              8516.5625
+            ],
+            "small_joint_nll": -2.419669134932008
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.6511566755079565,
+              0.3960295296314123
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3726.5625,
+              8509.75
+            ],
+            "small_joint_nll": -2.4117762193950982
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 2,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.731610482050806,
+              0.3786715268277269
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3426.625,
+              8489.4375
+            ],
+            "small_joint_nll": -2.5655518314903296
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.7326975998196485,
+              0.3887410498390771
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3415.125,
+              8450.6875
+            ],
+            "small_joint_nll": -2.557030032778876
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 5,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.7097063081766799,
+              0.3118567744187576
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3001.0,
+              7934.5
+            ],
+            "small_joint_nll": -2.8254490145147986
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.7128075578864026,
+              0.32352730324408996
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              2991.53125,
+              7886.46875
+            ],
+            "small_joint_nll": -2.81470050466124
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 10,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.6293975706095996,
+              0.2604497407778607
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3029.5,
+              7690.1875
+            ],
+            "small_joint_nll": -2.928527399926123
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.6339732896859815,
+              0.27410673091936466
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3013.625,
+              7646.65625
+            ],
+            "small_joint_nll": -2.92374696180132
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 15,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.5571100297068474,
+              0.22321418561160483
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3199.75,
+              7907.40625
+            ],
+            "small_joint_nll": -3.062159071463088
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.5581184920935641,
+              0.23461118116530888
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3186.03125,
+              7877.5625
+            ],
+            "small_joint_nll": -3.0585735171437007
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 20,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.4883502341392143,
+              0.19589290813810356
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3098.75,
+              7668.65625
+            ],
+            "small_joint_nll": -3.1195982145532724
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.48986503728832803,
+              0.20749520035244418
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3082.9375,
+              7645.5
+            ],
+            "small_joint_nll": -3.1168296036724175
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 25,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.4513906348125648,
+              0.17885503187542204
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3136.96875,
+              7671.8125
+            ],
+            "small_joint_nll": -3.1276645272168957
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.4563556755658678,
+              0.19167325873527447
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3131.5625,
+              7653.25
+            ],
+            "small_joint_nll": -3.124350793249532
+          },
+          "lr_used": 0.0001,
+          "lr_next": 0.0001
+        },
+        {
+          "epoch": 30,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.4318156694593022,
+              0.1698059319667283
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              2990.375,
+              7518.9375
+            ],
+            "small_joint_nll": -3.1827204731033225
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.4381944956269195,
+              0.1831605377524374
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              2978.65625,
+              7501.71875
+            ],
+            "small_joint_nll": -3.1804243428604364
+          },
+          "lr_used": 5e-05,
+          "lr_next": 5e-05
+        },
+        {
+          "epoch": 35,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.43930968287622557,
+              0.1719513886530065
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3132.75,
+              7601.3125
+            ],
+            "small_joint_nll": -3.163572126101443
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.44192107127254315,
+              0.18326850646086823
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3130.21875,
+              7568.9375
+            ],
+            "small_joint_nll": -3.160906593572672
+          },
+          "lr_used": 5e-05,
+          "lr_next": 5e-05
+        },
+        {
+          "epoch": 40,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.4268223579873929,
+              0.16764126674464294
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3099.3125,
+              7622.84375
+            ],
+            "small_joint_nll": -3.208317558500533
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.4316717375962322,
+              0.17952473135028724
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3089.8125,
+              7598.5
+            ],
+            "small_joint_nll": -3.205708890753644
+          },
+          "lr_used": 5e-05,
+          "lr_next": 5e-05
+        },
+        {
+          "epoch": 50,
+          "validation_diagnostic": {
+            "alignment_error_bin8": [
+              0.4210722462423795,
+              0.1644713881076511
+            ],
+            "observed_count_bin8": [
+              3178.0,
+              7621.0
+            ],
+            "generated_count_bin8": [
+              3148.96875,
+              7711.75
+            ],
+            "small_joint_nll": -3.2240141944343614
+          },
+          "train_diagnostic": {
+            "alignment_error_bin8": [
+              0.42334785449150725,
+              0.1741135776926555
+            ],
+            "observed_count_bin8": [
+              3059.0,
+              7552.0
+            ],
+            "generated_count_bin8": [
+              3139.125,
+              7685.375
+            ],
+            "small_joint_nll": -3.2212972562178432
+          },
+          "lr_used": 2.5e-05,
+          "lr_next": 2.5e-05
+        }
+      ],
+      "gpu": "NVIDIA A40"
+    }
+  }
+}

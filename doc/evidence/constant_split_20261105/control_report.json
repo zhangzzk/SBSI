@@ -1,0 +1,34 @@
+{
+  "case": 1000,
+  "passed": true,
+  "checks": {
+    "images/original/tile180.0_-0.5_bandr_rot0.fits": {
+      "different_pixels": 0,
+      "max_abs_difference": 0.0,
+      "shape": [
+        18181,
+        18181
+      ]
+    },
+    "images/original/psf_tile180.0_-0.5_bandr/psf_ima.fits": {
+      "different_pixels": 0,
+      "max_abs_difference": 0.0,
+      "shape": [
+        48,
+        48
+      ]
+    },
+    "catalogues/input/gals_info_tile180.0_-0.5.feather": {
+      "rows": 883944,
+      "exact": true
+    },
+    "catalogues/SExtractor/tile180.0_-0.5_bandr_rot0.feather": {
+      "rows": 294441,
+      "exact": true
+    },
+    "catalogues/CrossMatch/tile180.0_-0.5_rot0_matched.feather": {
+      "rows": 292879,
+      "exact": true
+    }
+  }
+}

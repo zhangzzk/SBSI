@@ -1,0 +1,18 @@
+{
+  "utc": "2026-11-05T14:48:40.435156+00:00",
+  "job": "17762865",
+  "gpu": "NVIDIA A40",
+  "train_rows": 46833127,
+  "last_epoch": 7,
+  "last_nll": -3.052949006854189,
+  "last_train": {
+    "nll": -0.32403700114508954,
+    "rows": 4000000,
+    "optimizer_steps": 489,
+    "gradient_norm_mean": 438.7432589072635,
+    "gradient_norm_max": 84757.296875,
+    "clipped_step_fraction": 1.0,
+    "seconds": 7.66687744401861
+  },
+  "completed": false
+}

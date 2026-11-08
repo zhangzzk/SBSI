@@ -1,0 +1,94 @@
+{
+  "seeded_replay_passed": true,
+  "flag_sample_rows": 1021,
+  "flags": {
+    "0": 2042
+  },
+  "flag_sample_both_success_fraction": 1.0,
+  "both_success_component_rms": 0.20835734146701945,
+  "nfev_quantiles": {
+    "min": 8.0,
+    "median": 51.0,
+    "p90": 130.0,
+    "max": 2443.0
+  },
+  "all_sample": {
+    "n": 62767,
+    "component_rms": 0.22004726110477077,
+    "vector_change_quantiles": {
+      "p25": 0.0006292672370574821,
+      "p50": 0.0036868348458708802,
+      "p75": 0.0208389343380115,
+      "p90": 0.24905925897091943,
+      "p99": 1.5413665505460712
+    },
+    "fraction_vector_change_gt_0.01": 0.35462902480602865,
+    "fraction_vector_change_gt_0.1": 0.12097121098666497,
+    "bins": [
+      {
+        "variable": "MAG_AUTO",
+        "lo": "-inf",
+        "hi": "23",
+        "n": 14525,
+        "component_rms": 0.25092527111600377,
+        "share_squared_g1_change": 0.3035690255284655
+      },
+      {
+        "variable": "MAG_AUTO",
+        "lo": "23",
+        "hi": "24",
+        "n": 17669,
+        "component_rms": 0.22658183090035114,
+        "share_squared_g1_change": 0.29982938146711274
+      },
+      {
+        "variable": "MAG_AUTO",
+        "lo": "24",
+        "hi": "24.5",
+        "n": 14161,
+        "component_rms": 0.2050212780383101,
+        "share_squared_g1_change": 0.1978936772920353
+      },
+      {
+        "variable": "MAG_AUTO",
+        "lo": "24.5",
+        "hi": "25",
+        "n": 16412,
+        "component_rms": 0.19472843840135018,
+        "share_squared_g1_change": 0.19870791571238647
+      },
+      {
+        "variable": "radius",
+        "lo": "3",
+        "hi": "3.2",
+        "n": 8886,
+        "component_rms": 0.3463185123224476,
+        "share_squared_g1_change": 0.35648644116266764
+      },
+      {
+        "variable": "radius",
+        "lo": "3.2",
+        "hi": "4",
+        "n": 32024,
+        "component_rms": 0.20675684445662898,
+        "share_squared_g1_change": 0.44854655782797415
+      },
+      {
+        "variable": "radius",
+        "lo": "4",
+        "hi": "6",
+        "n": 18990,
+        "component_rms": 0.16681573949074505,
+        "share_squared_g1_change": 0.17156014593311228
+      },
+      {
+        "variable": "radius",
+        "lo": "6",
+        "hi": "inf",
+        "n": 2867,
+        "component_rms": 0.16287201052132533,
+        "share_squared_g1_change": 0.02340685507624587
+      }
+    ]
+  }
+}

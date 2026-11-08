@@ -1,0 +1,2280 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084,
+    1124,
+    1005,
+    1045,
+    1085,
+    1125,
+    1006,
+    1046,
+    1086,
+    1126,
+    1007,
+    1047,
+    1087,
+    1127,
+    1008,
+    1048,
+    1088,
+    1128,
+    1009,
+    1049,
+    1089,
+    1129
+  ],
+  "pilot_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "arms": [
+    {
+      "name": "nll_control",
+      "cuts": "nine",
+      "weight": 0.0
+    },
+    {
+      "name": "single_weak",
+      "cuts": "single",
+      "weight": 0.001
+    },
+    {
+      "name": "nine_weak",
+      "cuts": "nine",
+      "weight": 0.001
+    },
+    {
+      "name": "single_strong",
+      "cuts": "single",
+      "weight": 0.01
+    },
+    {
+      "name": "nine_strong",
+      "cuts": "nine",
+      "weight": 0.01
+    }
+  ],
+  "tasks": [
+    {
+      "arm": "nll_control",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1000,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1000,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1040,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1040,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1080,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1080,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1120,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1120,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1001,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1001,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1001,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1001,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1001,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1001,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1001,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1001,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1001,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1001,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1041,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1041,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1041,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1041,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1041,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1041,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1041,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1041,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1041,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1041,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1081,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1081,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1081,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1081,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1081,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1081,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1081,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1081,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1081,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1081,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1121,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1121,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1121,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1121,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1121,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1121,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1121,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1121,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1121,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1121,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1002,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1002,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1002,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1002,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1002,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1002,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1002,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1002,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1002,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1002,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1042,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1042,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1042,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1042,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1042,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1042,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1042,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1042,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1042,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1042,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1082,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1082,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1082,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1082,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1082,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1082,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1082,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1082,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1082,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1082,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1122,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1122,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1122,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1122,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1122,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1122,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1122,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1122,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1122,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1122,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1003,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1003,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1003,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1003,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1003,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1003,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1003,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1003,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1003,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1003,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1043,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1043,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1043,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1043,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1043,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1043,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1043,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1043,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1043,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1043,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1083,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1083,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1083,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1083,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1083,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1083,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1083,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1083,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1083,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1083,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1123,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1123,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1123,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1123,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1123,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1123,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1123,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1123,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1123,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1123,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1004,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1004,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1004,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1004,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1004,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1004,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1004,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1004,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1004,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1004,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1044,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1044,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1044,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1044,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1044,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1044,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1044,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1044,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1044,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1044,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1084,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1084,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1084,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1084,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1084,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1084,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1084,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1084,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1084,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1084,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1124,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1124,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1124,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1124,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1124,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1124,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1124,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1124,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1124,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1124,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1005,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1005,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1005,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1005,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1005,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1005,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1005,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1005,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1005,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1005,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1045,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1045,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1045,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1045,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1045,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1045,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1045,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1045,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1045,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1045,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1085,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1085,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1085,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1085,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1085,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1085,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1085,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1085,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1085,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1085,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1125,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1125,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1125,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1125,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1125,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1125,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1125,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1125,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1125,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1125,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1006,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1006,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1006,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1006,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1006,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1006,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1006,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1006,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1006,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1006,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1046,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1046,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1046,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1046,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1046,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1046,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1046,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1046,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1046,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1046,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1086,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1086,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1086,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1086,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1086,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1086,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1086,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1086,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1086,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1086,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1126,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1126,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1126,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1126,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1126,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1126,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1126,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1126,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1126,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1126,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1007,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1007,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1007,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1007,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1007,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1007,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1007,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1007,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1007,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1007,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1047,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1047,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1047,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1047,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1047,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1047,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1047,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1047,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1047,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1047,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1087,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1087,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1087,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1087,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1087,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1087,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1087,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1087,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1087,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1087,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1127,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1127,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1127,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1127,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1127,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1127,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1127,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1127,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1127,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1127,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1008,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1008,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1008,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1008,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1008,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1008,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1008,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1008,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1008,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1008,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1048,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1048,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1048,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1048,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1048,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1048,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1048,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1048,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1048,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1048,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1088,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1088,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1088,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1088,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1088,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1088,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1088,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1088,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1088,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1088,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1128,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1128,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1128,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1128,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1128,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1128,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1128,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1128,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1128,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1128,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1009,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1009,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1009,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1009,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1009,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1009,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1009,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1009,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1009,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1009,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1049,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1049,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1049,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1049,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1049,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1049,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1049,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1049,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1049,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1049,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1089,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1089,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1089,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1089,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1089,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1089,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1089,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1089,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1089,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1089,
+      "axis": 2
+    },
+    {
+      "arm": "nll_control",
+      "case": 1129,
+      "axis": 1
+    },
+    {
+      "arm": "nll_control",
+      "case": 1129,
+      "axis": 2
+    },
+    {
+      "arm": "single_weak",
+      "case": 1129,
+      "axis": 1
+    },
+    {
+      "arm": "single_weak",
+      "case": 1129,
+      "axis": 2
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1129,
+      "axis": 1
+    },
+    {
+      "arm": "nine_weak",
+      "case": 1129,
+      "axis": 2
+    },
+    {
+      "arm": "single_strong",
+      "case": 1129,
+      "axis": 1
+    },
+    {
+      "arm": "single_strong",
+      "case": 1129,
+      "axis": 2
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1129,
+      "axis": 1
+    },
+    {
+      "arm": "nine_strong",
+      "case": 1129,
+      "axis": 2
+    }
+  ],
+  "checkpoints": {
+    "cartesian": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_20261105/cartesian/selected.pt",
+      "sha256": "37c4afc13b045bbd118eea0d20572961eef5f6649d6b9329c1e5d09fe820afbb"
+    }
+  },
+  "baseline_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_grid_20261104",
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "mag24.9_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.56",
+      [
+        ">",
+        2.8
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.1
+    ],
+    [
+      "mag24.9_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      24.9
+    ],
+    [
+      "mag25_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.0
+    ],
+    [
+      "mag25.1_radius_gt0.64",
+      [
+        ">",
+        3.2
+      ],
+      25.1
+    ],
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ]
+  ],
+  "sim_root": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims",
+  "axis": 2,
+  "intrinsic_size_edges_arcsec": [
+    0.15,
+    0.25,
+    0.4,
+    0.7
+  ],
+  "sim_roots": {
+    "1": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims",
+    "2": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_axis2_20261105/sims"
+  },
+  "target_cuts": [
+    "mag24.9_radius_gt0.56",
+    "mag25_radius_gt0.56",
+    "mag25.1_radius_gt0.56",
+    "mag24.9_radius_gt0.60",
+    "mag25_radius_gt0.60",
+    "mag25.1_radius_gt0.60",
+    "mag24.9_radius_gt0.64",
+    "mag25_radius_gt0.64",
+    "mag25.1_radius_gt0.64"
+  ],
+  "regularization_cuts": [
+    {
+      "name": "mag24.9_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.56",
+      "radius_min": 2.8,
+      "magnitude_max": 25.1
+    },
+    {
+      "name": "mag24.9_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.60",
+      "radius_min": 3.0,
+      "magnitude_max": 25.1
+    },
+    {
+      "name": "mag24.9_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 24.9
+    },
+    {
+      "name": "mag25_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 25.0
+    },
+    {
+      "name": "mag25.1_radius_gt0.64",
+      "radius_min": 3.2,
+      "magnitude_max": 25.1
+    }
+  ],
+  "training": {
+    "steps": 64,
+    "learning_rate": 1e-05,
+    "nll_batch": 8192,
+    "pairs_per_group": 32768,
+    "draws": 4,
+    "chunk": 1024,
+    "clip": 5.0,
+    "relative_response_scale": 0.003,
+    "radius_softness": 0.05,
+    "magnitude_softness": 0.05,
+    "independent_pairs": true,
+    "checkpoint_rule": "fixed step64; no outcome-based selection",
+    "probe_pairs": 262144,
+    "probe_draws": 16,
+    "probe_groups": 2
+  },
+  "domain": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/harmonized/domain"
+}

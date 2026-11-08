@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "checks": [
+    "known signed response change",
+    "constant shift has zero subsampling variance",
+    "independent fitter noise scales to full population correctly"
+  ],
+  "fixture": "Synthetic; not scientific evidence"
+}

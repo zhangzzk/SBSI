@@ -1,0 +1,45 @@
+{
+  "current": {
+    "sample": 17814260,
+    "pixels": 17814302,
+    "coherent": 17814363,
+    "operational": 17814368,
+    "model": 17814387,
+    "field_array": 17814392,
+    "report": 17814399,
+    "paired_diagnostics": 17815268,
+    "fit_trace": 17815288,
+    "fit_trace_original_cpu_family": 17815297
+  },
+  "earlier_attempts": [
+    {
+      "job": 17814275,
+      "reason": "A 192-pixel surrounding-source validation window was insufficient for one patch; replay broadened without changing its thresholds."
+    },
+    {
+      "job": 17814380,
+      "reason": "Identical flow numerators reduced on a different leading batch shape differed by 6.94e-18. A neighbour-only reversal now reuses the same mass and base numerator by construction, changing only disk transport."
+    },
+    {
+      "job": 17815279,
+      "reason": "Failed the bitwise same-seed shape gate on case 1040. Preserve case 1000 (all exact); record the original shapes and any nonexact replay as unclassified. Do not infer size signs from a nonexact replay."
+    }
+  ],
+  "limits": {
+    "study_gpu": 6,
+    "study_cpu": 500,
+    "this_gpu": 1,
+    "field_array_max_cpu": 128,
+    "combined_peak_cpu_including_gpu_worker": 132
+  },
+  "older_broad_held": 17788286,
+  "simulation_scripts": "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts",
+  "external_output": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/primary_neighbour_replay_20261107",
+  "follow_up": {
+    "type": "one-shot same-thread check; no recurring timer",
+    "user_timer": "sbsi-primary-replay-17814392-once.timer",
+    "local_due": "2026-11-07T07:29:10+01:00",
+    "status": "cancelled_by_owner",
+    "cancelled_at": "2026-11-07T05:33:19+01:00"
+  }
+}

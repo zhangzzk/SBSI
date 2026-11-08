@@ -1,0 +1,446 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120,
+    1001,
+    1041,
+    1081,
+    1121,
+    1002,
+    1042,
+    1082,
+    1122,
+    1003,
+    1043,
+    1083,
+    1123,
+    1004,
+    1044,
+    1084,
+    1124,
+    1005,
+    1045,
+    1085,
+    1125,
+    1006,
+    1046,
+    1086,
+    1126,
+    1007,
+    1047,
+    1087,
+    1127,
+    1008,
+    1048,
+    1088,
+    1128,
+    1009,
+    1049,
+    1089,
+    1129
+  ],
+  "pilot_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "arms": [
+    "joint_cartesian",
+    "joint_frame"
+  ],
+  "tasks": [
+    {
+      "arm": "joint_cartesian",
+      "case": 1000
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1000
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1040
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1040
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1080
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1080
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1120
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1120
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1001
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1001
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1041
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1041
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1081
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1081
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1121
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1121
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1002
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1002
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1042
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1042
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1082
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1082
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1122
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1122
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1003
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1003
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1043
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1043
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1083
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1083
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1123
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1123
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1004
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1004
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1044
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1044
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1084
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1084
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1124
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1124
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1005
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1005
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1045
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1045
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1085
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1085
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1125
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1125
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1006
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1006
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1046
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1046
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1086
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1086
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1126
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1126
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1007
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1007
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1047
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1047
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1087
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1087
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1127
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1127
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1008
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1008
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1048
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1048
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1088
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1088
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1128
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1128
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1009
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1009
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1049
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1049
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1089
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1089
+    },
+    {
+      "arm": "joint_cartesian",
+      "case": 1129
+    },
+    {
+      "arm": "joint_frame",
+      "case": 1129
+    }
+  ],
+  "checkpoints": {
+    "joint_cartesian": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_trajectory_20261105/galsbi_fs2rate/selected.pt",
+      "sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd"
+    },
+    "joint_frame": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_frame_full_20261105/frame/selected.pt",
+      "sha256": "738f4d9b83f35c180107f94e0ed852c42a4537924aee1fbe91da5eaec3d49398"
+    }
+  },
+  "baseline_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_grid_20261104",
+  "parent_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_dev_constant_20261103",
+  "cuts": [
+    [
+      "uncut",
+      null,
+      null
+    ],
+    [
+      "mag25.8_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.8
+    ],
+    [
+      "mag25.8_radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      25.8
+    ],
+    [
+      "mag25_radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      25.0
+    ],
+    [
+      "radius_gt0.60",
+      [
+        ">",
+        3.0
+      ],
+      null
+    ],
+    [
+      "radius_ge0.75",
+      [
+        ">=",
+        3.75
+      ],
+      null
+    ],
+    [
+      "mag25.8",
+      null,
+      25.8
+    ],
+    [
+      "mag25",
+      null,
+      25.0
+    ]
+  ],
+  "factorized_root": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_constant_20261105"
+}

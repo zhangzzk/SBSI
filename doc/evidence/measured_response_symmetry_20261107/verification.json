@@ -1,0 +1,6 @@
+{
+  "known_nonsymmetric_response_replayed": true,
+  "unequal_leg_masses": true,
+  "rows_are_shape_columns_are_shear": true,
+  "diagonal_and_offdiagonal_contrasts_passed": true
+}

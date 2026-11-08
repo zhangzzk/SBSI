@@ -1,0 +1,57 @@
+{
+  "pilot": 17821126,
+  "workers": 17821114,
+  "report": 17821115,
+  "maximum_concurrent_gpus": 6,
+  "cpus_per_worker": 4,
+  "case_axis_tasks": 80,
+  "state": "completed: replacement pilot, all six workers and report exit0:0; independent audit passed",
+  "broad_array_still_held": 17788286,
+  "automated_follow_up": "disabled",
+  "failed_startup": {
+    "job": 17821113,
+    "reason": "NumPy conditioning state could not be JSON serialized; no predictions produced",
+    "repair": "exact recursive NumPy equality, equal/unequal fixture passed"
+  },
+  "pilot_elapsed_seconds": 74,
+  "pilot_reference_response_max_abs": 0.0,
+  "worker_startup": {
+    "0": {
+      "identity_passed": true,
+      "feature_passed": true,
+      "first_draw_block_completed": true,
+      "traceback": false
+    },
+    "1": {
+      "identity_passed": true,
+      "feature_passed": true,
+      "first_draw_block_completed": true,
+      "traceback": false
+    },
+    "2": {
+      "identity_passed": true,
+      "feature_passed": true,
+      "first_draw_block_completed": true,
+      "traceback": false
+    },
+    "3": {
+      "identity_passed": true,
+      "feature_passed": true,
+      "first_draw_block_completed": true,
+      "traceback": false
+    },
+    "4": {
+      "identity_passed": true,
+      "feature_passed": true,
+      "first_draw_block_completed": true,
+      "traceback": false
+    },
+    "5": {
+      "identity_passed": true,
+      "feature_passed": true,
+      "first_draw_block_completed": true,
+      "traceback": false
+    }
+  },
+  "completed_audit": "completed_audit.json"
+}

@@ -1,0 +1,39 @@
+{
+  "arm": "retained",
+  "case": 1000,
+  "seconds": 285.3952149450197,
+  "parents": 883944,
+  "pairs": 16024507,
+  "measured": [
+    {
+      "cross_rows": 292879,
+      "shape_rows": 294441,
+      "cross_without_shape": 0,
+      "shape_without_cross": 1562,
+      "parent_rows": 883944,
+      "parent_usable": 292842,
+      "parent_absent_crossmatch": 591065,
+      "usable_zero_shape_rows": 0
+    },
+    {
+      "cross_rows": 292734,
+      "shape_rows": 294330,
+      "cross_without_shape": 0,
+      "shape_without_cross": 1596,
+      "parent_rows": 883944,
+      "parent_usable": 292699,
+      "parent_absent_crossmatch": 591210,
+      "usable_zero_shape_rows": 0
+    }
+  ],
+  "measured_replay_max_abs": 0.0,
+  "retained_replay_max_abs": 2.6193447411060333e-10,
+  "checkpoint": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/galsbi_f8c8_20261102/joint/joint_probability_refinement_full/selected.pt",
+  "checkpoint_sha256": "abac069f66cc24fbe19a4127b9acfeb5b87c09414c662dc9380ffb115b9a4dbb",
+  "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+  "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+  "source_sha256": "f808e603166e48b44cfd6b5aaa584691831b6d1be760a43540688ff178a1b265",
+  "helper_sha256": "3f78a0f1fc5fed977546d51f465a1248feb11a8c63ddc3e6be9abb66e29adaa9",
+  "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+  "flags_sha256": "904da8f40e47d8fd3b998e14ef977bd7295a513bfdbc04a4f01aa1c6c79ce90e"
+}

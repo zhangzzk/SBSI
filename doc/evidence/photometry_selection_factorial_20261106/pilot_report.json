@@ -1,0 +1,2211 @@
+{
+  "cases": [
+    1000
+  ],
+  "definition": "Weak nine-cut flow, common actual usability; equal A/B within-group opposite response. Errors=simulation-model; fixed-model case SE.",
+  "bootstrap_seed": 202611069301,
+  "report_sha256": "7bdfe0290ee7e9693e2358907db42eec4ff73215a7f07b9e9054ea18b4c57d43",
+  "cuts": {
+    "uncut": {
+      "simulation_shape": {
+        "value": 0.09344354063701497,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "simulation_selection": {
+        "value": 0.0,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "branches": {
+        "G_inputs_G_selection": {
+          "model_shape_response": {
+            "value": 0.08617223112250486,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.007271309514510119,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.007271309514510119,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -4.707187760426279e-05,
+          "mean_log_radius": {
+            "value": 1.1785548020473602,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 24.5596669363237,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.08585408353229956,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "G_inputs_M_selection": {
+          "model_shape_response": {
+            "value": 0.08617223112250486,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.007271309514510119,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.007271309514510119,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -4.707187760426279e-05,
+          "mean_log_radius": {
+            "value": 1.1785548020473602,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 24.5596669363237,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.08585408353229956,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "M_inputs_G_selection": {
+          "model_shape_response": {
+            "value": 0.08858588051626702,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.004857660120747953,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.004857660120747953,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -3.2327622592670524e-05,
+          "mean_log_radius": {
+            "value": 1.1790434511785377,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 24.560234544645123,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.08826692442361886,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "M_inputs_M_selection": {
+          "model_shape_response": {
+            "value": 0.08858588051626702,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.004857660120747953,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.004857660120747953,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -3.2327622592670524e-05,
+          "mean_log_radius": {
+            "value": 1.1790434511785377,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 24.560234544645123,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.08826692442361886,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        }
+      },
+      "effects": {
+        "photometry_first": {
+          "value": 0.0024136493937621656,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 0.0024136493937621656,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 0.0024136493937621656,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.0024136493937621656,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "MM_change_from_previous_draw_bank": {
+        "value": 4.5680078893245435e-06,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "coefficient_effects": {
+        "photometry_first": {
+          "value": 0.0024128408913192956,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 0.0024128408913192956,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 0.0024128408913192956,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.0024128408913192956,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "transport_geometry_effects": {
+        "photometry_first": {
+          "value": 8.085024428700072e-07,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 8.085024428700072e-07,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 8.085024428700072e-07,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.0,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 8.085024428700072e-07,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "bank_effect_differences": {
+        "photometry_first": 1.4744255011592267e-05,
+        "photometry_after_membership": 1.4744255011592267e-05,
+        "membership_first": 0.0,
+        "membership_after_photometry": 0.0,
+        "symmetric_photometry": 1.4744255011592267e-05,
+        "symmetric_membership": 0.0,
+        "interaction": 0.0,
+        "diagonal_change": 1.4744255011592267e-05
+      },
+      "per_case": {
+        "1000": {
+          "shape": 0.09344354063701497,
+          "selection": 0.0,
+          "responses": [
+            [
+              0.08617223112250486,
+              0.08617223112250486
+            ],
+            [
+              0.08858588051626702,
+              0.08858588051626702
+            ]
+          ],
+          "effects": {
+            "photometry_first": 0.0024136493937621656,
+            "photometry_after_membership": 0.0024136493937621656,
+            "membership_first": 0.0,
+            "membership_after_photometry": 0.0,
+            "symmetric_photometry": 0.0024136493937621656,
+            "symmetric_membership": 0.0,
+            "interaction": 0.0,
+            "diagonal_change": 0.0024136493937621656
+          }
+        }
+      },
+      "size_contributions": {
+        "photometry_first": [
+          {
+            "value": 0.00036470102228958537,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0012557155100449482,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0006344973568474729,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00015270829230159318,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 6.027212278573221e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "photometry_after_membership": [
+          {
+            "value": 0.00036470102228958537,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0012557155100449482,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0006344973568474729,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00015270829230159318,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 6.027212278573221e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "membership_first": [
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "membership_after_photometry": [
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "symmetric_photometry": [
+          {
+            "value": 0.00036470102228958537,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0012557155100449482,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0006344973568474729,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00015270829230159318,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 6.027212278573221e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "symmetric_membership": [
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "interaction": [
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "diagonal_change": [
+          {
+            "value": 0.00036470102228958537,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0012557155100449482,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0006344973568474729,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00015270829230159318,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 6.027212278573221e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ]
+      }
+    },
+    "mag25": {
+      "simulation_shape": {
+        "value": 0.07952166298038332,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "simulation_selection": {
+        "value": 0.0015160682798620274,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "branches": {
+        "G_inputs_G_selection": {
+          "model_shape_response": {
+            "value": 0.07395310905469016,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.005568553925693165,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.007084622205555197,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -4.5668125035994156e-05,
+          "mean_log_radius": {
+            "value": 1.3056091211858192,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 23.686197749226025,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.0737584153680314,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "G_inputs_M_selection": {
+          "model_shape_response": {
+            "value": 0.0740741162845634,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.005447546695819927,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.006963614975681959,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -3.772767482890238e-05,
+          "mean_log_radius": {
+            "value": 1.276089135286279,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 23.73535899467012,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.07386733179255185,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "M_inputs_G_selection": {
+          "model_shape_response": {
+            "value": 0.07543094725431683,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.004090715726066493,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.005606784005928525,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -3.964041109655314e-05,
+          "mean_log_radius": {
+            "value": 1.276826948791077,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 23.731899324693302,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.07524991795321095,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "M_inputs_M_selection": {
+          "model_shape_response": {
+            "value": 0.07887634105915302,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.0006453219212303046,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.0021613902010923364,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -3.7965709800719116e-05,
+          "mean_log_radius": {
+            "value": 1.3046117113445512,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 23.6910660389443,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.0786564156861525,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        }
+      },
+      "effects": {
+        "photometry_first": {
+          "value": 0.0014778381996266715,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 0.004802224774589622,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": 0.00012100722987323786,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.0034453938048361887,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 0.003140031487108147,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.0017832005173547133,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.003324386574962951,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.00492323200446286,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "MM_change_from_previous_draw_bank": {
+        "value": 2.544466014606228e-05,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "coefficient_effects": {
+        "photometry_first": {
+          "value": 0.0014915025851795494,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 0.004789083893600651,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": 0.00010891642452044714,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.003406497732941549,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 0.0031402932393901004,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.0017577070787309981,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.003297581308421102,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.0048980003181210985,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "transport_geometry_effects": {
+        "photometry_first": {
+          "value": -1.3664385552877856e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 1.3140880988971038e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": 1.2090805352790723e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 3.889607189463962e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": -2.6175228195340905e-07,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 2.549343862371517e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 2.6805266541848893e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 2.523168634176176e-05,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "bank_effect_differences": {
+        "photometry_first": 6.027713939441015e-06,
+        "photometry_after_membership": -2.3803497181673627e-07,
+        "membership_first": 7.940450207091776e-06,
+        "membership_after_photometry": 1.6747012958340246e-06,
+        "symmetric_photometry": 2.8948394838121394e-06,
+        "symmetric_membership": 4.8075757514629e-06,
+        "interaction": -6.265748911257751e-06,
+        "diagonal_change": 7.70241523527504e-06
+      },
+      "per_case": {
+        "1000": {
+          "shape": 0.07952166298038332,
+          "selection": 0.0015160682798620274,
+          "responses": [
+            [
+              0.07395310905469016,
+              0.0740741162845634
+            ],
+            [
+              0.07543094725431683,
+              0.07887634105915302
+            ]
+          ],
+          "effects": {
+            "photometry_first": 0.0014778381996266715,
+            "photometry_after_membership": 0.004802224774589622,
+            "membership_first": 0.00012100722987323786,
+            "membership_after_photometry": 0.0034453938048361887,
+            "symmetric_photometry": 0.003140031487108147,
+            "symmetric_membership": 0.0017832005173547133,
+            "interaction": 0.003324386574962951,
+            "diagonal_change": 0.00492323200446286
+          }
+        }
+      },
+      "size_contributions": {
+        "photometry_first": [
+          {
+            "value": 8.486339741250147e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0005307883581764927,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0006587641764798854,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00019318332957202894,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 1.0238937985765644e-05,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "photometry_after_membership": [
+          {
+            "value": 0.0006869774898598004,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.002523386043154892,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0012928590211811822,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00028524693171853594,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 1.3755288675211834e-05,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "membership_first": [
+          {
+            "value": -4.236833499940765e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00014742671839915872,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -6.493595755517612e-07,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 2.547915021314847e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -8.880944164108397e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "membership_after_photometry": [
+          {
+            "value": 0.0005597457574478912,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.002140024403377558,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.000633445485125745,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00011754275235965547,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -5.364593474662207e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "symmetric_photometry": [
+          {
+            "value": 0.0003859204436361509,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0015270872006656923,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0009758115988305338,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00023921513064528244,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 1.1997113330488739e-05,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "symmetric_membership": [
+          {
+            "value": 0.0002586887112242418,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0011437255608883583,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0003163980627750966,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 7.151095128640197e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -7.122768819385302e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "interaction": [
+          {
+            "value": 0.0006021140924472989,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.001992597684978399,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0006340948447012967,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 9.2063602146507e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 3.51635068944619e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "diagonal_change": [
+          {
+            "value": 0.0006446091548603927,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0026708127615540506,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0012922096616056304,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0003107260819316844,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 4.8743445111034366e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ]
+      }
+    },
+    "radius3": {
+      "simulation_shape": {
+        "value": 0.10980682093040571,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "simulation_selection": {
+        "value": 0.0033588842587438843,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "branches": {
+        "G_inputs_G_selection": {
+          "model_shape_response": {
+            "value": 0.10139973177926759,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.008407089151138122,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.011765973409882002,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -9.756503815973316e-05,
+          "mean_log_radius": {
+            "value": 1.3306333487899007,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 24.062205220591483,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.1010791169082014,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "G_inputs_M_selection": {
+          "model_shape_response": {
+            "value": 0.09836637819277019,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.011440442737635517,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.014799326996379397,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -9.431809697077465e-05,
+          "mean_log_radius": {
+            "value": 1.2783842198010007,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 24.127054501712312,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.0980446289575978,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "M_inputs_G_selection": {
+          "model_shape_response": {
+            "value": 0.09945680968703621,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.010350011243369497,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.013708895502113377,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -7.815967304124205e-05,
+          "mean_log_radius": {
+            "value": 1.2775029615108533,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 24.13399400223956,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.09914997840730126,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "M_inputs_M_selection": {
+          "model_shape_response": {
+            "value": 0.10644258463880274,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.0033642362916029706,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.0067231205503468505,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -8.150726780167816e-05,
+          "mean_log_radius": {
+            "value": 1.330138587385116,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 24.05803786350593,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.10610225250639943,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        }
+      },
+      "effects": {
+        "photometry_first": {
+          "value": -0.001942922092231375,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 0.008076206446032547,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": -0.003033353586497395,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.006985774951766527,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 0.003066642176900586,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.001976210682634566,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.010019128538263922,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.005042852859535152,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "MM_change_from_previous_draw_bank": {
+        "value": -1.2551134188951152e-05,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "coefficient_effects": {
+        "photometry_first": {
+          "value": -0.0019291385009001377,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 0.008057623548801629,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": -0.003034487950603598,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.0069522740990981685,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 0.0030642425239507456,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.001958893074247285,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.009986762049701767,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.005023135598198031,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "transport_geometry_effects": {
+        "photometry_first": {
+          "value": -1.37835913312373e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 1.858289723091766e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": 1.1343641062033782e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 3.350085266835834e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 2.399652949840181e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 1.731760838728086e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 3.236648856215496e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 1.971726133712104e-05,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "bank_effect_differences": {
+        "photometry_first": 1.9405365118491114e-05,
+        "photometry_after_membership": 1.2810829169096483e-05,
+        "membership_first": 3.2469411889585187e-06,
+        "membership_after_photometry": -3.3475947604361123e-06,
+        "symmetric_photometry": 1.6108097143793798e-05,
+        "symmetric_membership": -5.0326785738796787e-08,
+        "interaction": -6.594535949394631e-06,
+        "diagonal_change": 1.6057770358055e-05
+      },
+      "per_case": {
+        "1000": {
+          "shape": 0.10980682093040571,
+          "selection": 0.0033588842587438843,
+          "responses": [
+            [
+              0.10139973177926759,
+              0.09836637819277019
+            ],
+            [
+              0.09945680968703621,
+              0.10644258463880274
+            ]
+          ],
+          "effects": {
+            "photometry_first": -0.001942922092231375,
+            "photometry_after_membership": 0.008076206446032547,
+            "membership_first": -0.003033353586497395,
+            "membership_after_photometry": 0.006985774951766527,
+            "symmetric_photometry": 0.003066642176900586,
+            "symmetric_membership": 0.001976210682634566,
+            "interaction": 0.010019128538263922,
+            "diagonal_change": 0.005042852859535152
+          }
+        }
+      },
+      "size_contributions": {
+        "photometry_first": [
+          {
+            "value": -0.0009135400316771635,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -0.0014390613030619073,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0002323204987837342,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00017104029814099184,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 6.3184455830010006e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "photometry_after_membership": [
+          {
+            "value": 0.0016470789332623387,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.004470293432276534,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00164154039236164,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00030420944512723515,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 1.3084243004759556e-05,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "membership_first": [
+          {
+            "value": -0.000847767531994472,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -0.0017002247804724716,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -0.00043326030517021677,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -5.157145756700711e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -5.295112932016599e-07,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "membership_after_photometry": [
+          {
+            "value": 0.0017128514329450301,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00420912995486597,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0009759595884076891,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 8.15976894192362e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 6.236286128556896e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "symmetric_photometry": [
+          {
+            "value": 0.0003667694507925876,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0015156160646073134,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0009369304455726871,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0002376248716341135,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 9.701344293880278e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "symmetric_membership": [
+          {
+            "value": 0.00043254195047527904,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0012544525871967492,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00027134964161873616,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 1.5013115926114547e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 2.853387417677618e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "interaction": [
+          {
+            "value": 0.002560618964939502,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0059093547353384415,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0014092198935779059,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0001331691469862433,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 6.765797421758556e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "diagonal_change": [
+          {
+            "value": 0.0007993114012678666,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0027700686518040626,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0012082800871914233,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00025263798756022804,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 1.2554731711557896e-05,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ]
+      }
+    },
+    "mag25_radius_gt0.60": {
+      "simulation_shape": {
+        "value": 0.09020150794396087,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "simulation_selection": {
+        "value": 0.0028931032205422053,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "branches": {
+        "G_inputs_G_selection": {
+          "model_shape_response": {
+            "value": 0.08407209471979765,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.006129413224163216,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.00902251644470542,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -0.00010009568984764572,
+          "mean_log_radius": {
+            "value": 1.3606957182275525,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 23.640680531846442,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.08387481502634384,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "G_inputs_M_selection": {
+          "model_shape_response": {
+            "value": 0.0837127836797261,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.006488724264234774,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.009381827484776978,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -4.130269640181816e-05,
+          "mean_log_radius": {
+            "value": 1.3144370960720584,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 23.710339363777827,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.08349146245129661,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "M_inputs_G_selection": {
+          "model_shape_response": {
+            "value": 0.08453854937319397,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 0.005662958570766902,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.008556061791309105,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -0.00010612423617806233,
+          "mean_log_radius": {
+            "value": 1.3151782741517932,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 23.707472794056788,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.08435790667656219,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        },
+        "M_inputs_M_selection": {
+          "model_shape_response": {
+            "value": 0.09016119400845711,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "shape_error": {
+            "value": 4.031393550375795e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "error_including_selection": {
+            "value": 0.0029334171560459615,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "antithetic_bank_difference": -4.5175874547623285e-05,
+          "mean_log_radius": {
+            "value": 1.3595602909924338,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_magnitude": {
+            "value": 23.64523592049602,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          "mean_opposite_coefficient": {
+            "value": 0.08993095731282395,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        }
+      },
+      "effects": {
+        "photometry_first": {
+          "value": 0.0004664546533963143,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 0.006448410328731016,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": -0.00035931104007155823,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.005622644635263144,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 0.0034574324910636653,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.0026316667975957928,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.005981955675334702,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006089099288659458,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "MM_change_from_previous_draw_bank": {
+        "value": 3.300601666772485e-05,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "coefficient_effects": {
+        "photometry_first": {
+          "value": 0.0004830916502183563,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 0.0064394948615273395,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": -0.00038335257504722164,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 0.0055730506362617616,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": 0.003461293255872848,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 0.00259484903060727,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 0.005956403211308983,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 0.006056142286480118,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "transport_geometry_effects": {
+        "photometry_first": {
+          "value": -1.6636996822042005e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "photometry_after_membership": {
+          "value": 8.915467203676752e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_first": {
+          "value": 2.4041534975663414e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "membership_after_photometry": {
+          "value": 4.959399900138217e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_photometry": {
+          "value": -3.860764809182626e-06,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "symmetric_membership": {
+          "value": 3.681776698852279e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "interaction": {
+          "value": 2.5552464025718757e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        "diagonal_change": {
+          "value": 3.295700217934017e-05,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      },
+      "bank_effect_differences": {
+        "photometry_first": -6.0285463304166065e-06,
+        "photometry_after_membership": -3.873178145805123e-06,
+        "membership_first": 5.879299344582756e-05,
+        "membership_after_photometry": 6.094836163043904e-05,
+        "symmetric_photometry": -4.950862238110865e-06,
+        "symmetric_membership": 5.98706775381333e-05,
+        "interaction": 2.1553681846114836e-06,
+        "diagonal_change": 5.4919815300022434e-05
+      },
+      "per_case": {
+        "1000": {
+          "shape": 0.09020150794396087,
+          "selection": 0.0028931032205422053,
+          "responses": [
+            [
+              0.08407209471979765,
+              0.0837127836797261
+            ],
+            [
+              0.08453854937319397,
+              0.09016119400845711
+            ]
+          ],
+          "effects": {
+            "photometry_first": 0.0004664546533963143,
+            "photometry_after_membership": 0.006448410328731016,
+            "membership_first": -0.00035931104007155823,
+            "membership_after_photometry": 0.005622644635263144,
+            "symmetric_photometry": 0.0034574324910636653,
+            "symmetric_membership": 0.0026316667975957928,
+            "interaction": 0.005981955675334702,
+            "diagonal_change": 0.006089099288659458
+          }
+        }
+      },
+      "size_contributions": {
+        "photometry_first": [
+          {
+            "value": -0.00028091383873493983,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -0.0001016564413175991,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0006123134656187239,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00022688311523960843,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 9.828352590529827e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "photometry_after_membership": [
+          {
+            "value": 0.0009937943591625427,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0034223827351233874,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0016691258041520163,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00034511811531966283,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 1.7989314973389323e-05,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "membership_first": [
+          {
+            "value": -0.00033789870403804455,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -8.335907311948776e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 3.065740303075451e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 4.357542261629148e-05,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -1.22860885610576e-05,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "membership_after_photometry": [
+          {
+            "value": 0.000936809493859438,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0034406801033214987,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.001087469741564047,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00016181042269634589,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -4.125126178198104e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "symmetric_photometry": [
+          {
+            "value": 0.00035644026021380143,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0016603631469028941,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00114071963488537,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00028600061527963563,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 1.3908833781959575e-05,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "symmetric_membership": [
+          {
+            "value": 0.0002994553949106967,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0016786605151010055,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0005590635722974007,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00010269292265631868,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": -8.205607369627852e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "interaction": [
+          {
+            "value": 0.0012747081978974825,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0035240391764409865,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0010568123385332924,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.00011823500008005441,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 8.160962382859497e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ],
+        "diagonal_change": [
+          {
+            "value": 0.0006558956551244981,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0033390236620038996,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0016997832071827708,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 0.0003886935379359543,
+            "case_se": null,
+            "jackknife_se": null
+          },
+          {
+            "value": 5.703226412331723e-06,
+            "case_se": null,
+            "jackknife_se": null
+          }
+        ]
+      }
+    }
+  },
+  "receipts": [
+    {
+      "case": 1000,
+      "checkpoint": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+        "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+      },
+      "emulator": {
+        "root": "BLENDEMU_RUNS_DIR",
+        "path": "disk_response_moment_galsbi_20261103/model/model.json",
+        "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+        "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+        "backend": "disk_response_moment",
+        "composition": "mobius",
+        "response_coordinate": "disk_velocity",
+        "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+        "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+      },
+      "source_sha256": "070100b4718c550ae3246988f699577462182e764673d3bd613d18c2e352e4f7",
+      "latent_source_sha256": "7a7b916b4da5113f406c73ef56d7537927133109587df1c3767023d1103ad086",
+      "measured": [
+        {
+          "cross_rows": 292879,
+          "shape_rows": 294441,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 883944,
+          "parent_usable": 292842,
+          "parent_absent_crossmatch": 591065,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292800,
+          "shape_rows": 294366,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1566,
+          "parent_rows": 883944,
+          "parent_usable": 292753,
+          "parent_absent_crossmatch": 591144,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292786,
+          "shape_rows": 294357,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1571,
+          "parent_rows": 883944,
+          "parent_usable": 292751,
+          "parent_absent_crossmatch": 591158,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292734,
+          "shape_rows": 294330,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1596,
+          "parent_rows": 883944,
+          "parent_usable": 292699,
+          "parent_absent_crossmatch": 591210,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "gpu": "Tesla V100-SXM2-32GB",
+      "draws": 64,
+      "full_parent_block_size": 1024,
+      "generated_replay_passed": true,
+      "conditional_reconstruction_passed": true,
+      "seconds": 537.2356786730234
+    }
+  ],
+  "limitations": [
+    "Photometry swaps also condition shape on the substituted values.",
+    "Measured masks on independent flow draws are diagnostics, not corrected predictions.",
+    "Symmetric effects are algebraic model contrasts; interaction and both orders are retained.",
+    "Measured neighbour selection response is separate; these contributions cannot be doubled into coherent full-population errors."
+  ]
+}

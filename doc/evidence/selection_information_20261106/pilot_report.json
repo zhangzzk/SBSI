@@ -1,0 +1,460 @@
+{
+  "test_cases": [
+    1000
+  ],
+  "definition": "Disjoint-case diagnostic selection prediction; errors are measured minus predicted.",
+  "arms": {
+    "flow": {
+      "squared_error": {
+        "value": 0.06876628437704689,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "soft_logloss": null,
+      "predicted_pass_rate": {
+        "value": 0.475496154107679,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "measured_pass_rate": {
+        "value": 0.4763578648745421,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_rate_error": {
+        "value": 0.0008617107668631393,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "reference_coefficient_error": {
+        "value": 0.0034462097724880236,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_error_by_score_bin": [
+        {
+          "value": -0.006310014494066492,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0011768816471229887,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0032058795948987245,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0010403904543759654,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.004331262105931071,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.008377585864290495,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.015691489361702126,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.00738529799944429,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      ]
+    },
+    "existing8": {
+      "squared_error": {
+        "value": 0.06886324140704377,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "soft_logloss": {
+        "value": 0.23880527557611056,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "predicted_pass_rate": {
+        "value": 0.47724575587352486,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "measured_pass_rate": {
+        "value": 0.4763578648745421,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_rate_error": {
+        "value": -0.0008878909989827658,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "reference_coefficient_error": {
+        "value": 0.002266404068443778,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_error_by_score_bin": [
+        {
+          "value": -0.006519094693623277,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0007031649826708589,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0048306003965893326,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.002726656425914427,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.0012916543580720522,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.0046620210313339785,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.010797182050887779,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.0007792063561682486,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      ]
+    },
+    "existing8_capacity": {
+      "squared_error": {
+        "value": 0.06858916853768864,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "soft_logloss": {
+        "value": 0.2374534114273377,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "predicted_pass_rate": {
+        "value": 0.47732495973125433,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "measured_pass_rate": {
+        "value": 0.4763578648745421,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_rate_error": {
+        "value": -0.0009670948567122132,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "reference_coefficient_error": {
+        "value": 0.0022597772508258507,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_error_by_score_bin": [
+        {
+          "value": -0.006789560472277568,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0017119066789445187,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.004430057199810683,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.002163375951857436,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.0021429958842963167,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.004715992887201565,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.010869677996009785,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.0005783228523821696,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      ]
+    },
+    "plus_scene_score": {
+      "squared_error": {
+        "value": 0.06844949741047707,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "soft_logloss": {
+        "value": 0.2372451713121234,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "predicted_pass_rate": {
+        "value": 0.4772667737463212,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "measured_pass_rate": {
+        "value": 0.4763578648745421,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_rate_error": {
+        "value": -0.0009089088717790843,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "reference_coefficient_error": {
+        "value": -0.00035266671875031075,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_error_by_score_bin": [
+        {
+          "value": 6.801384770315247e-05,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.0006010657251775402,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.001997927876435079,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0008577431453967096,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0017727034335255226,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.0052410776574588255,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": 0.0017102885095671143,
+          "case_se": null,
+          "jackknife_se": null
+        },
+        {
+          "value": -0.002837516621916369,
+          "case_se": null,
+          "jackknife_se": null
+        }
+      ]
+    }
+  },
+  "paired_changes": {
+    "plus_scene_score_minus_existing8": {
+      "squared_error": {
+        "value": -0.00041374399656669836,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "soft_logloss": {
+        "value": -0.001560104263987172,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "predicted_pass_rate": {
+        "value": 2.101787279634726e-05,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "measured_pass_rate": {
+        "value": 0.0,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_rate_error": {
+        "value": -2.1017872796318528e-05,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "reference_coefficient_error": {
+        "value": -0.002619070787194089,
+        "case_se": null,
+        "jackknife_se": null
+      }
+    },
+    "plus_scene_score_minus_existing8_capacity": {
+      "squared_error": {
+        "value": -0.0001396711272115686,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "soft_logloss": {
+        "value": -0.00020824011521430874,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "predicted_pass_rate": {
+        "value": -5.8185984933123436e-05,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "measured_pass_rate": {
+        "value": 0.0,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "pass_rate_error": {
+        "value": 5.818598493312886e-05,
+        "case_se": null,
+        "jackknife_se": null
+      },
+      "reference_coefficient_error": {
+        "value": -0.0026124439695761614,
+        "case_se": null,
+        "jackknife_se": null
+      }
+    }
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "training_cases": [
+        1080,
+        1120
+      ],
+      "validation_case": 1040,
+      "test_case": 1000,
+      "arms": [
+        {
+          "arm": "existing8",
+          "width": 8,
+          "depth": 6,
+          "best_iteration": 599,
+          "validation_logloss": 0.23317488841593934,
+          "model_sha256": "a8db497e018dacca0c2002059483902180b27f7ccf032f3bc42383f1f14a2567",
+          "parameters": {
+            "objective": "reg:logistic",
+            "eval_metric": "logloss",
+            "tree_method": "hist",
+            "max_bin": 256,
+            "max_depth": 6,
+            "eta": 0.05,
+            "min_child_weight": 50,
+            "lambda": 1,
+            "subsample": 1.0,
+            "colsample_bytree": 1.0,
+            "seed": 202611069701,
+            "nthread": 8,
+            "device": "cpu"
+          }
+        },
+        {
+          "arm": "existing8_capacity",
+          "width": 8,
+          "depth": 9,
+          "best_iteration": 588,
+          "validation_logloss": 0.23175257400332902,
+          "model_sha256": "913f47a5cf3a95c3db62ace81024c336f49c9874805e081775d09f068f865bbb",
+          "parameters": {
+            "objective": "reg:logistic",
+            "eval_metric": "logloss",
+            "tree_method": "hist",
+            "max_bin": 256,
+            "max_depth": 9,
+            "eta": 0.05,
+            "min_child_weight": 50,
+            "lambda": 1,
+            "subsample": 1.0,
+            "colsample_bytree": 1.0,
+            "seed": 202611069701,
+            "nthread": 8,
+            "device": "cpu"
+          }
+        },
+        {
+          "arm": "plus_scene_score",
+          "width": 9,
+          "depth": 6,
+          "best_iteration": 599,
+          "validation_logloss": 0.23162098101903414,
+          "model_sha256": "0d3533ef7bb62cf8b480add433435acedc901665e2414d5b3fdbacbd9afeb0ce",
+          "parameters": {
+            "objective": "reg:logistic",
+            "eval_metric": "logloss",
+            "tree_method": "hist",
+            "max_bin": 256,
+            "max_depth": 6,
+            "eta": 0.05,
+            "min_child_weight": 50,
+            "lambda": 1,
+            "subsample": 1.0,
+            "colsample_bytree": 1.0,
+            "seed": 202611069701,
+            "nthread": 8,
+            "device": "cpu"
+          }
+        }
+      ],
+      "source_sha256": "16b4169bc2a3284e7c1c0bf0f71414619dbf82d7ae1cd87f354b4930b5f968f2",
+      "xgboost_version": "3.0.5",
+      "reload_exact": true,
+      "seconds": 59.21587763889693
+    }
+  ],
+  "bootstrap_seed": 202611069301,
+  "source_sha256": "e21a75b31f835fdc38204430c15432477bab85dfc947f51462b4c096eac6477e",
+  "limitations": [
+    "These are selection predictors, not replacement flows or calibrated responses.",
+    "Flow log loss omitted because its64-draw pass probabilities can be exactly0/1; squared error includes Monte Carlo integration variance.",
+    "Bootstrap fixes the fitted nuisance models; four development scenes cannot establish independent acceptance.",
+    "Additional-feature gain is predictive evidence, not a proof of information-theoretic insufficiency."
+  ]
+}

@@ -1,0 +1,37 @@
+# Do neighbour-only crossings matter to shear response?
+
+## What the measured galaxies contribute
+
+Hold the designated primary at fixed shear and flip only all the other galaxies from −0.02 to +0.02; repeat at the other primary sign and average. These are 2,048 fixed probability-sampled IDs on the four original **g1** development fields. For the central output cut, FLUX_RADIUS >3 pixels and MAG_AUTO <25, there are 13 entries and 12 exits counting both primary-sign comparisons; 17 distinct IDs change the final usable-and-passing event. Using their measured ngmix ellipticities, the response of galaxies retained on both legs accounts for +0.16222 of the measured neighbour R11 of +0.26425. Including entrants and exits raises it by +0.10203. This is a change in the simulation's normalized mean, not an estimate of a model's coherent multiplicative bias.
+
+| Central-cut contribution to physical neighbour R11 | Estimate | Four-scene jackknife SE | Sampling SE conditional on these images | Original fit repeats 1 / 2 |
+|---|---:|---:|---:|---:|
+| Retained on both neighbour legs | +0.16222 | 0.03125 | 0.06764 | +0.23349 / +0.09096 |
+| Entries | +0.04595 | 0.02980 | 0.02840 | +0.07930 / +0.01260 |
+| Exits (signed) | +0.05608 | 0.04662 | 0.05497 | +0.04918 / +0.06298 |
+| Entries and exits together | **+0.10203** | **0.06792** | **0.06109** | +0.12847 / +0.07558 |
+| Total | +0.26425 | 0.08816 | 0.09020 | +0.36196 / +0.16654 |
+
+Each entering galaxy contributes its **plus-leg shape minus the plus-leg retained mean**, divided by the full plus-leg selected weight. The loss of an object contributes the negative of the analogous minus-leg difference. Both groups thus increase the measured response even though their counts almost balance. The retained means and weights are recomputed in every case deletion. The uncertainty of the sum includes covariance; do not add the displayed SEs. No ellipticity is assigned to an undetected galaxy.
+
+Of the +0.10203, **+0.09550** comes from objects usable on both sides that cross the photometric cut (case SE 0.04797; sampling SE 0.05780). **+0.00652** comes from objects unusable on the other leg (0.02265; 0.01986). The preference for a photometry explanation is suggestive, not an estimate that the classifier has zero error. Holding intrinsic e1 fixed instead of using ngmix fits yields +0.04058 (0.04060; 0.03350) for the full migration term: this is a different observable, not a noise-free estimate of the measured response. Unknown fit and population effects are not removed by this substitution.
+
+**Limits:** the measured migration term is −0.02873, +0.23725, +0.18347 and −0.00129 separately on cases 1000, 1040, 1080 and 1120. It ranges from −0.00704 to +0.10203 across the nine pooled cuts, with correlated samples of only 13–22 distinct changers. The central migration is positive for both primary signs and fit repeats, but is not resolved at two standard errors by either the case or conditional sampling statistic. More optimizer starts can reduce uncertainty in each measured shape but cannot create more independent crossing IDs. The point estimate must not be extrapolated to the full-field coherent calibration. [Locked definition](rule.md#measured-contrast-on-the-existing-four-images), [all cuts, cases, R11/R21 and uncertainties](crossings.json), [validated computation](cross.py), [original whole-field versus small-pilot limitations](../primary_neighbour_replay_20261107/findings.md#completed-pilot-where-does-the-change-in-response-go).
+
+## What the frozen-shape experiment established
+
+The held-out static neighbour-score error fell from +0.003367 to +0.000762. But the two fixed continuations' four-scene coherent results give a slightly *larger* central residual with the added neighbour penalty, on both axes. With predicted usability: the predicted flow contribution moves by −0.003256 / −0.003248 and the emulator contribution by +0.002997 / +0.003000; the simulation-minus-model residual therefore increases by +0.000259 / +0.000248. With actual usability and generated cuts it increases by +0.000374 / +0.000391. This small paired shift is distinct from the uncertainty of either endpoint's absolute calibration. Across the nine target cuts, pooled absolute residual improves in only 3/9 cuts per axis with predicted usability, 1/9 with actual usability, and 0/9 with actual usability and measured selection. Fully freezing the conditional shape model did not turn improvement of the static score into improved target calibration. [Central values and case errors](../frozen_shape_neighbour_20261107/findings.md#completed-frozen-shape-comparison-on-both-axes), [each field and each nearby cut](frozen_scenes.json).
+
+## Giving the model the actual entrants and exits
+
+As an additional check after seeing the measured decomposition, use the original, frozen **nine-cut starting model**, physical four-corner replay arm control (reassembled both factors from 6fc0c373…; replay artifact 8edbd153…). Give it the **same real event in every corner**, and weight its uncut predicted shape and disk correction exactly as in the archived actual-usability/measured-selection intervention. Generated photometry is still used internally, so this does not condition the shape draw on the corresponding measured photometry/noise realization. Every case, seed, cut, weight and model prediction was already stored; no fitted model moved. The total reproduces the prior actual-measured-selection response and case/sampling errors at all cuts on both output components.
+
+| Central physical neighbour R11 | Images | Nine-cut model supplied actual events | Paired images − model | Case SE | Conditional sampling SE |
+|---|---:|---:|---:|---:|---:|
+| Retained on both legs | +0.16222 | +0.15863 | +0.00359 | 0.03341 | 0.06574 |
+| Entries and exits | +0.10203 | +0.02398 | +0.07804 | 0.05987 | 0.05837 |
+| Total | +0.26425 | +0.18262 | +0.08163 | 0.07357 | 0.08712 |
+
+With generated usability and selection the model's neighbour-flip membership term is exactly zero; its corresponding total response is +0.17383. Supplying actual membership gives a nonzero crossing term, but the model's mean shapes at these IDs do not reproduce the central measured term's point estimate. This also changes which galaxies contribute to the retained comparison: +0.02398 is **not** the change in model total. In the external-membership diagnostic the residual is concentrated in the changers at its point estimate; uncertainty is large on both the crossing and retained components. Giving the model true flags is not enough evidence to attribute a particular percentage of the full-catalogue bias to crossings. [Paired membership swap and seed/scene results](membership_swap.json), [computation](membership_swap.py).
+
+**Decision:** do not increase the static-neighbour loss or select the best-scoring model from these fields. For the missing neighbour-shear channel, the available images motivate a precision test, not an immediate training campaign. Repeating the original ngmix fit on the saved pixels can check fit noise; it does not fix the small number of independent crossing IDs. A future probability sample can deliberately oversample galaxies near either output boundary using the available coherent catalogues, with a weighted random complement including nondetections; set a target SE before allocating new images. No new exposures, checkpoint selection or schedule was started.

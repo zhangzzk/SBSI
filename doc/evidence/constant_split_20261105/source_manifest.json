@@ -1,0 +1,20 @@
+{
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/fit_reduce.py": "e394eaf885c2926a490a6b061dab09ca7fad39c340a25c4c8724637a37fc42d5",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/control.py": "620b8570cf4d9f0b7711885d907a81d6c5afb0f41f27cead8feb46266551960b",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/verify_fit_reducer.py": "477f09da81fe30652a7bbad02d7614b69f886a10387ac68b0d38f97f69935069",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/fit_parameters_reduce.py": "3e6ce5d221446adfcf1d1b4d8d5f6fff282671f72570338abdcdd1a374c96fc8",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/verify_contrasts.py": "93d54cb9d64e1b73a1f500499970c233565a227b66c43ec74390aecb921db265",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/fit_details.py": "8e48907f808a887c7c59b24e004d6f76ae1c5432cf512b0e0da2ec5200fff6ca",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/contrasts.py": "0030303cb95e9387cc5e1b67d8576a6b8eeacc838db165eea05bbcd4b111f6fa",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/model.py": "4a8c4144e3e0c97cce85ccd77b5e82980048d711641410868658b9c22dc913f1",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/reduce.py": "6837b78f52350576695eb3d3eb9ce98a39b0838f6f28053c1c6ab87a492a2a75",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/verify_reducer.py": "a9d1de6f951cd5e2e5ae9c77d936952ea13c355e71f212f325ea16454086613d",
+  "/home/z/Zekang.Zhang/SBSI/doc/evidence/constant_split_20261105/check_status.py": "a55ed0e13d2eacd28b5c154abb72a3194a8fa4347956df4280ade66442912f28",
+  "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/prepare_constant_split.py": "b3a370c5096228983cc81a7e44692987e7054d097f18c7a471ab35b9caca1bb5",
+  "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/audit_constant_fit_randomness.py": "4af276f4824b7e96c8cf4e066c3ae9ad771bc1ed4d806815ae7c082799619ae8",
+  "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/audit_constant_fit_flags.py": "9735b677b450b97de9bece711cb6c1af9c4eb71e7de3fbf7941237350025ff42",
+  "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/audit_constant_fit_modes.py": "bcb782c0916d4a531e109c87174461bb308b8eadce5396a10373ed9f762b93a9",
+  "/home/z/Zekang.Zhang/blendemu_galsbi_resim/jobs/job_constant_split.sh": "1dc812c59f44ef127e9447b82127404d9ac4ec3b616c6d01102db034453eced0",
+  "/home/z/Zekang.Zhang/blendemu_galsbi_resim/jobs/job_constant_fit_audit.sh": "7e2b691891777ddb313477669b84b129a5c9b3a79dc619234dfa334e9f876c4a",
+  "/home/z/Zekang.Zhang/blendemu_galsbi_resim/blendemu/shape.py": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969"
+}

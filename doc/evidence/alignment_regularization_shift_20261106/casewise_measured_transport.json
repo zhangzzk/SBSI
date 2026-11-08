@@ -1,0 +1,44 @@
+{
+  "cases": [
+    {
+      "case": 1000,
+      "simulation_shape": 0.09020150794396087,
+      "model_shape": 0.0903542442031453,
+      "shape_error": -0.00015273625918443834,
+      "selection_response": 0.0028931032205422053,
+      "total_error": 0.0027403669613577653
+    },
+    {
+      "case": 1040,
+      "simulation_shape": 0.09154180258803528,
+      "model_shape": 0.09178064839574063,
+      "shape_error": -0.00023884580770534847,
+      "selection_response": 0.004181207365561665,
+      "total_error": 0.003942361557856322
+    },
+    {
+      "case": 1080,
+      "simulation_shape": 0.08502942500583363,
+      "model_shape": 0.09119415978025888,
+      "shape_error": -0.006164734774425251,
+      "selection_response": 0.0018177572882784596,
+      "total_error": -0.004346977486146791
+    },
+    {
+      "case": 1120,
+      "simulation_shape": 0.09386155853308006,
+      "model_shape": 0.09246630346075888,
+      "shape_error": 0.0013952550723211887,
+      "selection_response": 0.002817755749879672,
+      "total_error": 0.004213010822200866
+    }
+  ],
+  "pooled": {
+    "simulation_shape": 0.09017547112525137,
+    "model_shape": 0.09144931884335353,
+    "shape_error": -0.0012738477181021557,
+    "selection_response": 0.002925020256124278,
+    "total_error": 0.0016511725380221193
+  },
+  "definition": "Casewise equal A/B average, common usability and target cut; descriptive signs, not new uncertainty estimate."
+}

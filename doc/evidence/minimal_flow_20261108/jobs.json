@@ -1,0 +1,27 @@
+{
+  "numerical_attempt1": 17833501,
+  "attempt1_failure": "Class-identity assertion across source-isolated imports; replaced by explicit wrapper structure and input-index checks. No training started.",
+  "max_gpus": 3,
+  "broad_array_still_held": 17788286,
+  "automated_followup": "disabled",
+  "numerical": 17833508,
+  "numerical_state": "COMPLETED 0:0; all three architectures passed; 9 seconds",
+  "train": 17833512,
+  "evaluation_pilot": 17833513,
+  "evaluation_workers": 17833514,
+  "report": 17833515,
+  "dependencies": {
+    "train": "afterok:17833508",
+    "evaluation_pilot": "afterok:17833512",
+    "evaluation_workers": "afterok:17833513",
+    "report": "afterok:17833514"
+  },
+  "state": "Cancelled unfinished architecture-compression training and all dependent evaluation/report jobs after owner clarified training-stage simplification",
+  "cancelled_jobs": [
+    17833512,
+    17833513,
+    17833514,
+    17833515
+  ],
+  "outputs_preserved": true
+}

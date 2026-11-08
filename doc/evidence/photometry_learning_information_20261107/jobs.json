@@ -1,0 +1,40 @@
+{
+  "recorded_at_utc": "2026-11-07T13:01:08.114460+00:00",
+  "verification": {
+    "job_id": 17817862,
+    "status": "COMPLETED",
+    "exit_code": "0:0"
+  },
+  "training_own_data_pilot": {
+    "job_id": 17817874,
+    "status": "COMPLETED",
+    "exit_code": "0:0"
+  },
+  "remaining_coherent_tasks": {
+    "job_id": 17817875,
+    "array": "0-2%3",
+    "dependency": "afterok:17817874",
+    "status": "COMPLETED",
+    "exit_code": "0:0"
+  },
+  "report": {
+    "job_id": 17817876,
+    "dependency": "afterok:17817875",
+    "status": "COMPLETED",
+    "exit_code": "0:0"
+  },
+  "resource_coordination": {
+    "replication_array": 17817802,
+    "temporary_array_throttle": 3,
+    "restore_throttle": 6,
+    "restore_job_id": 17817944,
+    "restore_dependency": "afterany:17817875",
+    "combined_gpu_ceiling": 6,
+    "restore_status": "COMPLETED"
+  },
+  "results_available": true,
+  "audit_plot_job_id": 17818561,
+  "audit_plot_status": "COMPLETED",
+  "audit_plot_exit_code": "0:0",
+  "audit_statistics_checked": 8160
+}

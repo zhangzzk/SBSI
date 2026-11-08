@@ -1,0 +1,27 @@
+{
+  "case": 1080,
+  "seconds": 170.06995153595926,
+  "catalogues": [
+    {
+      "cross_rows": 292826,
+      "shape_rows": 294017,
+      "cross_without_shape": 0,
+      "shape_without_cross": 1191,
+      "parent_rows": 884738,
+      "parent_usable": 292784,
+      "parent_absent_crossmatch": 591912,
+      "usable_zero_shape_rows": 0
+    },
+    {
+      "cross_rows": 292812,
+      "shape_rows": 294022,
+      "cross_without_shape": 0,
+      "shape_without_cross": 1210,
+      "parent_rows": 884738,
+      "parent_usable": 292774,
+      "parent_absent_crossmatch": 591926,
+      "usable_zero_shape_rows": 0
+    }
+  ],
+  "replay": "original true-U/model-own-selection masses and contributions reproduce for all four cuts"
+}

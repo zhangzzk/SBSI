@@ -1,0 +1,2042 @@
+{
+  "definition": "Same40 scenes and independent per-leg selection; m=100*(Rmeasured/Rmodel-1). Paired whole-scene errors. Frozen control vs probability-loss endpoint. Nine correlated cuts are not nine independent replications. Cut contrasts describe threshold sensitivity, not causal attribution to a model component.",
+  "receipts": [
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/constant/control/axis1/case1000.npz",
+      "sha256": "058eabe22b8ba682a68c0906730ac3d7f5884ea14b3050373818c5d8979a02b9"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/constant/control/axis2/case1000.npz",
+      "sha256": "7decf5b264d144412cfb1bc9eff5fedc3e500d980484503d2fea86cb216d22c4"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/constant/control/axis1/case1040.npz",
+      "sha256": "82b275b24f2e275587e9aad72f723c693e561fe20dc661964f8417ee287e6304"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/constant/control/axis2/case1040.npz",
+      "sha256": "777b687c0f73dff6d91f38cdb94f68958c013ef28dceece2d83506979a9cf627"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/constant/control/axis1/case1080.npz",
+      "sha256": "50cb8b6c146e92eb8149a568f04cb51aa1e989ee01cd98e61ddc95dc6de6ecff"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/constant/control/axis2/case1080.npz",
+      "sha256": "af906b58075721b824b42232578e8bfefd7facf3e7762b9bb3b9b0112f4cfed6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/constant/control/axis1/case1120.npz",
+      "sha256": "3232ac827a4abf1bfa59f1d447d6c8b67ecb31814c48eeb1cc78be3a3a1e91a3"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_probability_20261107/constant/control/axis2/case1120.npz",
+      "sha256": "25b78cfb05ddbb80edfdd5b1b26653cfeea1394996abc782564577f3d825b57b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1001.npz",
+      "sha256": "3e9e2317848b3b828997a7679399daec0012076ba577e4cc0657a061d158ab1f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1001.npz",
+      "sha256": "2b7db3336a11d8f59c43c64789f5540b461293ee87e6ddbacf4246149b0d4550"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1041.npz",
+      "sha256": "1a4cf680c5e631ed78d09eb15f87299b390e858e17dacf2bb9f319162d8d3e71"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1041.npz",
+      "sha256": "dcdafda4c7759f6e5900e363dbd5770f068dc1a170206afcf3718a88e4ead280"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1081.npz",
+      "sha256": "ec28523f1da72b5d619144e403a007f0ec3963bef134d8a3328d669ff811fd77"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1081.npz",
+      "sha256": "befc51552875a05e396dad5a7b8ca80b05ce694caec4776fd6f630654b7d924a"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1121.npz",
+      "sha256": "16050c4517f2379073e9e214e8a01265b46f30e0841616e49d3ea9204cd7b621"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1121.npz",
+      "sha256": "3e8feb3754bba89da4bf7ca2de6a63cfc6e7c7950d0bb57cb1ceb1399fa74c15"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1002.npz",
+      "sha256": "110d70fee4b3055b358eb8c74154a50e7628a23c31dbc4ccaf89ea9d9d9259fa"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1002.npz",
+      "sha256": "a7c6ed7f96578ea5baa15d40d7ea990e010ac361845b119f038c997623664f28"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1042.npz",
+      "sha256": "0cecc85cd5e78e53fc10b8d5bcf0612881aee45e591cd90c85b5fdaba53521fb"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1042.npz",
+      "sha256": "d600d3768890f83a349ee6a57301d5c6153361b0a912c52427f1e351875beb65"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1082.npz",
+      "sha256": "9080cf11cf7706385cfcf5032b8bafc270b7979303d61660fe85ec3226aefeeb"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1082.npz",
+      "sha256": "ceeccf8dc842c427392a5faaf6043c5c2721354ee2e181093b42e4a6ee054954"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1122.npz",
+      "sha256": "0f5d009e4080952d6ccf919572d8d9ef27127cbffb2a3c27fbcdb85bc0d90ab3"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1122.npz",
+      "sha256": "8e71cb177369877cabfb7c12e428799ac501a4dce912a9c333d1044e15afd27a"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1003.npz",
+      "sha256": "2bc51b47068107210254026aa30219b2c9c00990e94606700b9784bd79aca3b3"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1003.npz",
+      "sha256": "c1cfe64aee3c330516c54e4a18b4ca111243b7d846a3988a228bdbf0b9c0ea6d"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1043.npz",
+      "sha256": "83aeaf366c8af41b16da8543d2183e4478ff25047fe8113e5ebdafcbd59271aa"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1043.npz",
+      "sha256": "e4345d2cbde0a8e46c5ee17444fa8d298ce05309abcef714658f5ec23a6d8ed9"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1083.npz",
+      "sha256": "4dcb5ef3ba6e2866a0034bdb4b69a9dad84b67ff5907917c90a55288e36cbb75"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1083.npz",
+      "sha256": "6682361f5b861138847e11301e93873e9de5f2121130befc3cf11c4fae32d746"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1123.npz",
+      "sha256": "6c9ae569c750aaa504876777fc431a247620c37284d1e4cf6b2fb298fbfe2531"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1123.npz",
+      "sha256": "e6b29beb0981618c6a4eec722918e12d0dbf6f70271810579d6e00bde63ca11c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1004.npz",
+      "sha256": "36bd0765513df87a89a67b4f5cf8f9faf4a5d998bedec58c9d90fbdc31b21dd0"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1004.npz",
+      "sha256": "d7e3001d103247ed60330bb97c774a1a190dac657baae91f96982193afd0d4a5"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1044.npz",
+      "sha256": "5f38861d3abc14255b2402b009e4e6eb9ba12ef46636e52ee06564d686bc2211"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1044.npz",
+      "sha256": "2c3c677a17940472360b5f2ec42ccc36c628e2de9d8dc25eea67c167fce7483b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1084.npz",
+      "sha256": "a6739639cfedcc85d0386f6bbb2103772652ddeab53886519cf61df5388e6d5c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1084.npz",
+      "sha256": "75950846fcd04313c9c2aa250a65eb0c0fa2ae28040d7d8bf259581053f00de0"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1124.npz",
+      "sha256": "736ab6f69e3cd31478ffe5dc5255924a28410c6a42f34e534611406bcd4e35c1"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1124.npz",
+      "sha256": "b28ed54be0c97dd9f482f1a5e228e14c52bf5485ddcd51fc7d63a16c29287e5d"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1005.npz",
+      "sha256": "c48775c325e59dfd22856d0b67da6535fd0b7f3e6cd9287ca19bb0d6675102e8"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1005.npz",
+      "sha256": "62fe130fbda273671ffbdb9aae0d43f4f91bc5ac941deb126c49fbc6f7758576"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1045.npz",
+      "sha256": "4c2386d0b4d2e660c071403d44fb6ef123acbb089d2b580c5a598db4d6ed0a54"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1045.npz",
+      "sha256": "c09fdc90a8dee8547e6895ba968c9038b0d53d8e8f2902dbe1afd805d7b5c9dc"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1085.npz",
+      "sha256": "96faaed74878877967959bce2bb6a99c8d4acdd44c1d3baa37b4577c1510f19a"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1085.npz",
+      "sha256": "2bf1f722862c515edda62323c2d08de5b3ad4f5b588eb40d1aeded0bba1b0237"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1125.npz",
+      "sha256": "7c6dc42e5634af9ab29d858fbe58965942ff249ac2cac9599967bd9c177dce9c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1125.npz",
+      "sha256": "4b7682447d05e0300b7b6efa2ef701653c358037a3bedc69ca50d12487acc5b8"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1006.npz",
+      "sha256": "e3336209ef9020fed3c8fd060080428d03c2d6777c5337ef32dfb98189df6fbc"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1006.npz",
+      "sha256": "99ce792ac52c36489be2a3a69466d12dca5c2f54ecc81938e4e8c1151e4ddcb1"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1046.npz",
+      "sha256": "fc9b9970ae212774e519a871f4a5e81793cc82440e83d3a2bc390653a743b91e"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1046.npz",
+      "sha256": "7467ee36bae7840bf259a0a06905dc13e8a82e36c4d227611f518f6476891ee4"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1086.npz",
+      "sha256": "70b47fcdb5c79257c72035c33afe9d39aae24b214ae8460103175e70aa6246d2"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1086.npz",
+      "sha256": "449582de526a5e6428490ae11d3d990146d90088597546ec6d8a27d2a0de2a44"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1126.npz",
+      "sha256": "6b50c7b9e9bac99695f049c26187f44afe94bdd12be705e15e1603ee8089c893"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1126.npz",
+      "sha256": "40c77c358e54b0d852bca089b7a782573ca833e577cf066d3f135d82f57391a6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1007.npz",
+      "sha256": "b5a656606ec8eb9b5d8d397a42f455f7fb9fe4519d1dbc27ef90210ac873b90c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1007.npz",
+      "sha256": "e42aa3057eb3d85324afe5d20483992f5ef27076c8e4b0f4128f35cd9b70d594"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1047.npz",
+      "sha256": "5fbb43c86bbcf995d6eb185489e8737f6160a8a5420d726cffac0db8d8f11b54"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1047.npz",
+      "sha256": "ef90f7a913fb7f701f9df7b6f869c5817c2a4c7fb4be1123d73591e240d6f316"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1087.npz",
+      "sha256": "ce2392923d33ee327c5f70aa0ac2a61bceefb1b371fd7ec335f9a10bf62deba2"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1087.npz",
+      "sha256": "6f910b0264e549592be226659784a8d847a17eba6ae93cabc9466b56c67937c6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1127.npz",
+      "sha256": "8ed6d1c4dd154e5550e7690866d245fb7a4b20c7341073755750bd0e36557666"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1127.npz",
+      "sha256": "23bdf35cd7a39310ed24f8a9c3f5a5424b2701ef27125331b4bb98498f76f74a"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1008.npz",
+      "sha256": "9586026aba9db36826878885084b2c270dee794afd230649e115e2361f50f774"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1008.npz",
+      "sha256": "1885de55a70c5b9c07b85eb62cef27ca4e8b0bf3d8f89ffde0c7cdd7faca1cbd"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1048.npz",
+      "sha256": "8f9148ab9a4ba4957722b2185408b653cd96214ace622e9689f8e0a8c88163f5"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1048.npz",
+      "sha256": "de845d4cf6eb3229c9ce193da23a1bc2e185f971ae7909b1aac36e394aa1ec1d"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1088.npz",
+      "sha256": "39fdb30f5782803adc60a7bf6988afd79a77507f0529e26f3b8a27062ecb6247"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1088.npz",
+      "sha256": "e8aaaff51552a55cf581259c14175c00793ca7a5e5bff4f30da019f2342665ed"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1128.npz",
+      "sha256": "4e3bdfdbb2044efa0ef5600452a71e34090a0c46d595068b7728871f46abb19c"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1128.npz",
+      "sha256": "5d37ac250d5ebee5cc8f4f25ee280e64c8e8bb65fecb633f8bdf1fb2aa0a0c83"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1009.npz",
+      "sha256": "fb8d7cdf2d5fc689e948f5925de5bdc8eef58aa32854b987c0649dd4b97b8341"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1009.npz",
+      "sha256": "d49358688ca1a8e14349aa7bde51e3470449533527b17f6b8edc14867a0e7658"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1049.npz",
+      "sha256": "4072ff1697bfece67b47696f8ccab18641162e0894e0dd8d122d8bfa4a4125e6"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1049.npz",
+      "sha256": "23fe51ad78cfed84bf71dff4b8194392874b5d53fdcaa9e81c7b578bafba510f"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1089.npz",
+      "sha256": "467560b0a4da04f98b5f88383bc31ebbe017f405c2b6eb10f07ed20ee6e2d05b"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1089.npz",
+      "sha256": "cb7e31f34e39a59de67039b86ed409c965edc0a34d94b285fe270a866cf12272"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis1/case1129.npz",
+      "sha256": "85118f1d1c6581d0a3a37ca34cebe08da7b049b64e18287c89dd52fa2503bbb5"
+    },
+    {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/conditional_cut_replication_20261107/constant/control/axis2/case1129.npz",
+      "sha256": "24b98a1e77fd3edea99909bd8da2449f8640f450f5e520e54db8652294ceb1c4"
+    }
+  ],
+  "source_sha256": "aa363428e0a96ec4a93e893e6838b95c85a40bca511ca9bb2dc407321e4b819a",
+  "cuts": {
+    "mag24.9_radius_gt0.56": {
+      "control_m_percent": {
+        "value": [
+          0.6795742986585473,
+          0.4295175812724761
+        ],
+        "jackknife_se": [
+          0.15450209096461207,
+          0.17951388684719183
+        ],
+        "bootstrap_ci95": [
+          [
+            0.3727951469731067,
+            0.07922092752738308
+          ],
+          [
+            0.9775713150596609,
+            0.7642414910771472
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          0.5537380223309407,
+          0.3025417008059472
+        ],
+        "jackknife_se": [
+          0.15526961352000143,
+          0.1792650930221325
+        ],
+        "bootstrap_ci95": [
+          [
+            0.2454589751374309,
+            -0.04687540841299853
+          ],
+          [
+            0.8536906636428515,
+            0.6374353572909763
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.12583627632760663,
+          -0.12697588046652886
+        ],
+        "jackknife_se": [
+          0.0029938147060107933,
+          0.002561792602121281
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.13160828981146566,
+            -0.13176335259517502
+          ],
+          [
+            -0.1200433071378737,
+            -0.1220426159780863
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.42813986156844397,
+        "jackknife_se": 0.13349208241133895,
+        "bootstrap_ci95": [
+          0.1663274479635042,
+          0.6830807987250458
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.12559816076249675,
+        "jackknife_se": 0.10149964119604814,
+        "bootstrap_ci95": [
+          -0.07252494713416796,
+          0.320067210557324
+        ]
+      }
+    },
+    "mag25_radius_gt0.56": {
+      "control_m_percent": {
+        "value": [
+          0.6546927076503728,
+          0.4447503382897233
+        ],
+        "jackknife_se": [
+          0.15399859281377484,
+          0.18366174817025277
+        ],
+        "bootstrap_ci95": [
+          [
+            0.35522472287320195,
+            0.08229327231560891
+          ],
+          [
+            0.9475922665277702,
+            0.7886182257788071
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          0.5364144613094757,
+          0.32789706718310274
+        ],
+        "jackknife_se": [
+          0.15438812330464882,
+          0.18383092039002713
+        ],
+        "bootstrap_ci95": [
+          [
+            0.2357117929180491,
+            -0.034876316591948286
+          ],
+          [
+            0.8312587870963295,
+            0.6726957830954493
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.11827824634089712,
+          -0.11685327110662058
+        ],
+        "jackknife_se": [
+          0.002494131401682179,
+          0.002412600802169593
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.12304766049090698,
+            -0.12159237524850985
+          ],
+          [
+            -0.11342731037930598,
+            -0.11222500861067297
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.4321557642462892,
+        "jackknife_se": 0.13856016502347684,
+        "bootstrap_ci95": [
+          0.16304052937974434,
+          0.6962408964384252
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.10425869706318647,
+        "jackknife_se": 0.09806034174504409,
+        "bootstrap_ci95": [
+          -0.08139310562198271,
+          0.2967442360234549
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.56": {
+      "control_m_percent": {
+        "value": [
+          0.8022325753836101,
+          0.49055157936406246
+        ],
+        "jackknife_se": [
+          0.1549224333806421,
+          0.18235376900837494
+        ],
+        "bootstrap_ci95": [
+          [
+            0.5009912939304373,
+            0.134805304825672
+          ],
+          [
+            1.101381703339555,
+            0.8344239326540764
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          0.6951746790772262,
+          0.38235741866714523
+        ],
+        "jackknife_se": [
+          0.155358002736173,
+          0.1830557548362434
+        ],
+        "bootstrap_ci95": [
+          [
+            0.3928249062011685,
+            0.026256095089026172
+          ],
+          [
+            0.994679333898442,
+            0.7272321636355693
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.10705789630638396,
+          -0.10819416069691723
+        ],
+        "jackknife_se": [
+          0.002699099914203356,
+          0.002331446967909216
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.11228424841051132,
+            -0.11265687717329775
+          ],
+          [
+            -0.10189395105197785,
+            -0.10372680458745787
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.5387660488721857,
+        "jackknife_se": 0.13698712614768463,
+        "bootstrap_ci95": [
+          0.2778009924855637,
+          0.7989677702718739
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.15640863020504048,
+        "jackknife_se": 0.10028602328449424,
+        "bootstrap_ci95": [
+          -0.03367112116471255,
+          0.34706038580067833
+        ]
+      }
+    },
+    "mag24.9_radius_gt0.60": {
+      "control_m_percent": {
+        "value": [
+          0.6789382419086332,
+          0.34572320179020455
+        ],
+        "jackknife_se": [
+          0.14425914979193089,
+          0.16610886941793168
+        ],
+        "bootstrap_ci95": [
+          [
+            0.39465396751012016,
+            0.02426214050820331
+          ],
+          [
+            0.96068256157462,
+            0.6516022633835289
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          0.5590653030070225,
+          0.22750281762220492
+        ],
+        "jackknife_se": [
+          0.14470322822629264,
+          0.16619408340417705
+        ],
+        "bootstrap_ci95": [
+          [
+            0.27326453817418495,
+            -0.09340229608846254
+          ],
+          [
+            0.8413388259500237,
+            0.5347015716967246
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.11987293890161066,
+          -0.11822038416799963
+        ],
+        "jackknife_se": [
+          0.003737233037354408,
+          0.0036270121155446604
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.12719593426972153,
+            -0.12540739585058108
+          ],
+          [
+            -0.112862251577861,
+            -0.11133549095574846
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.3932840603146137,
+        "jackknife_se": 0.12171634913839148,
+        "bootstrap_ci95": [
+          0.15508980506320463,
+          0.6233455133535911
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.1657812426924088,
+        "jackknife_se": 0.09728761052289102,
+        "bootstrap_ci95": [
+          -0.021885228461746842,
+          0.3592373429985162
+        ]
+      }
+    },
+    "mag25_radius_gt0.60": {
+      "control_m_percent": {
+        "value": [
+          0.6706472513533734,
+          0.323723886441174
+        ],
+        "jackknife_se": [
+          0.13187651583782664,
+          0.1691158787637535
+        ],
+        "bootstrap_ci95": [
+          [
+            0.4138839447613285,
+            -0.006500525236894642
+          ],
+          [
+            0.9290031631796146,
+            0.6402375816114635
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          0.5557647064006188,
+          0.21011319080019852
+        ],
+        "jackknife_se": [
+          0.13142707492987532,
+          0.1689831330576194
+        ],
+        "bootstrap_ci95": [
+          [
+            0.2999897078776764,
+            -0.11889186157151399
+          ],
+          [
+            0.8122709829491004,
+            0.5272394420012215
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.11488254495275463,
+          -0.11361069564097548
+        ],
+        "jackknife_se": [
+          0.003319985177907847,
+          0.003172819201588566
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.12141191439813237,
+            -0.1198373257638552
+          ],
+          [
+            -0.10871590143874399,
+            -0.10748153772545455
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.38293894860040867,
+        "jackknife_se": 0.12187257390013789,
+        "bootstrap_ci95": [
+          0.1436579974439102,
+          0.6128414646232998
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.17282575780021014,
+        "jackknife_se": 0.08978453860354524,
+        "bootstrap_ci95": [
+          -0.0009146742386895156,
+          0.3486817102170517
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.60": {
+      "control_m_percent": {
+        "value": [
+          0.8340837368079335,
+          0.39544510167970337
+        ],
+        "jackknife_se": [
+          0.13798759252736964,
+          0.1726092123327754
+        ],
+        "bootstrap_ci95": [
+          [
+            0.565710948748907,
+            0.06706261890633725
+          ],
+          [
+            1.1038608236709895,
+            0.7176195540283603
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          0.7248594855358448,
+          0.28832815861778993
+        ],
+        "jackknife_se": [
+          0.13806508906947154,
+          0.17285822390052147
+        ],
+        "bootstrap_ci95": [
+          [
+            0.4559359634973531,
+            -0.04081663616362391
+          ],
+          [
+            0.99328036369988,
+            0.6113430387369684
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.10922425127208868,
+          -0.10711694306191344
+        ],
+        "jackknife_se": [
+          0.003255504057663497,
+          0.003175746856792061
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.11552620858221563,
+            -0.11334304511059407
+          ],
+          [
+            -0.10304027094789836,
+            -0.1011220747468422
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.5065938220768174,
+        "jackknife_se": 0.12393476185436754,
+        "bootstrap_ci95": [
+          0.2644909589429408,
+          0.7408246167545187
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.21826566345902743,
+        "jackknife_se": 0.0954523022195021,
+        "bootstrap_ci95": [
+          0.03766433294428051,
+          0.4002703774493562
+        ]
+      }
+    },
+    "mag24.9_radius_gt0.64": {
+      "control_m_percent": {
+        "value": [
+          1.0855738268057635,
+          0.8149547514962219
+        ],
+        "jackknife_se": [
+          0.1928773253735941,
+          0.18883898561193302
+        ],
+        "bootstrap_ci95": [
+          [
+            0.7037962546310328,
+            0.4470502222061795
+          ],
+          [
+            1.4694752327338656,
+            1.1663505325682773
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          0.9292786197607317,
+          0.6637186827828767
+        ],
+        "jackknife_se": [
+          0.19081118639007247,
+          0.18813644069796348
+        ],
+        "bootstrap_ci95": [
+          [
+            0.5517897521775339,
+            0.2966748828760607
+          ],
+          [
+            1.3097633466713885,
+            1.0136329765772656
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.15629520704503186,
+          -0.15123606871334516
+        ],
+        "jackknife_se": [
+          0.005036781152700431,
+          0.00446135114354151
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.1659140773381551,
+            -0.15984474634759382
+          ],
+          [
+            -0.14652108008346432,
+            -0.14255725640412442
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.7964986512718042,
+        "jackknife_se": 0.1369751262991717,
+        "bootstrap_ci95": [
+          0.5272698289825148,
+          1.0611107699975466
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.13277996848892748,
+        "jackknife_se": 0.13091955301011618,
+        "bootstrap_ci95": [
+          -0.11627144537592421,
+          0.38743647540547926
+        ]
+      }
+    },
+    "mag25_radius_gt0.64": {
+      "control_m_percent": {
+        "value": [
+          1.07917762738019,
+          0.8751043457810637
+        ],
+        "jackknife_se": [
+          0.18244090105072083,
+          0.18407722782254377
+        ],
+        "bootstrap_ci95": [
+          [
+            0.7217197031529382,
+            0.5199916705539925
+          ],
+          [
+            1.4411612441183985,
+            1.221263529365863
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          0.925753831061038,
+          0.7281869133234586
+        ],
+        "jackknife_se": [
+          0.17994188149508725,
+          0.18335377132960134
+        ],
+        "bootstrap_ci95": [
+          [
+            0.5729125437974553,
+            0.37318961296907815
+          ],
+          [
+            1.2828349796048522,
+            1.0739675082638567
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.15342379631915204,
+          -0.14691743245760502
+        ],
+        "jackknife_se": [
+          0.005267099840652999,
+          0.004293858361312211
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.16372048844237375,
+            -0.15504619591462154
+          ],
+          [
+            -0.14307884115346226,
+            -0.1384799983313828
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.8269703721922483,
+        "jackknife_se": 0.13404493804244744,
+        "bootstrap_ci95": [
+          0.5699509430405825,
+          1.0860838506950392
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.0987834588687897,
+        "jackknife_se": 0.12260015364421982,
+        "bootstrap_ci95": [
+          -0.1319494221041631,
+          0.33982265042111104
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.64": {
+      "control_m_percent": {
+        "value": [
+          1.2336519886300579,
+          0.9409601212582608
+        ],
+        "jackknife_se": [
+          0.19348234682627619,
+          0.18347442571129727
+        ],
+        "bootstrap_ci95": [
+          [
+            0.8562040384220754,
+            0.5905977954928071
+          ],
+          [
+            1.6194950633244032,
+            1.2835936498483602
+          ]
+        ]
+      },
+      "weighted_m_percent": {
+        "value": [
+          1.0819970876340346,
+          0.7983935061729897
+        ],
+        "jackknife_se": [
+          0.19105580229859587,
+          0.18318213855137586
+        ],
+        "bootstrap_ci95": [
+          [
+            0.7106405388358644,
+            0.44861588023452137
+          ],
+          [
+            1.463406463632913,
+            1.141277003483872
+          ]
+        ]
+      },
+      "weighted_minus_control_pp": {
+        "value": [
+          -0.1516549009960233,
+          -0.14256661508527113
+        ],
+        "jackknife_se": [
+          0.0051278653011766605,
+          0.003991043921682434
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.16164293421361164,
+            -0.15028702960038665
+          ],
+          [
+            -0.1415251258892486,
+            -0.13476428454071543
+          ]
+        ]
+      },
+      "weighted_mean_m_percent": {
+        "value": 0.9401952969035121,
+        "jackknife_se": 0.138725639947524,
+        "bootstrap_ci95": [
+          0.6771529065100793,
+          1.2103129170588645
+        ]
+      },
+      "weighted_half_difference_pp": {
+        "value": 0.14180179073052246,
+        "jackknife_se": 0.125635204299025,
+        "bootstrap_ci95": [
+          -0.0955976136057432,
+          0.3863587309736654
+        ]
+      }
+    }
+  },
+  "contrasts": {
+    "mag24.9_radius_gt0.60 minus mag24.9_radius_gt0.56": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.0053272806760817915,
+          -0.0750388831837423
+        ],
+        "jackknife_se": [
+          0.07876469586930471,
+          0.06893373731662132
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.1407429015801004,
+            -0.20652785099405935
+          ],
+          [
+            0.16323438701744686,
+            0.05964256957596886
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          0.08111676804751533,
+          0.08001046152179214
+        ],
+        "jackknife_se": [
+          0.000666564202814993,
+          0.0006231212531579341
+        ],
+        "bootstrap_ci95": [
+          [
+            0.07983893434406135,
+            0.07879285221919717
+          ],
+          [
+            0.08242095675217996,
+            0.08121514370193302
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          0.08062135022695793,
+          0.08045748002960873
+        ],
+        "jackknife_se": [
+          0.00013757637548993926,
+          0.00013360090525799383
+        ],
+        "bootstrap_ci95": [
+          [
+            0.08035855844399399,
+            0.08020574265491136
+          ],
+          [
+            0.0808893952990693,
+            0.08072579733358694
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.0004954178205573978,
+          -0.0004470185078165878
+        ],
+        "jackknife_se": [
+          0.0006859171530817335,
+          0.0005954334915310151
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.0008075044998050201,
+            -0.0015951725441920195
+          ],
+          [
+            0.0018612651352608173,
+            0.0007062549916956205
+          ]
+        ]
+      }
+    },
+    "mag24.9_radius_gt0.64 minus mag24.9_radius_gt0.60": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.37021331675370917,
+          0.4362158651606718
+        ],
+        "jackknife_se": [
+          0.13138371472712318,
+          0.09832343949411688
+        ],
+        "bootstrap_ci95": [
+          [
+            0.12114278976884052,
+            0.24069546928561114
+          ],
+          [
+            0.631661422825132,
+            0.6219830334175813
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          0.05302776294943712,
+          0.05361439758260511
+        ],
+        "jackknife_se": [
+          0.0012649840850815681,
+          0.0009380057020149951
+        ],
+        "bootstrap_ci95": [
+          [
+            0.05064403741582999,
+            0.051786341947374054
+          ],
+          [
+            0.0555429342091351,
+            0.055375827010413915
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          0.04916658980251376,
+          0.04927371809423331
+        ],
+        "jackknife_se": [
+          0.00014660976818195085,
+          0.00014390336145789578
+        ],
+        "bootstrap_ci95": [
+          [
+            0.04888012252188811,
+            0.04899669440160509
+          ],
+          [
+            0.04945098908232837,
+            0.04955232141814403
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.003861173146923358,
+          0.004340679488371801
+        ],
+        "jackknife_se": [
+          0.0012714020068287568,
+          0.0009515203868489928
+        ],
+        "bootstrap_ci95": [
+          [
+            0.001454817167436087,
+            0.0024741195369422293
+          ],
+          [
+            0.006394869772553332,
+            0.00614140317659155
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.60 minus mag25_radius_gt0.56": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.019350245091143137,
+          -0.11778387638290422
+        ],
+        "jackknife_se": [
+          0.07021787533389245,
+          0.07810800856933851
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.11182821694757372,
+            -0.2705492115967556
+          ],
+          [
+            0.15804330873954994,
+            0.03408975768444677
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          0.08084906057861851,
+          0.07930969371478302
+        ],
+        "jackknife_se": [
+          0.0005531172066873026,
+          0.0006826944060135296
+        ],
+        "bootstrap_ci95": [
+          [
+            0.07978929231062475,
+            0.07796606235776306
+          ],
+          [
+            0.08192787635824329,
+            0.08062772452913762
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          0.0802444912493111,
+          0.08010765272694897
+        ],
+        "jackknife_se": [
+          0.0001321363412363972,
+          0.00012582034471288105
+        ],
+        "bootstrap_ci95": [
+          [
+            0.07999072352920078,
+            0.07986814799611985
+          ],
+          [
+            0.08050207830615976,
+            0.08035886063433405
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.0006045693293074139,
+          -0.0007979590121659497
+        ],
+        "jackknife_se": [
+          0.0005756305400321778,
+          0.0006592835435110188
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.00048059431018985794,
+            -0.002083136258849777
+          ],
+          [
+            0.001738464874969175,
+            0.0004885981202108397
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.64 minus mag25_radius_gt0.60": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.3699891246604192,
+          0.5180737225232601
+        ],
+        "jackknife_se": [
+          0.12962138019815386,
+          0.09305796334294444
+        ],
+        "bootstrap_ci95": [
+          [
+            0.12484528939695316,
+            0.3354440027950223
+          ],
+          [
+            0.6285620885540881,
+            0.6958787168666147
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          0.053355918145545744,
+          0.05459777609132033
+        ],
+        "jackknife_se": [
+          0.0012165095225006362,
+          0.0008616784243440684
+        ],
+        "bootstrap_ci95": [
+          [
+            0.05104196257098367,
+            0.052919990650765955
+          ],
+          [
+            0.055796729993614,
+            0.05623398074381156
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          0.049567637556058974,
+          0.049571610482116
+        ],
+        "jackknife_se": [
+          0.00014389608098451444,
+          0.0001389486672540117
+        ],
+        "bootstrap_ci95": [
+          [
+            0.04928792147541129,
+            0.049303626224363975
+          ],
+          [
+            0.04984633919984233,
+            0.04984143533847741
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.00378828058948677,
+          0.005026165609204325
+        ],
+        "jackknife_se": [
+          0.0012291889858522327,
+          0.0008779757135853632
+        ],
+        "bootstrap_ci95": [
+          [
+            0.0014780455713957919,
+            0.00333346274910635
+          ],
+          [
+            0.006255922209590599,
+            0.006706707157724316
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.60 minus mag25.1_radius_gt0.56": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.029684806458618596,
+          -0.0940292600493553
+        ],
+        "jackknife_se": [
+          0.07033427061919093,
+          0.07427231002938414
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.10501597882510594,
+            -0.23772006471925622
+          ],
+          [
+            0.16608082607656724,
+            0.04926413585543241
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          0.08083885222463472,
+          0.07932905808227597
+        ],
+        "jackknife_se": [
+          0.000551864244906453,
+          0.0006324887332320992
+        ],
+        "bootstrap_ci95": [
+          [
+            0.07977127491978526,
+            0.07808407373327676
+          ],
+          [
+            0.08190174498656842,
+            0.08055603346239383
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          0.08002083109313085,
+          0.07985336099019369
+        ],
+        "jackknife_se": [
+          0.00012383762540891643,
+          0.00012115018113789992
+        ],
+        "bootstrap_ci95": [
+          [
+            0.07978389385416086,
+            0.07962252513308325
+          ],
+          [
+            0.08026040152976795,
+            0.08009555268477209
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.0008180211315038655,
+          -0.0005243029079177175
+        ],
+        "jackknife_se": [
+          0.0005735994585039603,
+          0.0006215836048356585
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.0002736518424659634,
+            -0.0017380806011125238
+          ],
+          [
+            0.001935193691519831,
+            0.0006924752364813651
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.64 minus mag25.1_radius_gt0.60": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.3571376020981898,
+          0.5100653475551997
+        ],
+        "jackknife_se": [
+          0.13636132729740902,
+          0.09554890335386394
+        ],
+        "bootstrap_ci95": [
+          [
+            0.0977681361654481,
+            0.32231253666271886
+          ],
+          [
+            0.6294773235577621,
+            0.6924271600717669
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          0.0538271973977853,
+          0.05493578578975766
+        ],
+        "jackknife_se": [
+          0.0012528721589680075,
+          0.0008551034552027196
+        ],
+        "bootstrap_ci95": [
+          [
+            0.05143320026817644,
+            0.053263338905639265
+          ],
+          [
+            0.05631623574061206,
+            0.05657758872454786
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          0.05013577966303462,
+          0.05003595206002376
+        ],
+        "jackknife_se": [
+          0.0001388908906562331,
+          0.00013329981373125837
+        ],
+        "bootstrap_ci95": [
+          [
+            0.049865949568859,
+            0.04977753851844491
+          ],
+          [
+            0.05040486112984199,
+            0.05029171240787536
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.0036914177347506794,
+          0.0048998337297339045
+        ],
+        "jackknife_se": [
+          0.0012704069388423066,
+          0.0008801665251752269
+        ],
+        "bootstrap_ci95": [
+          [
+            0.0012667180763134584,
+            0.0031880089961787623
+          ],
+          [
+            0.00624721708969271,
+            0.006587674981293301
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.56 minus mag24.9_radius_gt0.56": {
+      "delta_weighted_m_pp": {
+        "value": [
+          -0.01732356102146504,
+          0.02535536637715552
+        ],
+        "jackknife_se": [
+          0.07580636833877226,
+          0.07934649334700405
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.16534932802146463,
+            -0.12952901664125493
+          ],
+          [
+            0.13370075794780886,
+            0.17751897450045406
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          -0.01955116051217376,
+          -0.019116692729244877
+        ],
+        "jackknife_se": [
+          0.0006271931462333286,
+          0.0006588616613751566
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.02077819992697224,
+            -0.02040873017975207
+          ],
+          [
+            -0.018306475885016875,
+            -0.017861400984080535
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          -0.01930228877023188,
+          -0.01926641423108455
+        ],
+        "jackknife_se": [
+          2.477163747257957e-05,
+          2.3379428506425653e-05
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.019349187377944173,
+            -0.01931263577477953
+          ],
+          [
+            -0.019253765813242483,
+            -0.019221537938554575
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          -0.00024887174194188066,
+          0.00014972150183967248
+        ],
+        "jackknife_se": [
+          0.0006296243282432244,
+          0.0006574715223929713
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.0014780760418053429,
+            -0.0011358282690485304
+          ],
+          [
+            0.0010007777613712879,
+            0.0014090777799480978
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.56 minus mag25_radius_gt0.56": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.1587602177677505,
+          0.05446035148404249
+        ],
+        "jackknife_se": [
+          0.07144023717081997,
+          0.06981520909378633
+        ],
+        "bootstrap_ci95": [
+          [
+            0.018327574628723697,
+            -0.07936058504358745
+          ],
+          [
+            0.29739271783987314,
+            0.1881822924296017
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          -0.016746701545924947,
+          -0.0175469462936636
+        ],
+        "jackknife_se": [
+          0.0005832323589994373,
+          0.0005657445733456618
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.017898667776435666,
+            -0.018628426953972627
+          ],
+          [
+            -0.015618271373223854,
+            -0.01646136467863311
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          -0.017923335923360928,
+          -0.01792519001274162
+        ],
+        "jackknife_se": [
+          2.3628776282086577e-05,
+          3.154504461949182e-05
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.017969171864193036,
+            -0.017986354875755856
+          ],
+          [
+            -0.017879444086613697,
+            -0.017867103587806417
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.001176634377435981,
+          0.0003782437190780197
+        ],
+        "jackknife_se": [
+          0.0005793297178294218,
+          0.0005677751969613539
+        ],
+        "bootstrap_ci95": [
+          [
+            2.9647063958976335e-05,
+            -0.0007098165594901257
+          ],
+          [
+            0.0022954402327170745,
+            0.0014683345286748777
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.60 minus mag24.9_radius_gt0.60": {
+      "delta_weighted_m_pp": {
+        "value": [
+          -0.003300596606403694,
+          -0.0173896268220064
+        ],
+        "jackknife_se": [
+          0.07441174246186305,
+          0.07656734155008943
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.150318135819128,
+            -0.163186858858001
+          ],
+          [
+            0.14220699135048087,
+            0.13089503438975966
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          -0.019818867981070576,
+          -0.019817460536253995
+        ],
+        "jackknife_se": [
+          0.0006786279893305412,
+          0.0006968464410834368
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.021165282169474674,
+            -0.021153330138033086
+          ],
+          [
+            -0.018490059413335033,
+            -0.018473716716221757
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          -0.01967914774787871,
+          -0.019616241533744305
+        ],
+        "jackknife_se": [
+          2.714334550227284e-05,
+          2.8586770034079497e-05
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.01973113917592438,
+            -0.019673232131735267
+          ],
+          [
+            -0.01962781185474636,
+            -0.019562417892319297
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          -0.00013972023319186455,
+          -0.00020121900250968938
+        ],
+        "jackknife_se": [
+          0.0006822281297585017,
+          0.0006965201632187112
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.0014800917517903273,
+            -0.0015349029029132987
+          ],
+          [
+            0.0011938828494556211,
+            0.001146522319808221
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.60 minus mag25_radius_gt0.60": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.16909477913522597,
+          0.07821496781759141
+        ],
+        "jackknife_se": [
+          0.07170727899922293,
+          0.06218370813292427
+        ],
+        "bootstrap_ci95": [
+          [
+            0.027805023750643865,
+            -0.04223605666030833
+          ],
+          [
+            0.30504178719556563,
+            0.19372353651817598
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          -0.016756909899908745,
+          -0.017527581926170654
+        ],
+        "jackknife_se": [
+          0.0006426669529307977,
+          0.0005522911685375225
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.018014497169291824,
+            -0.018598812299304053
+          ],
+          [
+            -0.015544046040817175,
+            -0.016501283148378898
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          -0.018146996079541178,
+          -0.018179481749496906
+        ],
+        "jackknife_se": [
+          2.3736842745877424e-05,
+          3.206667257762976e-05
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.01819187011252551,
+            -0.018241647910884846
+          ],
+          [
+            -0.018102541046083956,
+            -0.01812010388164017
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.0013900861796324326,
+          0.0006518998233262518
+        ],
+        "jackknife_se": [
+          0.0006368655462155961,
+          0.0005532379975819259
+        ],
+        "bootstrap_ci95": [
+          [
+            0.0001408633791750714,
+            -0.0004156074351541944
+          ],
+          [
+            0.0025933253182618744,
+            0.0016810689614852681
+          ]
+        ]
+      }
+    },
+    "mag25_radius_gt0.64 minus mag24.9_radius_gt0.64": {
+      "delta_weighted_m_pp": {
+        "value": [
+          -0.0035247886996936373,
+          0.06446823054058193
+        ],
+        "jackknife_se": [
+          0.0834131239595063,
+          0.07708686632198665
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.16848857114639793,
+            -0.08566883105393885
+          ],
+          [
+            0.15787581636451498,
+            0.21450479583180346
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          -0.01949071278496195,
+          -0.01883408202753878
+        ],
+        "jackknife_se": [
+          0.0008045403088358439,
+          0.0007405533721127484
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.02108621673937721,
+            -0.020269479057347516
+          ],
+          [
+            -0.017941171214114076,
+            -0.017399611056579938
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          -0.019278099994333497,
+          -0.019318349145861613
+        ],
+        "jackknife_se": [
+          3.101685701104312e-05,
+          2.999265410897256e-05
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.019337296626107947,
+            -0.019376335772726794
+          ],
+          [
+            -0.01921929253148094,
+            -0.019260258531641414
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          -0.0002126127906284525,
+          0.0004842671183228342
+        ],
+        "jackknife_se": [
+          0.0008053534440747263,
+          0.000742878993994049
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.0018128758994090776,
+            -0.0009509416270189114
+          ],
+          [
+            0.0013415654484284,
+            0.0019348335317108387
+          ]
+        ]
+      }
+    },
+    "mag25.1_radius_gt0.64 minus mag25_radius_gt0.64": {
+      "delta_weighted_m_pp": {
+        "value": [
+          0.15624325657299654,
+          0.07020659284953101
+        ],
+        "jackknife_se": [
+          0.07688792550721481,
+          0.06344675621361091
+        ],
+        "bootstrap_ci95": [
+          [
+            0.008529297455150965,
+            -0.052780436380291396
+          ],
+          [
+            0.3044282748924787,
+            0.18894556777376828
+          ]
+        ]
+      },
+      "delta_measured_Rdiag": {
+        "value": [
+          -0.01628563064766919,
+          -0.01718957222773332
+        ],
+        "jackknife_se": [
+          0.0007267640960832889,
+          0.0005971783252068125
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.01768978356364565,
+            -0.01835393411577515
+          ],
+          [
+            -0.014888713837502064,
+            -0.016064004230844763
+          ]
+        ]
+      },
+      "delta_model_Rdiag": {
+        "value": [
+          -0.017578853972565534,
+          -0.01771514017158915
+        ],
+        "jackknife_se": [
+          2.685340308807502e-05,
+          3.591873162504148e-05
+        ],
+        "bootstrap_ci95": [
+          [
+            -0.017629606764522292,
+            -0.0177834155453489
+          ],
+          [
+            -0.017528398396976695,
+            -0.017650522658465752
+          ]
+        ]
+      },
+      "delta_response_error_diag": {
+        "value": [
+          0.001293223324896342,
+          0.0005255679438558314
+        ],
+        "jackknife_se": [
+          0.0007191675675392943,
+          0.0005981004814826753
+        ],
+        "bootstrap_ci95": [
+          [
+            -9.280744023066055e-05,
+            -0.0006334693434744076
+          ],
+          [
+            0.0026711931359842843,
+            0.0016495456731317247
+          ]
+        ]
+      }
+    }
+  },
+  "joint_nine_cut_rms_percent": {
+    "control": {
+      "value": 0.7573501295107286,
+      "jackknife_se": 0.11237655209153147,
+      "bootstrap_ci95": [
+        0.5585814760102467,
+        0.9818812193900748
+      ]
+    },
+    "weighted": {
+      "value": 0.6345722375760957,
+      "jackknife_se": 0.11008079806884272,
+      "bootstrap_ci95": [
+        0.44633468462281106,
+        0.8559576888161096
+      ]
+    },
+    "weighted_minus_control_pp": {
+      "value": -0.12277789193463284,
+      "jackknife_se": 0.005147836412873191,
+      "bootstrap_ci95": [
+        -0.12825656349641779,
+        -0.10434548044361999
+      ]
+    }
+  }
+}

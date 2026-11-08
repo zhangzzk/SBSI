@@ -1,0 +1,296 @@
+{
+  "utc": "2026-11-05T20:42:09.219463+00:00",
+  "owner_request": "can we use more GPUs?",
+  "configured_total_gpu_cap": 6,
+  "array_job": "17768588",
+  "pending_partition": "cip,inter",
+  "pending_gpu_type": "generic GPU, excluding P5000 node met-cl-vis02",
+  "queue_after": "17768588_27|cip|RUNNING|gres:gpu:1|cip-cl-h01g01n2\n17768588_26|cip|RUNNING|gres:gpu:1|cip-cl-h01g01n6\n17768588_28|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_29|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_30|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_31|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_32|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_33|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_34|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_35|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_36|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_37|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_38|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_39|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_40|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_41|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_42|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_43|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_44|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_45|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_46|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_47|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_48|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_49|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_50|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_51|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_52|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_53|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_54|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_55|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_56|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_57|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_58|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_59|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_60|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_61|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_62|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_63|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_64|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_65|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_66|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_67|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_68|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_69|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_70|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_71|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_72|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_73|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_74|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_75|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_76|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_77|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_78|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n17768588_79|cip,inter|PENDING|gres:gpu:a40:1|(Priority)\n",
+  "throttle_verification": "JobId=17769523 ArrayJobId=17768588 ArrayTaskId=30 ArrayTaskThrottle=6 JobName=factorized_constant UserId=zekang.zhang(27188) GroupId=nobody(10000) MCS_label=N/A Priority=537 Nice=0 Account=ls-gruen QOS=normal JobState=PENDING Reason=Priority Dependency=(null) Requeue=1 Restarts=0 BatchFlag=1 Reboot=0 ExitCode=0:0 RunTime=00:00:00 TimeLimit=00:45:00 TimeMin=N/A SubmitTime=2026-11-05T20:09:38 EligibleTime=2026-11-05T21:41:23 AccrueTime=2026-11-05T21:41:23 StartTime=Unknown EndTime=Unknown Deadline=N/A SuspendTime=None SecsPreSuspend=0 LastSchedEval=2026-11-05T21:41:58 Scheduler=Main Partition=cip,inter AllocNode:Sid=kng-sv-clhead02:3096056 ReqNodeList=(null) ExcNodeList=(null) NodeList= NumNodes=1 NumCPUs=4 NumTasks=1 CPUs/Task=4 ReqB:S:C:T=0:0:*:* ReqTRES=cpu=4,mem=24G,node=1,billing=4,gres/gpu=1,gres/gpu:a40=1 AllocTRES=(null) Socks/Node=* NtasksPerN:B:S:C=0:0:*:* CoreSpec=* MinCPUsNode=4 MinMemoryNode=24G MinTmpDiskNode=0 Features=(null) DelayBoot=00:00:00 OverSubscribe=OK Contiguous=0 Licenses=(null) Network=(null) Command=/home/z/Zekang.Zhang/SBSI/doc/evidence/alignment_factorized_constant_20261105/run.sh WorkDir=/home/z/Zekang.Zhang/SBSI StdErr=/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_constant_20261105/logs/factorized_constant_17768588_30.log StdIn=/dev/null StdOut=/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_factorized_constant_20261105/logs/factorized_constant_17768588_30.log Power= TresPerNode=gres:gpu:a40:1 \n",
+  "note": "scontrol bulk throttle update reported already-finished array members, but live-task state confirms throttle6. All then-pending tasks were updated successfully; in-flight tasks retained existing allocation.",
+  "compatible_gpu_updates": [
+    {
+      "job": "17768588_28",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_29",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_30",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_31",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_32",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_33",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_34",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_35",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_36",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_37",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_38",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_39",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_40",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_41",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_42",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_43",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_44",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_45",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_46",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_47",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_48",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_49",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_50",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_51",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_52",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_53",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_54",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_55",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_56",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_57",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_58",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_59",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_60",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_61",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_62",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_63",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_64",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_65",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_66",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_67",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_68",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_69",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_70",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_71",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_72",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_73",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_74",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_75",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_76",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_77",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_78",
+      "returncode": 0,
+      "stderr": ""
+    },
+    {
+      "job": "17768588_79",
+      "returncode": 0,
+      "stderr": ""
+    }
+  ],
+  "updated_utc": "2026-11-05T20:42:55.570126+00:00",
+  "running_after": "17768588_27|cip|cip-cl-h01g01n2\n17768588_26|cip|cip-cl-h01g01n6\n17768588_28|cip|cip-cl-h01g01n3\n17768588_31|inter|met-cl-vis01\n17768588_30|inter|met-cl-vis01\n17768588_29|inter|met-cl-vis01\n",
+  "observed_running_count": 6,
+  "compiled_cuda_architectures": "sm_50 sm_60 sm_70 sm_75 sm_80 sm_86 sm_90",
+  "verified_utc": "2026-11-05T20:43:52.910639+00:00",
+  "expanded_worker_startup": {
+    "28": [
+      "READY cartesian 1083 parents 885264 pairs 16057111 GPU NVIDIA A40-8Q",
+      "PROGRESS cartesian 1083 block 0 seconds 16.3"
+    ],
+    "29": [
+      "READY frame 1083 parents 885264 pairs 16057111 GPU NVIDIA GeForce RTX 2080 Ti",
+      "PROGRESS frame 1083 block 0 seconds 29.4"
+    ],
+    "30": [
+      "READY cartesian 1123 parents 883737 pairs 16020383 GPU NVIDIA GeForce RTX 2080 Ti",
+      "PROGRESS cartesian 1123 block 0 seconds 30.4"
+    ],
+    "31": [
+      "READY frame 1123 parents 883737 pairs 16020383 GPU NVIDIA GeForce RTX 2080 Ti",
+      "PROGRESS frame 1123 block 0 seconds 30.3"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "pilot": "17806566",
+  "pilot_report": "17806572",
+  "remaining_a40": "17806587",
+  "remaining_v100": "17806588",
+  "remaining_rtx": "17806589",
+  "parent_report": "17806280",
+  "broad_array_held": "17788286",
+  "combined_gpu_ceiling": 6,
+  "max_bins_workers": 3,
+  "scheduled_check": "17806329",
+  "report": "17806590",
+  "pilot_prose_refresh": "17806691"
+}

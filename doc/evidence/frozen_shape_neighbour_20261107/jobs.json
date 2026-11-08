@@ -1,0 +1,9 @@
+{
+  "training_own_data_and_first_case": 17815619,
+  "dependent_persistent_workers": 17815620,
+  "dependent_report": 17815621,
+  "maximum_concurrent_gpus": 3,
+  "broad_array_still_held": 17788286,
+  "follow_up_loop": "disabled",
+  "output": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/frozen_shape_neighbour_20261107"
+}

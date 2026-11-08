@@ -1,0 +1,36 @@
+{
+  "prepare": 17821847,
+  "pilot": 17821859,
+  "cancelled_pending_pilot_superseded_to_include_verification": 17821851,
+  "workers": 17821856,
+  "report": 17821860,
+  "cpu_ceiling_this_diagnostic": 500,
+  "gpus": 0,
+  "broad_array_still_held": 17788286,
+  "automated_followup": "disabled",
+  "prepare_state": "COMPLETED 0:0",
+  "pilot_state": "COMPLETED 0:0",
+  "workers_state": "groups0/3 completed; slow groups1/2 cancelled with checkpoints preserved",
+  "report_state": "COMPLETED 0:0; all40 scenes",
+  "recovery_workers": 17824227,
+  "recovery_state": "stopped at completed checkpoints for CPU scaling",
+  "partial_report": 17824200,
+  "partial_report_state": "completed",
+  "report_dependency": "afterok:17824404_0:17824424",
+  "current_allocated_cpus": 0,
+  "requested_cpu_concurrency": 284,
+  "packed_workers": [
+    "17824404_0",
+    "17824424_1-7"
+  ],
+  "packing": "one60-CPU allocation plus seven32-CPU allocations; same immutable eight-group schedule",
+  "packed_workers_initial": 17824404,
+  "packed_workers_active": [],
+  "report_dependencies": [
+    "17824404_0",
+    "17824424"
+  ],
+  "resize_reason": "Most60-CPU allocations had an estimated two-hour queue; all seven replacement32-CPU allocations started promptly.",
+  "packed_workers_state": "COMPLETED 0:0",
+  "completed_chunks": 2667
+}

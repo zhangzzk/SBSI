@@ -1,0 +1,7 @@
+{
+  "utc": "2026-11-05T22:46:22.980315+00:00",
+  "logs": {
+    "alignment_seed_repeat_17772044_0.log": "EPOCH cartesian 10 nll -3.2184308927150256 lr 0.0001 next 0.0001 alignment [0.4966858644384061, 0.2002038064405914] seconds 188.7\nEPOCH cartesian 11 nll -3.231560771574895 lr 0.0001 next 0.0001 alignment None seconds 196.7\nEPOCH cartesian 12 nll -3.2285659233624906 lr 0.0001 next 0.0001 alignment None seconds 204.5\nEPOCH cartesian 13 nll -3.238457917357784 lr 0.0001 next 0.0001 alignment None seconds 212.5\nEPOCH cartesian 14 nll -3.2867135501563935 lr 0.0001 next 0.0001 alignment None seconds 220.4\nEPOCH cartesian 15 nll -3.2624504529687703 lr 0.0001 next 0.0001 alignment [0.4281500295732573, 0.15242016515402362] seconds 235.1"
+  },
+  "queue": "             JOBID     STATE       TIME NODELIST(REASON)\n        17772044_0   RUNNING       4:25 cip-cl-nv01\n        17772044_1   PENDING       0:00 (QOSMaxGRESPerUser)\n"
+}

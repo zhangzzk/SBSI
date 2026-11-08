@@ -1,0 +1,61 @@
+{
+  "provenance": {
+    "manifest": "c95d22558b34b2195f834b6b96a376224ef73a616d998f57d62f9eb766e0d22c",
+    "train": "033905e02a24d377dc481f3a9e39c2775faa7405425b54474401e1796a079e19",
+    "probability": "d9bac243f437b05bc287f763f0ca35573a4acc05148c3bf6d50d3851574ebefa",
+    "source_pins": "1ab0bdd223f486a373a4e226e110fca9709491e25d8802efdd286a5911ada403",
+    "targets": "32217b95fe6fafc7fca4edc693bbb6a02b4e5412eca839bbab58392eb9aff232",
+    "initial": {
+      "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/neighbour_moment_guard_20261106/control/final.pt",
+      "sha256": "6fc0c373fc9cc71e8a8ccc772d22e279495af8725f7e1647bcd53c6933f4c65b"
+    }
+  },
+  "weight": 220.30314835861844,
+  "samples": [
+    {
+      "batch": 0,
+      "nll": -3.9013020312324946,
+      "guard": 5.224766184664843,
+      "probability_score": 0.050708089918846413,
+      "base_norm": 39.87171280680429,
+      "extra_norm": 0.06590875683990892,
+      "cosine": 0.057167089997337404
+    },
+    {
+      "batch": 1,
+      "nll": -3.927185449361167,
+      "guard": -1.2347570373381276,
+      "probability_score": 0.05209092052770285,
+      "base_norm": 46.655694025303944,
+      "extra_norm": 0.04327954363638279,
+      "cosine": 0.19293297116738628
+    },
+    {
+      "batch": 2,
+      "nll": -3.928572700827977,
+      "guard": 0.346059225460114,
+      "probability_score": 0.05277976261187413,
+      "base_norm": 45.165966412132725,
+      "extra_norm": 0.05606652069447589,
+      "cosine": 0.18341232394631357
+    },
+    {
+      "batch": 3,
+      "nll": -3.9148939315513624,
+      "guard": 0.6878444957072931,
+      "probability_score": 0.05058153465713383,
+      "base_norm": 58.77734654659937,
+      "extra_norm": 0.05065400490549373,
+      "cosine": -0.03335219950166575
+    }
+  ],
+  "gradient_check": {
+    "relative_gradient_error": 6.297356408648255e-08,
+    "loss": 0.034106998811633135,
+    "same_rows_both_banks": true,
+    "uneven_final_chunk": true,
+    "conditional_shape_gradients_absent": true
+  },
+  "training_only": true,
+  "parameter_updates": 0
+}

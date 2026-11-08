@@ -1,0 +1,805 @@
+{
+  "cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "definition": "Measured minus generated conditional-model response. Same common-U four-edge normalization as parent factorial.",
+  "bootstrap_seed": 202611069301,
+  "results": {
+    "fine": {
+      "finite_shape": {
+        "generated": {
+          "value": 0.08495816327202262,
+          "case_se": 0.00031573120395117705,
+          "jackknife_se": 0.0003636456285323369
+        },
+        "measured": {
+          "value": 0.0915140625759843,
+          "case_se": 0.0004173470419513486,
+          "jackknife_se": 0.000482060145070194
+        },
+        "diagonal_change": {
+          "value": 0.006555899303961679,
+          "case_se": 0.00017089830896573858,
+          "jackknife_se": 0.00019914983940357578
+        },
+        "distribution": {
+          "value": -0.00020426275010534088,
+          "case_se": 0.00028090713412824085,
+          "jackknife_se": 0.00032111331579412895
+        },
+        "within_bin": {
+          "value": 0.00593778483273508,
+          "case_se": 0.00024089705865900317,
+          "jackknife_se": 0.0002767352544013604
+        },
+        "exclusive": {
+          "value": 0.0008223772213319449,
+          "case_se": 1.0941055117297171e-05,
+          "jackknife_se": 1.2498022824706375e-05
+        },
+        "shared_generated_mass": {
+          "value": 0.9999951283399628,
+          "case_se": 8.1376835689367e-06,
+          "jackknife_se": 2.158844890437927e-06
+        },
+        "shared_measured_mass": {
+          "value": 0.9971041705405888,
+          "case_se": 2.203109902009297e-05,
+          "jackknife_se": 2.5749593618028702e-05
+        }
+      },
+      "scalar_coefficient": {
+        "generated": {
+          "value": 0.08476388900826384,
+          "case_se": 0.00031072346605978457,
+          "jackknife_se": 0.0003580644582471936
+        },
+        "measured": {
+          "value": 0.09131059553777834,
+          "case_se": 0.0004232351413382515,
+          "jackknife_se": 0.0004890139369251958
+        },
+        "diagonal_change": {
+          "value": 0.006546706529514501,
+          "case_se": 0.00017222820857492967,
+          "jackknife_se": 0.0002005964923098821
+        },
+        "distribution": {
+          "value": -0.00020856266418975848,
+          "case_se": 0.00027965896811404136,
+          "jackknife_se": 0.0003197713774727442
+        },
+        "within_bin": {
+          "value": 0.0059378164780753495,
+          "case_se": 0.0002419693090293752,
+          "jackknife_se": 0.0002782133413473483
+        },
+        "exclusive": {
+          "value": 0.0008174527156289079,
+          "case_se": 1.0819225130567608e-05,
+          "jackknife_se": 1.2333484219032645e-05
+        },
+        "shared_generated_mass": {
+          "value": 0.9999951283399628,
+          "case_se": 8.1376835689367e-06,
+          "jackknife_se": 2.158844890437927e-06
+        },
+        "shared_measured_mass": {
+          "value": 0.9971041705405888,
+          "case_se": 2.203109902009297e-05,
+          "jackknife_se": 2.5749593618028702e-05
+        }
+      }
+    },
+    "fine_with_intrinsic_size": {
+      "finite_shape": {
+        "generated": {
+          "value": 0.08495816327202262,
+          "case_se": 0.0003157312039511774,
+          "jackknife_se": 0.0003636456285323346
+        },
+        "measured": {
+          "value": 0.0915140625759843,
+          "case_se": 0.00041734704195134907,
+          "jackknife_se": 0.00048206014507019075
+        },
+        "diagonal_change": {
+          "value": 0.006555899303961679,
+          "case_se": 0.0001708983089657429,
+          "jackknife_se": 0.0001991498394035907
+        },
+        "distribution": {
+          "value": -0.0002455729471987889,
+          "case_se": 0.00032300572166961487,
+          "jackknife_se": 0.00036885182692765136
+        },
+        "within_bin": {
+          "value": 0.006000912849142277,
+          "case_se": 0.00027735387622015333,
+          "jackknife_se": 0.00031574976232722385
+        },
+        "exclusive": {
+          "value": 0.0008005594020181975,
+          "case_se": 1.4365652717571687e-05,
+          "jackknife_se": 1.2806621662769018e-05
+        },
+        "shared_generated_mass": {
+          "value": 0.9998681316009629,
+          "case_se": 6.163221350820449e-05,
+          "jackknife_se": 1.5465956757364478e-05
+        },
+        "shared_measured_mass": {
+          "value": 0.9971030443353235,
+          "case_se": 2.2249655643005504e-05,
+          "jackknife_se": 2.5861444995394793e-05
+        }
+      },
+      "scalar_coefficient": {
+        "generated": {
+          "value": 0.08476388900826384,
+          "case_se": 0.0003107234660597847,
+          "jackknife_se": 0.00035806445824719876
+        },
+        "measured": {
+          "value": 0.09131059553777834,
+          "case_se": 0.00042323514133824937,
+          "jackknife_se": 0.0004890139369251958
+        },
+        "diagonal_change": {
+          "value": 0.006546706529514501,
+          "case_se": 0.00017222820857492805,
+          "jackknife_se": 0.0002005964923098764
+        },
+        "distribution": {
+          "value": -0.0002496961834276554,
+          "case_se": 0.00032116808333075683,
+          "jackknife_se": 0.0003671722897585352
+        },
+        "within_bin": {
+          "value": 0.006001203240895607,
+          "case_se": 0.0002781248894770309,
+          "jackknife_se": 0.0003171606045427066
+        },
+        "exclusive": {
+          "value": 0.0007951994720465453,
+          "case_se": 1.4324520987973798e-05,
+          "jackknife_se": 1.2711118356683543e-05
+        },
+        "shared_generated_mass": {
+          "value": 0.9998681316009629,
+          "case_se": 6.163221350820449e-05,
+          "jackknife_se": 1.5465956757364478e-05
+        },
+        "shared_measured_mass": {
+          "value": 0.9971030443353235,
+          "case_se": 2.2249655643005504e-05,
+          "jackknife_se": 2.5861444995394793e-05
+        }
+      }
+    },
+    "medium": {
+      "finite_shape": {
+        "generated": {
+          "value": 0.08495816327202262,
+          "case_se": 0.00031573120395117857,
+          "jackknife_se": 0.0003636456285323284
+        },
+        "measured": {
+          "value": 0.0915140625759843,
+          "case_se": 0.0004173470419513495,
+          "jackknife_se": 0.000482060145070194
+        },
+        "diagonal_change": {
+          "value": 0.006555899303961679,
+          "case_se": 0.0001708983089657408,
+          "jackknife_se": 0.00019914983940358394
+        },
+        "distribution": {
+          "value": -0.00017122363949592526,
+          "case_se": 0.0002635849932268817,
+          "jackknife_se": 0.00030289093612672285
+        },
+        "within_bin": {
+          "value": 0.006094309827255847,
+          "case_se": 0.00022410827239666904,
+          "jackknife_se": 0.0002583914377339212
+        },
+        "exclusive": {
+          "value": 0.0006328131162017604,
+          "case_se": 1.0446862535422332e-05,
+          "jackknife_se": 1.2043318421175367e-05
+        },
+        "shared_generated_mass": {
+          "value": 0.9999972309014573,
+          "case_se": 1.3026389608566782e-06,
+          "jackknife_se": 1.5328753246199532e-06
+        },
+        "shared_measured_mass": {
+          "value": 0.9982287665113813,
+          "case_se": 1.6960278603609462e-05,
+          "jackknife_se": 1.9412091951013667e-05
+        }
+      },
+      "scalar_coefficient": {
+        "generated": {
+          "value": 0.08476388900826384,
+          "case_se": 0.00031072346605978376,
+          "jackknife_se": 0.0003580644582471885
+        },
+        "measured": {
+          "value": 0.09131059553777834,
+          "case_se": 0.0004232351413382512,
+          "jackknife_se": 0.0004890139369251897
+        },
+        "diagonal_change": {
+          "value": 0.006546706529514501,
+          "case_se": 0.00017222820857493138,
+          "jackknife_se": 0.0002005964923098821
+        },
+        "distribution": {
+          "value": -0.00017445233605953983,
+          "case_se": 0.00026320801567295324,
+          "jackknife_se": 0.00030241262510483693
+        },
+        "within_bin": {
+          "value": 0.006092351327779245,
+          "case_se": 0.00022600280193500508,
+          "jackknife_se": 0.00026060026987173037
+        },
+        "exclusive": {
+          "value": 0.0006288075377947931,
+          "case_se": 1.018815787468499e-05,
+          "jackknife_se": 1.1736420249253146e-05
+        },
+        "shared_generated_mass": {
+          "value": 0.9999972309014573,
+          "case_se": 1.3026389608566782e-06,
+          "jackknife_se": 1.5328753246199532e-06
+        },
+        "shared_measured_mass": {
+          "value": 0.9982287665113813,
+          "case_se": 1.6960278603609462e-05,
+          "jackknife_se": 1.9412091951013667e-05
+        }
+      }
+    },
+    "medium_with_intrinsic_size": {
+      "finite_shape": {
+        "generated": {
+          "value": 0.08495816327202262,
+          "case_se": 0.0003157312039511771,
+          "jackknife_se": 0.0003636456285323369
+        },
+        "measured": {
+          "value": 0.0915140625759843,
+          "case_se": 0.00041734704195134744,
+          "jackknife_se": 0.0004820601450701976
+        },
+        "diagonal_change": {
+          "value": 0.006555899303961679,
+          "case_se": 0.0001708983089657405,
+          "jackknife_se": 0.00019914983940357838
+        },
+        "distribution": {
+          "value": -0.00023220102951267097,
+          "case_se": 0.0003178667692470313,
+          "jackknife_se": 0.00036642456388775654
+        },
+        "within_bin": {
+          "value": 0.006159810067809238,
+          "case_se": 0.000270457194005625,
+          "jackknife_se": 0.0003117290190411237
+        },
+        "exclusive": {
+          "value": 0.0006282902656651159,
+          "case_se": 1.042826729749144e-05,
+          "jackknife_se": 1.1533973333643218e-05
+        },
+        "shared_generated_mass": {
+          "value": 0.99997907462427,
+          "case_se": 1.8419128757150345e-05,
+          "jackknife_se": 6.902822583901497e-06
+        },
+        "shared_measured_mass": {
+          "value": 0.9982287665113811,
+          "case_se": 1.6960278603627128e-05,
+          "jackknife_se": 1.9412091951013667e-05
+        }
+      },
+      "scalar_coefficient": {
+        "generated": {
+          "value": 0.08476388900826384,
+          "case_se": 0.0003107234660597839,
+          "jackknife_se": 0.0003580644582471936
+        },
+        "measured": {
+          "value": 0.09131059553777833,
+          "case_se": 0.0004232351413382535,
+          "jackknife_se": 0.0004890139369251954
+        },
+        "diagonal_change": {
+          "value": 0.006546706529514487,
+          "case_se": 0.00017222820857493206,
+          "jackknife_se": 0.00020059649230987647
+        },
+        "distribution": {
+          "value": -0.00023595163376916874,
+          "case_se": 0.0003167696888988147,
+          "jackknife_se": 0.0003651157881473576
+        },
+        "within_bin": {
+          "value": 0.006158775146549937,
+          "case_se": 0.00027181317717473477,
+          "jackknife_se": 0.00031338698528100996
+        },
+        "exclusive": {
+          "value": 0.0006238830167337305,
+          "case_se": 1.0396815518837399e-05,
+          "jackknife_se": 1.1449401165966252e-05
+        },
+        "shared_generated_mass": {
+          "value": 0.99997907462427,
+          "case_se": 1.8419128757150345e-05,
+          "jackknife_se": 6.902822583901497e-06
+        },
+        "shared_measured_mass": {
+          "value": 0.9982287665113811,
+          "case_se": 1.6960278603627128e-05,
+          "jackknife_se": 1.9412091951013667e-05
+        }
+      }
+    },
+    "coarse": {
+      "finite_shape": {
+        "generated": {
+          "value": 0.08495816327202262,
+          "case_se": 0.00031573120395117553,
+          "jackknife_se": 0.00036364562853233973
+        },
+        "measured": {
+          "value": 0.09151406257598428,
+          "case_se": 0.00041734704195134907,
+          "jackknife_se": 0.00048206014507018777
+        },
+        "diagonal_change": {
+          "value": 0.006555899303961665,
+          "case_se": 0.00017089830896574145,
+          "jackknife_se": 0.0001991498394035762
+        },
+        "distribution": {
+          "value": 0.00017425407544313307,
+          "case_se": 0.00026166079488264,
+          "jackknife_se": 0.00030061680531242885
+        },
+        "within_bin": {
+          "value": 0.006336847318797542,
+          "case_se": 0.00022515534458361037,
+          "jackknife_se": 0.0002592526354515413
+        },
+        "exclusive": {
+          "value": 4.479790972101244e-05,
+          "case_se": 2.7191723181605245e-06,
+          "jackknife_se": 3.1252391973820135e-06
+        },
+        "shared_generated_mass": {
+          "value": 0.9999988844328662,
+          "case_se": 1.899914622415107e-07,
+          "jackknife_se": 2.1943001662340106e-07
+        },
+        "shared_measured_mass": {
+          "value": 0.9999072934158711,
+          "case_se": 2.4915865891403025e-06,
+          "jackknife_se": 2.8828325581388904e-06
+        }
+      },
+      "scalar_coefficient": {
+        "generated": {
+          "value": 0.08476388900826384,
+          "case_se": 0.00031072346605978473,
+          "jackknife_se": 0.00035806445824719876
+        },
+        "measured": {
+          "value": 0.09131059553777834,
+          "case_se": 0.0004232351413382512,
+          "jackknife_se": 0.0004890139369251794
+        },
+        "diagonal_change": {
+          "value": 0.006546706529514501,
+          "case_se": 0.00017222820857493151,
+          "jackknife_se": 0.00020059649230987355
+        },
+        "distribution": {
+          "value": 0.0001716167504250632,
+          "case_se": 0.00026093727070182623,
+          "jackknife_se": 0.0002997130816695788
+        },
+        "within_bin": {
+          "value": 0.0063307890499132635,
+          "case_se": 0.0002284105690279469,
+          "jackknife_se": 0.00026303211458030435
+        },
+        "exclusive": {
+          "value": 4.430072917617406e-05,
+          "case_se": 2.524756617005246e-06,
+          "jackknife_se": 2.900860807576581e-06
+        },
+        "shared_generated_mass": {
+          "value": 0.9999988844328662,
+          "case_se": 1.899914622415107e-07,
+          "jackknife_se": 2.1943001662340106e-07
+        },
+        "shared_measured_mass": {
+          "value": 0.9999072934158711,
+          "case_se": 2.4915865891403025e-06,
+          "jackknife_se": 2.8828325581388904e-06
+        }
+      }
+    },
+    "coarse_with_intrinsic_size": {
+      "finite_shape": {
+        "generated": {
+          "value": 0.08495816327202263,
+          "case_se": 0.000315731203951176,
+          "jackknife_se": 0.00036364562853233415
+        },
+        "measured": {
+          "value": 0.0915140625759843,
+          "case_se": 0.00041734704195134966,
+          "jackknife_se": 0.000482060145070194
+        },
+        "diagonal_change": {
+          "value": 0.006555899303961665,
+          "case_se": 0.0001708983089657426,
+          "jackknife_se": 0.00019914983940359587
+        },
+        "distribution": {
+          "value": 4.511426332829554e-05,
+          "case_se": 0.00034113713212897333,
+          "jackknife_se": 0.00039340423111955435
+        },
+        "within_bin": {
+          "value": 0.006467444652949078,
+          "case_se": 0.00030251667814240395,
+          "jackknife_se": 0.00034944577252723255
+        },
+        "exclusive": {
+          "value": 4.334038768430907e-05,
+          "case_se": 2.5413344417511704e-06,
+          "jackknife_se": 3.0160444875772175e-06
+        },
+        "shared_generated_mass": {
+          "value": 0.9999918277821382,
+          "case_se": 4.982532578560822e-06,
+          "jackknife_se": 3.0168805620594684e-06
+        },
+        "shared_measured_mass": {
+          "value": 0.9999072934158711,
+          "case_se": 2.4915865891165466e-06,
+          "jackknife_se": 2.8828325580033465e-06
+        }
+      },
+      "scalar_coefficient": {
+        "generated": {
+          "value": 0.08476388900826384,
+          "case_se": 0.0003107234660597847,
+          "jackknife_se": 0.00035806445824719876
+        },
+        "measured": {
+          "value": 0.09131059553777834,
+          "case_se": 0.0004232351413382497,
+          "jackknife_se": 0.0004890139369251958
+        },
+        "diagonal_change": {
+          "value": 0.006546706529514501,
+          "case_se": 0.00017222820857492867,
+          "jackknife_se": 0.0002005964923098764
+        },
+        "distribution": {
+          "value": 4.169214620807495e-05,
+          "case_se": 0.0003403944102648965,
+          "jackknife_se": 0.0003925220983425897
+        },
+        "within_bin": {
+          "value": 0.006462290958538185,
+          "case_se": 0.00030569155582161565,
+          "jackknife_se": 0.0003532337704211166
+        },
+        "exclusive": {
+          "value": 4.272342476823708e-05,
+          "case_se": 2.31281939438078e-06,
+          "jackknife_se": 2.7657691019152656e-06
+        },
+        "shared_generated_mass": {
+          "value": 0.9999918277821382,
+          "case_se": 4.982532578560822e-06,
+          "jackknife_se": 3.0168805620594684e-06
+        },
+        "shared_measured_mass": {
+          "value": 0.9999072934158711,
+          "case_se": 2.4915865891165466e-06,
+          "jackknife_se": 2.8828325580033465e-06
+        }
+      }
+    }
+  },
+  "receipts": [
+    {
+      "case": 1000,
+      "checkpoint": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+        "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+      },
+      "emulator": {
+        "root": "BLENDEMU_RUNS_DIR",
+        "path": "disk_response_moment_galsbi_20261103/model/model.json",
+        "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+        "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+        "backend": "disk_response_moment",
+        "composition": "mobius",
+        "response_coordinate": "disk_velocity",
+        "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+        "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+      },
+      "source_sha256": "aa849e65b355ca57b7f0361c17057df7cc0eb2dbe53dc92bec985a4552148b10",
+      "helper_sha256": "070100b4718c550ae3246988f699577462182e764673d3bd613d18c2e352e4f7",
+      "measured": [
+        {
+          "cross_rows": 292879,
+          "shape_rows": 294441,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 883944,
+          "parent_usable": 292842,
+          "parent_absent_crossmatch": 591065,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292800,
+          "shape_rows": 294366,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1566,
+          "parent_rows": 883944,
+          "parent_usable": 292753,
+          "parent_absent_crossmatch": 591144,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292786,
+          "shape_rows": 294357,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1571,
+          "parent_rows": 883944,
+          "parent_usable": 292751,
+          "parent_absent_crossmatch": 591158,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292734,
+          "shape_rows": 294330,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1596,
+          "parent_rows": 883944,
+          "parent_usable": 292699,
+          "parent_absent_crossmatch": 591210,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "gpu": "Tesla V100-SXM2-32GB",
+      "draws": 64,
+      "factorial_replay_passed": true,
+      "seconds": 408.20450996095315
+    },
+    {
+      "case": 1040,
+      "checkpoint": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+        "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+      },
+      "emulator": {
+        "root": "BLENDEMU_RUNS_DIR",
+        "path": "disk_response_moment_galsbi_20261103/model/model.json",
+        "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+        "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+        "backend": "disk_response_moment",
+        "composition": "mobius",
+        "response_coordinate": "disk_velocity",
+        "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+        "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+      },
+      "source_sha256": "aa849e65b355ca57b7f0361c17057df7cc0eb2dbe53dc92bec985a4552148b10",
+      "helper_sha256": "070100b4718c550ae3246988f699577462182e764673d3bd613d18c2e352e4f7",
+      "measured": [
+        {
+          "cross_rows": 292757,
+          "shape_rows": 293923,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1166,
+          "parent_rows": 883991,
+          "parent_usable": 292716,
+          "parent_absent_crossmatch": 591234,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292753,
+          "shape_rows": 293982,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1229,
+          "parent_rows": 883991,
+          "parent_usable": 292715,
+          "parent_absent_crossmatch": 591238,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292689,
+          "shape_rows": 293864,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1175,
+          "parent_rows": 883991,
+          "parent_usable": 292652,
+          "parent_absent_crossmatch": 591302,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292660,
+          "shape_rows": 293883,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1223,
+          "parent_rows": 883991,
+          "parent_usable": 292618,
+          "parent_absent_crossmatch": 591331,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "gpu": "NVIDIA A40-16Q",
+      "draws": 64,
+      "factorial_replay_passed": true,
+      "seconds": 1029.5269361200044
+    },
+    {
+      "case": 1080,
+      "checkpoint": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+        "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+      },
+      "emulator": {
+        "root": "BLENDEMU_RUNS_DIR",
+        "path": "disk_response_moment_galsbi_20261103/model/model.json",
+        "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+        "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+        "backend": "disk_response_moment",
+        "composition": "mobius",
+        "response_coordinate": "disk_velocity",
+        "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+        "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+      },
+      "source_sha256": "aa849e65b355ca57b7f0361c17057df7cc0eb2dbe53dc92bec985a4552148b10",
+      "helper_sha256": "070100b4718c550ae3246988f699577462182e764673d3bd613d18c2e352e4f7",
+      "measured": [
+        {
+          "cross_rows": 292826,
+          "shape_rows": 294017,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1191,
+          "parent_rows": 884738,
+          "parent_usable": 292784,
+          "parent_absent_crossmatch": 591912,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292823,
+          "shape_rows": 294013,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1190,
+          "parent_rows": 884738,
+          "parent_usable": 292774,
+          "parent_absent_crossmatch": 591915,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292705,
+          "shape_rows": 293914,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1209,
+          "parent_rows": 884738,
+          "parent_usable": 292661,
+          "parent_absent_crossmatch": 592033,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292812,
+          "shape_rows": 294022,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1210,
+          "parent_rows": 884738,
+          "parent_usable": 292774,
+          "parent_absent_crossmatch": 591926,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "gpu": "Tesla V100-SXM2-32GB",
+      "draws": 64,
+      "factorial_replay_passed": true,
+      "seconds": 407.3829531780211
+    },
+    {
+      "case": 1120,
+      "checkpoint": {
+        "path": "/project/ls-gruen/users/zekang.zhang/sbsi_caches/alignment_regularized_20261106/nine_weak/final.pt",
+        "sha256": "888fb04402546518657386a097a33ba37639abc2745c99724f96643a2cf21e2e"
+      },
+      "emulator": {
+        "root": "BLENDEMU_RUNS_DIR",
+        "path": "disk_response_moment_galsbi_20261103/model/model.json",
+        "sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "metadata_path": "disk_response_moment_galsbi_20261103/model/metadata.json",
+        "metadata_sha256": "fda7277ecd54e2d3cfc7f196d7408c347e72c38e09945fad217447824cd0bf93",
+        "backend": "disk_response_moment",
+        "composition": "mobius",
+        "response_coordinate": "disk_velocity",
+        "recipe": "frozen trial9 xgboost, seed 20260816, 218 trees, moment objective; fit cases 40-199, development 0-39 (report only)",
+        "code": "BlendEMU branch galsbi-resim b4605fe, jobs/job_disk_response_galsbi.example.sh"
+      },
+      "source_sha256": "aa849e65b355ca57b7f0361c17057df7cc0eb2dbe53dc92bec985a4552148b10",
+      "helper_sha256": "070100b4718c550ae3246988f699577462182e764673d3bd613d18c2e352e4f7",
+      "measured": [
+        {
+          "cross_rows": 292888,
+          "shape_rows": 294450,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1562,
+          "parent_rows": 886209,
+          "parent_usable": 292847,
+          "parent_absent_crossmatch": 593321,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292896,
+          "shape_rows": 294478,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1582,
+          "parent_rows": 886209,
+          "parent_usable": 292863,
+          "parent_absent_crossmatch": 593313,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292918,
+          "shape_rows": 294515,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1597,
+          "parent_rows": 886209,
+          "parent_usable": 292882,
+          "parent_absent_crossmatch": 593291,
+          "usable_zero_shape_rows": 0
+        },
+        {
+          "cross_rows": 292864,
+          "shape_rows": 294488,
+          "cross_without_shape": 0,
+          "shape_without_cross": 1624,
+          "parent_rows": 886209,
+          "parent_usable": 292824,
+          "parent_absent_crossmatch": 593345,
+          "usable_zero_shape_rows": 0
+        }
+      ],
+      "gpu": "NVIDIA GeForce RTX 2080 Ti",
+      "draws": 64,
+      "factorial_replay_passed": true,
+      "seconds": 445.70940293802414
+    }
+  ],
+  "report_sha256": "1a3ea713b4c273d8b011c0d5897ff77377de73addb34321c78a9bcd6cd0ff64d",
+  "limitations": [
+    "Descriptive bin decomposition, not a unique causal attribution.",
+    "Within-bin contrasts can include differing intrinsic properties and neighbour environments.",
+    "Development scenes at fixed checkpoints; conditional SE excludes model-training uncertainty.",
+    "Rare endpoint cut-crossers retain their original weights and all bin support."
+  ]
+}

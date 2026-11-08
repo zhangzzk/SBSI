@@ -58,13 +58,17 @@ def _normalise_cuts(cuts: Sequence[Sequence[float]]) -> Tuple[Tuple[float, float
 class EmulatorPairingConfig:
     """Training-matched settings for one emulator's pair catalogue."""
 
-    cuts: Tuple[Tuple[float, float], ...]
+    cuts: Optional[Tuple[Tuple[float, float], ...]]
     r_max_arcsec: float
     k: int
     conditions: Mapping[str, float]
 
     def __post_init__(self):
-        object.__setattr__(self, "cuts", _normalise_cuts(self.cuts))
+        object.__setattr__(
+            self,
+            "cuts",
+            None if self.cuts is None else _normalise_cuts(self.cuts),
+        )
         object.__setattr__(self, "conditions", dict(self.conditions))
         if self.r_max_arcsec <= 0:
             raise ValueError("r_max_arcsec must be positive")
@@ -86,14 +90,21 @@ class EmulatorPairingConfig:
         cuts = settings.get("cuts")
         r_max = settings.get("r_max")
         k = settings.get("k")
-        missing = [name for name, value in (("cuts", cuts), ("r_max", r_max), ("k", k)) if value is None]
+        no_truth_cuts = settings.get("truth_analysis_cuts_applied") is False
+        missing = [
+            name
+            for name, value in (("r_max", r_max), ("k", k))
+            if value is None
+        ]
+        if cuts is None and not no_truth_cuts:
+            missing.append("cuts")
         if missing:
             raise ValueError(
                 "emulator metadata does not record training-matched "
                 f"{', '.join(missing)}; pass EmulatorPairingConfig explicitly"
             )
         return cls(
-            cuts=_normalise_cuts(cuts),
+            cuts=None if no_truth_cuts else _normalise_cuts(cuts),
             r_max_arcsec=float(r_max),
             k=int(k),
             conditions=emulator.conditions,
@@ -267,11 +278,10 @@ def make_pair_catalogue(
 
 def select_response_pairs(
     pairs: pd.DataFrame,
-    cuts: Sequence[Sequence[float]],
+    cuts: Optional[Sequence[Sequence[float]]],
 ) -> pd.DataFrame:
-    """Apply the emulator training cuts to an unscaled pair catalogue."""
+    """Apply emulator truth cuts, or preserve inherited parent support only."""
 
-    cuts = _normalise_cuts(cuts)
     required = {
         "r_input_s",
         "r_input_p",
@@ -282,6 +292,9 @@ def select_response_pairs(
     missing = sorted(required - set(pairs.columns))
     if missing:
         raise KeyError(f"pair catalogue is missing selection columns: {missing}")
+    if cuts is None:
+        return pairs.reset_index(drop=True)
+    cuts = _normalise_cuts(cuts)
     keep = (
         pairs["r_input_s"].between(*cuts[0], inclusive="neither")
         & pairs["r_input_p"].between(*cuts[1], inclusive="neither")

@@ -1,0 +1,20 @@
+{
+  "prepare": 17824947,
+  "prepare_state": "COMPLETED 0:0;40 cases andold/new sums replayed",
+  "pilot": 17824967,
+  "pilot_state": "COMPLETED 0:0;two full replay gates passed",
+  "workers": 17824973,
+  "worker_groups": 4,
+  "gpu_concurrency": 4,
+  "study_gpu_ceiling": 6,
+  "report": 17824974,
+  "report_dependency": "afterok:17824973:17824967",
+  "changed_leg_memberships": 6218,
+  "broad_array_still_held": 17788286,
+  "automated_followup": "disabled",
+  "workers_state": "COMPLETED 0:0;four packed workers",
+  "report_state": "COMPLETED 0:0;168 independent scalar checks passed",
+  "current_allocated_gpus": 0,
+  "current_allocated_cpus": 0,
+  "completed_case_axis_outputs": 80
+}

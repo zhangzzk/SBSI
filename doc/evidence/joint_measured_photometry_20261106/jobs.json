@@ -1,0 +1,24 @@
+{
+  "jobs": {
+    "initial_pilot_failed_support_assertion": "17807960",
+    "pilot": "17808000",
+    "pilot_gate": "17807964",
+    "four_remaining": "17807965",
+    "four_report": "17807971",
+    "full_remaining": "17807972",
+    "full_report": "17807973",
+    "release": "17807977",
+    "bounded_check": "17807978",
+    "neighbour_array": "17807394",
+    "neighbour_report": "17807399",
+    "older_broad_held": "17788286"
+  },
+  "combined_gpu_limit": 6,
+  "initial_neighbour_array_throttle": 4,
+  "current_neighbour_array_throttle": 3,
+  "initial_measured_input_throttle": 2,
+  "current_measured_input_throttle": 3,
+  "measured_input_throttle_after_neighbour_array_drains": 6,
+  "memory_per_worker_gb": 24,
+  "check_behavior": "One local status/report snapshot; no chat notification."
+}

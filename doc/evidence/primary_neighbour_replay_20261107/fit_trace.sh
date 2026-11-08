@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --partition=cluster
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=14G
+#SBATCH --time=00:30:00
+#SBATCH --job-name=primary_fittrace
+#SBATCH --output=/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/primary_neighbour_replay_20261107/logs/%x_%j.out
+set -eo pipefail
+source /home/z/Zekang.Zhang/blendemu/jobs/env_fs2_lsst_r.sh
+export LD_LIBRARY_PATH="${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH:-}" OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+export PYTHONPATH=/home/z/Zekang.Zhang/blendemu_galsbi_resim
+python -u /home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/primary_replay_fit_trace.py
+exec /project/ls-gruen/users/zekang.zhang/envs/py31/bin/python -I -u /home/z/Zekang.Zhang/SBSI/doc/evidence/primary_neighbour_replay_20261107/fit_trace_report.py

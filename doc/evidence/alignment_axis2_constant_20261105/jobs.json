@@ -1,0 +1,52 @@
+{
+  "prepare": "17772071",
+  "pilot_images": "17772072",
+  "remaining_images": "17774673",
+  "source_sha256": {
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/jobs/job_constant_axis2.sh": "a01e0d50572ffc0e4827c0cc287369b9d24ebd5af2dc74bf32345cc4f030562f",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/verify_constant_axis2.py": "a0be537baf64c95167cac851edd125e1cd8ea43523488b60d9cc1813daf6f2a8",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/prepare_constant_axis2.py": "575eac20249eea2398ab902d05497bae8bc4a6628a5f48bf272c57cc825c1bc8",
+    "doc/evidence/alignment_axis2_constant_20261105/run_report.sh": "ee71e831761d83131e8738c433619eb6e8a8b6682c978b62eb040c8f6e80672f",
+    "doc/evidence/alignment_axis2_constant_20261105/run.sh": "bc419c5893e02dae2d168c534f7fbb2694ead0b00783f05715a6e322656afef5",
+    "doc/evidence/alignment_axis2_constant_20261105/manifest.json": "1399b81d2935c85e2faeb7b5cb7ba7d90b3c3942138c22d15bc0d1feba57a1b0",
+    "doc/evidence/alignment_axis2_constant_20261105/verify.py": "8815def8dbdd76c6e37c6ab4d5239505d0377393d8f1684b9aef1bec56c62a81",
+    "doc/evidence/alignment_axis2_constant_20261105/run_c8.sh": "647d6843ec7b2c6ac63f30b30056efd0ade7bb7380c532e6dec364371c1fa986",
+    "doc/evidence/alignment_axis2_constant_20261105/evaluate.py": "3b966aa71d941813974d1e58a60719dd0da41cdbb98738f9054cde1e41bd2f7e",
+    "doc/evidence/alignment_axis2_constant_20261105/report.py": "c7b4bdc82721eb6505dd6067b08534469837fa98372afd7a078fe0a1eae95145",
+    "doc/evidence/alignment_axis2_constant_20261105/c8.py": "4054e7bfa3007e3458dc6701b4d38fbf18422b901bc94eaad1fc45762ecd8e26",
+    "doc/evidence/alignment_axis2_constant_20261105/rule.md": "dff1b7131befaa118b0d95b643230b9fb8e88af30f7f3b9cc944f968619a79db",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/jobs/job_constant_axis2_packed.sh": "6a4ac932e1c40fb27c724619dee8a67e376f8e2de3c06693b16b82f307600b29"
+  },
+  "c8": "17772094",
+  "verify": "17772095",
+  "evaluate": "17772096",
+  "report": "17772097",
+  "check": "17772183",
+  "resources": "17772184",
+  "runtime_audit": "17774601",
+  "cpu_concurrency_amendment": {
+    "utc": "2026-11-05T23:54:31.378124+00:00",
+    "job": "17772073",
+    "old_throttle": 8,
+    "new_throttle": 40,
+    "pilot_dependency": "unchanged afterok:17772072",
+    "basis": "Historical campaign used280 constant workers and up to500 including training; eight was an agent-imposed conservative cap. Cluster permits50 jobs/user,3500CPUs,20000G memory. No science changes."
+  },
+  "superseded_remaining_images": "17772073",
+  "packed_launcher_smoke": "17774672",
+  "packed_launcher_failed_smoke": "17774658",
+  "cpu_packing_amendment": {
+    "utc": "2026-11-05T23:59:55.213234+00:00",
+    "owner_cpu_ceiling": 500,
+    "array_groups": 9,
+    "workers_per_group": 8,
+    "maximum_image_workers": 72,
+    "pilot_dependency": "afterok:17772072",
+    "superseded_array": "17772073 cancelled before starting",
+    "evaluation_dependency": "afterok:17774673:17772054",
+    "mapping": "leg_task = 8 + 8*group + slot; group0..8,slot0..7",
+    "validation": "bash -n, exact72-task mapping, eight MPI singleton checks all passed; source activation requires no shell nounset"
+  },
+  "nested_selection_failed": "17785969",
+  "nested_selection": "17785999"
+}

@@ -1,0 +1,7 @@
+{
+  "independent_banks_unbiased": true,
+  "reused_bank_variance_bias_detected": true,
+  "conditional_cancellation_detected": true,
+  "expected_gradient_exact": true,
+  "row_shape_mismatch_rejected": true
+}

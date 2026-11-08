@@ -1,0 +1,112 @@
+{
+  "cases": [
+    4,
+    96,
+    145,
+    81,
+    62,
+    120,
+    151,
+    131,
+    21,
+    66,
+    22,
+    130,
+    10,
+    68,
+    98,
+    183,
+    91,
+    115,
+    154,
+    110,
+    51,
+    78,
+    23,
+    137,
+    33,
+    141,
+    138,
+    25,
+    13,
+    99,
+    41,
+    185,
+    38,
+    129,
+    180,
+    75,
+    113,
+    114,
+    69,
+    84
+  ],
+  "pairs": 5817708,
+  "draws": 16,
+  "definition": "half-trace forward influence response; data baseline mass/mean shared by model and simulation",
+  "bootstrap": "10000 whole-case paired resamples, seed20260925; mass, mean and shear normal recomputed",
+  "cuts": {
+    "soft": {
+      "simulation": {
+        "value": 0.7222342836933328,
+        "se": 0.0024759550902648726
+      },
+      "model_generated_selection": {
+        "value": 0.7165354477185685,
+        "se": 0.00044269236250065277
+      },
+      "model_true_selection": {
+        "value": 0.6947616315519045,
+        "se": 0.0004073697131705738
+      },
+      "error_generated_selection": {
+        "value": 0.0056988359747642825,
+        "se": 0.0024860601839065844
+      },
+      "error_true_selection": {
+        "value": 0.027472652141428244,
+        "se": 0.0025101890786633865
+      },
+      "m_true_selection_percent": {
+        "value": 3.954255804262252,
+        "se": 0.3617114688907322
+      },
+      "change_in_error_true_minus_generated": {
+        "value": 0.021773816166663962,
+        "se": 0.00013618062613370745
+      }
+    },
+    "hard": {
+      "simulation": {
+        "value": 0.7277161635668162,
+        "se": 0.0027350803995284316
+      },
+      "model_generated_selection": {
+        "value": 0.7197287891907291,
+        "se": 0.0004679026516893138
+      },
+      "model_true_selection": {
+        "value": 0.6980530071159544,
+        "se": 0.0005511476691251833
+      },
+      "error_generated_selection": {
+        "value": 0.007987374376087097,
+        "se": 0.002743721952996917
+      },
+      "error_true_selection": {
+        "value": 0.029663156450861816,
+        "se": 0.002779413268432701
+      },
+      "m_true_selection_percent": {
+        "value": 4.2494131747124575,
+        "se": 0.39879617249206145
+      },
+      "change_in_error_true_minus_generated": {
+        "value": 0.02167578207477472,
+        "se": 0.0003425965226038667
+      }
+    }
+  },
+  "replay": "Original soft-cut simulation and model point values agree within2e-10.",
+  "seconds": 201.46360802202253
+}

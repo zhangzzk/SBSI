@@ -1,0 +1,39 @@
+{
+  "status": "design_only_no_image_jobs",
+  "source_cases": [
+    1000,
+    1040,
+    1080,
+    1120
+  ],
+  "proposed_primaries_per_case": 512,
+  "proposed_shear_corners": [
+    [
+      0.02,
+      0.02
+    ],
+    [
+      0.02,
+      -0.02
+    ],
+    [
+      -0.02,
+      0.02
+    ],
+    [
+      -0.02,
+      -0.02
+    ]
+  ],
+  "files": {
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/prepare_constant_split.py": "b3a370c5096228983cc81a7e44692987e7054d097f18c7a471ab35b9caca1bb5",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/run_sim.py": "c051a74b42e467ba365fc3027023685823505c178a4e1170ff1631bcfbdfa4e2",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/scripts/run_shape.py": "60960a7b9302ee7c9008de226a201b06a3d11351b13dc4b5773e7d73c42d9e4b",
+    "/home/z/Zekang.Zhang/blendemu_galsbi_resim/blendemu/shape.py": "b35d60306aaeed9948846122fad4001a68b92db7f346b42f5a83473ff2915969",
+    "/home/z/Zekang.Zhang/MultiBand_ImSim_galsbi_resim/modules/ImSimObject.py": "09418280db01824ca0066458d5373fb59e8425974ee331a5aba9e9c0d2945428",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/sim_config_case1000_0.02.ini": "60d0013f869b00c5bf3cb2b0bdcd2e9b7d8ee3ea12559b5f61a50f4d4558f88a",
+    "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_g002/sims/noise.csv": "72ef5f40b9fd968946015407907ecb5da495ca34de3148820af010561320c417"
+  },
+  "source_scene_manifest": "/project/ls-gruen/users/zekang.zhang/sbsi/galsbi_resim/constant_split_20261105/manifest.json",
+  "note": "Reuse original catalogue/noise/renderer settings; no implied permission or launch of a large campaign."
+}

@@ -1,0 +1,102 @@
+{
+  "time": "2026-11-08T02:49:43.976171",
+  "pilot": {
+    "manifest_sha256": "2ecfcc0b771ee69d7136c93498282d80c3e1061847bbf6fd7026af12b3a592b3",
+    "records": [
+      {
+        "case": 1000,
+        "axis": 1,
+        "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+        "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+        "data_sha256": "b8e2d67808ab32a2d29ae94408e324962d088793d9871a1020f56d1469116732",
+        "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+        "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+        "flags_sha256": "904da8f40e47d8fd3b998e14ef977bd7295a513bfdbc04a4f01aa1c6c79ce90e",
+        "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+        "pool_max_abs": 6.661338147750939e-16,
+        "half_bank_identity_passed": true,
+        "legacy_replay": {
+          "legacy_response_max_abs": 4.440892098500626e-16,
+          "legacy_count_max_abs": 1.7462298274040222e-10,
+          "portable_minus_legacy_response_terms": [
+            [
+              -0.00045521929487724044,
+              -0.00021826001883749793,
+              0.00011393588431213297,
+              0.00017449782834620046
+            ]
+          ]
+        },
+        "parent_count": 883944,
+        "pair_count": 16024507,
+        "gpu": "NVIDIA A40-8Q",
+        "seconds": 520.9222232970642
+      },
+      {
+        "case": 1000,
+        "axis": 2,
+        "checkpoint_sha256": "d3c671a23e2104b345f8215afe2fa31c24b0aa7ae2f367db21264c38ffa044cd",
+        "emulator_sha256": "cd32781db7edd2cab576a2ef7478d722df2984788bc83a7fe12caa6adf19fb43",
+        "classifier_sha256": "ad5c05d2dcd9af9d711b18b532cd681ac5de6df6350bab288cdec94a3019a3c6",
+        "data_sha256": "14aaecb44a81b187a818448edd13c200f664ce063ccbaacbc8006ea35a8618dd",
+        "source_sha256": "5ee70aa506d6581b918c64392b15a08b3d23bb90281392325fb787901637c0d5",
+        "parent_sha256": "407959a399711437b3c772d1e5667f46f632767fe020118a6e9029bce0a270e0",
+        "flags_sha256": "18360de2a5acb5f8f856e3688e8945bb8390955e8a272aec9e4a6880a7a057b5",
+        "measurement_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+        "pool_max_abs": 6.661338147750939e-16,
+        "half_bank_identity_passed": true,
+        "legacy_replay": null,
+        "parent_count": 883944,
+        "pair_count": 16024507,
+        "gpu": "NVIDIA A40-8Q",
+        "seconds": 248.45433199498802
+      }
+    ]
+  },
+  "six_worker_startup_logs": {
+    "worker_17825577_0.log": [
+      "POOL_REPLAY_PASSED 1040 1 2.220446049250313e-16",
+      "PROGRESS 1040 1 0 14.8",
+      "PROGRESS 1040 1 100 41.3",
+      "PROGRESS 1040 1 200 67.8",
+      "PROGRESS 1040 1 300 94.3"
+    ],
+    "worker_17825577_1.log": [
+      "POOL_REPLAY_PASSED 1040 2 4.440892098500626e-16",
+      "PROGRESS 1040 2 0 14.6",
+      "PROGRESS 1040 2 100 41.9",
+      "PROGRESS 1040 2 200 69.1",
+      "PROGRESS 1040 2 300 96.1"
+    ],
+    "worker_17825577_2.log": [
+      "READY 1080 1 parents 884738 pairs 16041398 legacy_replay False",
+      "POOL_REPLAY_PASSED 1080 1 4.440892098500626e-16",
+      "PROGRESS 1080 1 0 19.4",
+      "PROGRESS 1080 1 100 50.8",
+      "PROGRESS 1080 1 200 82.6"
+    ],
+    "worker_17825578_3.log": [
+      "MODELS_READY Quadro P5000",
+      "READY 1080 2 parents 884738 pairs 16041398 legacy_replay False",
+      "POOL_REPLAY_PASSED 1080 2 6.661338147750939e-16",
+      "PROGRESS 1080 2 0 28.2",
+      "PROGRESS 1080 2 100 85.4"
+    ],
+    "worker_17825578_4.log": [
+      "MODELS_READY Quadro P5000",
+      "READY 1120 1 parents 886209 pairs 16077746 legacy_replay False",
+      "POOL_REPLAY_PASSED 1120 1 2.220446049250313e-16",
+      "PROGRESS 1120 1 0 28.4",
+      "PROGRESS 1120 1 100 84.7"
+    ],
+    "worker_17825578_5.log": [
+      "MODELS_READY Tesla V100-SXM2-32GB",
+      "READY 1120 2 parents 886209 pairs 16077746 legacy_replay False",
+      "POOL_REPLAY_PASSED 1120 2 4.440892098500626e-16",
+      "PROGRESS 1120 2 0 32.6",
+      "PROGRESS 1120 2 100 80.5"
+    ]
+  },
+  "queue": "               JOBID     STATE       TIME NODELIST(REASON)\n          17825577_0   RUNNING       2:10 cip-cl-h01g03n1\n          17825577_1   RUNNING       2:10 cip-cl-h01g04n3\n          17825577_2   RUNNING       2:10 cip-cl-h01g03n3\n            17825579   PENDING       0:00 (Dependency)\n          17825578_3   RUNNING       2:10 met-cl-vis02\n          17825578_4   RUNNING       2:10 met-cl-vis02\n          17825578_5   RUNNING       2:10 th-cl-nv02\n"
+}

@@ -1,0 +1,21 @@
+{
+  "fit_replay": 17821683,
+  "orientation_ring": 17821716,
+  "catalogue_localization": 17821702,
+  "cpus_total": 8,
+  "gpus": 0,
+  "broad_array_still_held": 17788286,
+  "fit_replay_state": "COMPLETED 0:0",
+  "orientation_ring_state": "COMPLETED 0:0",
+  "catalogue_localization_state": "COMPLETED 0:0",
+  "continuation": 17821777,
+  "continuation_initial_failed": [
+    17821736,
+    17821743,
+    17821766
+  ],
+  "continuation_cancelled_pending": 17821749,
+  "multistart": 17821808,
+  "continuation_state": "COMPLETED 0:0",
+  "multistart_state": "COMPLETED 0:0"
+}

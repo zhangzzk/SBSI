@@ -1,0 +1,7 @@
+{
+  "six_partition_conservation_passed": true,
+  "max_sum_roundoff": 3.7107383832335472e-09,
+  "data_sha256": "42280721ac1ca9071c8ca8c1eae61aa02669b1ab20ff44094573ad00051af2ab",
+  "cross_without_shape": 0,
+  "shape_without_cross": 228683
+}

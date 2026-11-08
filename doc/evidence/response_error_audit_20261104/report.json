@@ -1,0 +1,47 @@
+{
+  "job_id": "17730387",
+  "random_split_null": {
+    "replicates": 20000,
+    "seed": 2026110407,
+    "observed_difference": 0.006990764901678936,
+    "null_sd": 0.0028413338927230883,
+    "two_sided_p": 0.014449277536123194
+  },
+  "simulation": {
+    "train": {
+      "bootstrap_se": 0.0012779867742956964,
+      "jackknife_se": 0.0012690760754301127,
+      "max_leave_one_out_shift": 0.0002896928539573018,
+      "largest_case_variance_share": 0.051781722722022104
+    },
+    "validation": {
+      "bootstrap_se": 0.0024365465030380695,
+      "jackknife_se": 0.002478733676286099,
+      "max_leave_one_out_shift": 0.0010328984332401703,
+      "largest_case_variance_share": 0.16930430511517167
+    }
+  },
+  "fixed_model_validation": {
+    "m_percent": 0.8748066800226661,
+    "bootstrap_se_pp": 0.3471538444012788,
+    "jackknife_se_pp": 0.34701184052587547,
+    "max_leave_one_out_shift_pp": 0.13239915844904804,
+    "largest_case_variance_share": 0.141936794841206,
+    "bootstrap_ci95_pp": [
+      0.18661935646032357,
+      1.5454782519940269
+    ],
+    "method": "resample saved per-case simulation and model sums together; model, baseline mean and shear design fixed as in original report"
+  },
+  "scene_seed_audit": {
+    "cases": 200,
+    "unique_scene_seeds": 200,
+    "seed_pattern_matches_case": true
+  },
+  "limitations": [
+    "Conditional on the fixed simulation population prescription.",
+    "Model error calculation does not repeat training or model selection.",
+    "Random split test assumes exchangeable cases and tests raw measured responses, not model residuals.",
+    "Bootstrap and jackknife reuse the same observed cases; agreement does not prove coverage for unseen tails or unrecorded common errors."
+  ]
+}

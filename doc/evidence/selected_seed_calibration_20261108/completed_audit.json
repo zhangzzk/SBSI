@@ -1,0 +1,7 @@
+{
+  "independent_scalar_point_and_jackknife_checks": 126,
+  "cases": 40,
+  "cuts": 9,
+  "case_sums_sha256": "824319a9f6ff690d1d78ff834b4c1321586d56e495472d3f398004cc34443056",
+  "report_sha256": "ad3aa7346011af1c705ca98886a1753656e5204b914904174744ffba86ebe57e"
+}
