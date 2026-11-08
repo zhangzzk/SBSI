@@ -1,5 +1,44 @@
 # Work log
 
+## 2026-11-08 — Model band as the sampler magnitude coordinate (owner-approved)
+
+Change (aaa48bc, doc 978ce77): `GalSBITargetCoordinates` uses `m_model` as its
+magnitude coordinate when a model band is hooked into the prior photometry
+(SceneMarks, i.e. models declaring `scene_inputs`). Otherwise it keeps `m_r`.
+`run_galsbi_inference.py` writes the coordinate names to `protocol.json` and
+refuses to run if the constructed coordinates differ. The native V3.x behaviour
+is unchanged.
+
+Validation:
+- `tests/test_galsbi_target_coordinates.py`: a new test uses a stand-in band
+  with its own z/SED colour. It checks the round trip and the finite-difference
+  Jacobian (1e-8), and that a z/SED move keeps `m_model` while `m_r` changes.
+- `scripts/check_galsbi_scene_marks.py` now also checks the real LSST-i band
+  on scenes 1000/1077 (about 885k rows each). The band shifts one-for-one with
+  M_B (max error 1.7e-14), and the coordinate round trip holds to 3.2e-14 (M_B)
+  and 2.8e-14 (band). all_pass. Job 17846892 ran this and the full suite:
+  389 passed, 1 skipped.
+- A/B in `$DATA_DIR/sbsi/catalogue_prior/galsbi_magcoord_ab_20261108`
+  (job 17846891, 1 GPU, 38 min): 12 pilot c1 units, the first 3 bright and
+  3 faint per leg (1080 galaxies), same reference and recipe.
+
+| R-hat >= 1.1 | m_r coordinate (pilot) | m_model coordinate |
+|---|---|---|
+| log z, all | 69.8% ±1.4% | 8.0% ±0.8% |
+| log z, mag<21 (48) | 94% | 42% |
+| log z, 23-24 (323) | 95% | 10% |
+| shear ratio g1, all | 5.6% | 1.5% |
+
+Median log-z ESS rose from 9-32 to 77-510. The old-model 100k run had 9.5%.
+Mixing of the remaining parameters (m, e, Re, crowding) is unchanged within
+noise; bright m/Re/e mixing stays poor, as in all earlier runs. The ± values
+are binomial.
+
+Limitations: no shear estimate has been made with the new coordinate yet. The
+pilot result (m1 -3.2% ±5.2%) was made with the old coordinate.
+Next: rerun the pilot or a larger subset with the new coordinate, using larger
+units.
+
 ## 2026-11-08 — GalSBI image pilot result (infer-1.0-galsbi, like-1.0-galsbi)
 
 Run: `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_pilot_20261108`
