@@ -120,6 +120,14 @@ galaxies (`scripts/check_galsbi_scene_marks.py`). The manifests also pin
 conditions differ, for example FS2 0.73/2.224/0.312. The V3.x presets declare
 neither and keep the native behaviour.
 
+For these models the sampler's magnitude coordinate is the model band (`m_model`)
+instead of `m_r` (`sbsi/galsbi/coordinates.py`, from aaa48bc). Redshift and SED
+moves then keep the magnitude the model sees fixed. Both bands equal M_B plus a
+function of (z, SED), so the Jacobian is unchanged. `protocol.json` records the
+choice in `target_coordinates`. The 2026-11-08 image pilot still used `m_r`
+with the LSST-i model input. Redshift mixing collapsed there: 69% of galaxies
+had R-hat(log z) >= 1.1, versus 9.5% before (`doc/WORKLOG.md`).
+
 Measured image catalogues become paired inference references with
 `scripts/prepare_galsbi_image_reference.py`. It draws one shared random subset
 of input identities for both legs, independently of measurement. Each leg then
