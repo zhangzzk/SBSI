@@ -1,5 +1,38 @@
 # Work log
 
+## 2026-11-09 (night) — GalSBI image run, 100k galaxies per leg: paired result
+
+Run `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_200k_20261109` (code 75cc2e5, infer-1.0-galsbi with
+like-1.0-galsbi, constant_g002 cases 1000-1139, both legs). c2: 402 units, 0 failed; last worker ended 18:41;
+finish job 17853257 completed in 27.7 min (`paired_estimate.json`, `c2/estimate_{plus,minus}.json`).
+
+Result (errors are total: statistical + chains + selection; σ = value / error):
+
+| | value | σ |
+|---|---|---|
+| m1 | -1.72% ± 1.64% | -1.1 |
+| c1 | +0.00105 ± 0.00108 | +1.0 |
+| c2 | +0.00091 ± 0.00109 | +0.8 |
+| g1→g2 cross response | +0.0297 ± 0.0148 | +2.0 |
+
+- Per leg: plus g = (+0.02070 ± 0.00115, +0.00150 ± 0.00115), minus g = (-0.01861 ± 0.00114,
+  +0.00031 ± 0.00114); case bootstrap agrees with the galaxy bootstrap (g1 0.00111/0.00111).
+- Selected galaxies: 98,870 on both legs; unmatched rows dropped and reported: 2,018 plus-only, 2,070 minus-only.
+- Against the expectation (m1 ≈ -0.1% ± 0.9% from earlier evidence, plus ±1.6% statistical): difference
+  -1.6% ± 1.9% (-0.9σ). Against the 10k rerun (m1 -3.54% ± 5.09%): consistent (+1.8% ± 5.4%, 0.3σ; the
+  two share simulation cases, so the comparison is not independent).
+- c2 shows no sign of the mirror-asymmetry excess seen with the V3.9-like models on FS2 images
+  (+0.0041 ± 0.0013 there); at this size |c2| < 0.0031 (2σ). like-1.0-galsbi's own mirror test is still not run.
+- The cross response is at 2.0σ; not followed up yet.
+- Chain mixing (`R-hat log Z >= 1.1`, stuck.py job 17865404): c1 7.9% of 201,828 galaxies; by measured
+  magnitude <21 42%, 21-23 5%, 23-24 10%, 24-25.1 5%. For the g1 ratio (the shear input) <21 13%, 21-23 2%,
+  23-24 4%, 24-25.1 0%. c2 (8,021 bright galaxies): log Z 42%, g1 ratio 0%. The bright fraction matches the
+  known bright blend-mode mixing problem (2026-10-19); its effect on m1 is not bounded here.
+- Wall time: launched 01:00, c1 ~12 h on 6 GPUs, c2 ~4 h on 5 GPUs, result 19:09.
+
+Limitations: development images with known shear, not independent acceptance; legs share the noise field per
+case (included in the paired errors); chain errors are a floor with no finite-chain bias bound.
+
 ## 2026-11-09 (evening) — Where a sampler step's time goes (profile, no code change)
 
 Owner: "look deeply into the pipeline and see if we can improve the computation efficiency and speed by a lot".
