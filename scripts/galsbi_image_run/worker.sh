@@ -1,12 +1,13 @@
 #!/bin/bash
 #SBATCH -p inter
 #SBATCH --gres=gpu:1
-#SBATCH -c 32
-#SBATCH --mem 200G
+#SBATCH -c 64
+#SBATCH --mem 128G
 #SBATCH --time 24:00:00
 #SBATCH --constraint=x86-64-v3
 #SBATCH --exclude=met-cl-vis01,met-cl-vis02
-# rule.md: one GPU, (cores-2) one-core sampler slots with MPS, walking <stage>/units.txt
+# rule.md: one GPU, min(slots_per_worker, cpus-2, 48) one-core sampler slots with MPS (sbatch -c/--mem come
+# from rule.json via launch.sh / pipeline.sh; the header values are fallbacks), walking <stage>/units.txt
 # ('label leg file first last g1 g2') and claiming units with mkdir in <stage>/claims/<label>.
 # bright* units run the tempered recipe, faint units the plain recipe (sampler defaults: 20480 steps,
 # 8192 warm-up, stride 16, likelihood-drawn starts). Unit on line j: seed base+j, bank base+j.
@@ -68,8 +69,19 @@ slot() {
     done < $R/units.txt
 }
 
-cores=($($PY -c 'import os;print(*sorted(os.sched_getaffinity(0)))'))
+# Slot CPUs: one hyperthread of every physical core first, then their sibling threads, so slots share a
+# physical core only when there are more slots than cores (speed test 2026-11-09).
+cores=($($PY -I -c '
+import os
+cpus = sorted(os.sched_getaffinity(0)); first, second, seen = [], [], set()
+for c in cpus:
+    sib = open(f"/sys/devices/system/cpu/cpu{c}/topology/thread_siblings_list").read().strip()
+    (second if sib in seen else first).append(c); seen.add(sib)
+print(*first, *second)'))
+want=$($PY -I -c 'import json,sys;print(json.load(open(sys.argv[1]))["resources"]["slots_per_worker"])' $H/rule.json)
 slots=$(( ${#cores[@]} - 2 ))
+[ $slots -gt $want ] && slots=$want
+[ $slots -gt 48 ] && slots=48  # CUDA MPS client limit per GPU
 echo "START $(date +%s) slots=$slots stage=$stage"
 pids=()
 for ((s=0; s<slots; s++)); do

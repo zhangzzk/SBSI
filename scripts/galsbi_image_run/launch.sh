@@ -5,7 +5,11 @@
 #      fields: study, model, inference, sims_root, cases (contiguous), identity_fraction, identity_seed,
 #      bootstrap_seed, cuts, magnitude_coordinate, seeds {c1, c2: [sampler base, bank base], selection_base},
 #      unit_size_caps {bright, faint, bright21}, job_prefix, resources {c1_workers, c2_workers,
-#      selection_gpus, gpu_ceiling, cpu_ceiling, note};
+#      cpus_per_worker, mem_per_worker, slots_per_worker (<= 48, the MPS limit), selection_gpus,
+#      gpu_ceiling, cpu_ceiling, note}; workers x cpus_per_worker (+ 8 per selection GPU) <= cpu_ceiling;
+#      recommended (layout test 2026-11-09, A40): cpus_per_worker 64, slots_per_worker 48, mem_per_worker
+#      128G -> 48 slots on 32 physical cores + 16 hyperthreads, 1.9-2.0x the old 30-slot -c 32 layout per
+#      GPU (peak 78 GB); 6 x 64 + 2 x 8 = 400 CPUs. Pin a commit >= 0fd1038 for the exact sampler speed-ups;
 #   2. write R/normalization/plan.json (selection replicas, selection_seed_base = seeds.selection_base);
 #   3. git archive the pinned commit into R/source_snapshot with SHA256SUMS and COMMIT;
 #   4. cp scripts/galsbi_image_run/{study.py,worker.sh,pipeline.sh,launch.sh} R/ and
@@ -22,6 +26,7 @@ for k in sys.argv[2:]: v = v[k]
 print(*v) if isinstance(v, list) else print(v)' rule.json "$@"; }
 SB=/opt/slurm/bin/sbatch
 prefix=$(rj job_prefix) n=$(rj resources c1_workers) g=$(rj resources selection_gpus)
+size=(-c $(rj resources cpus_per_worker) --mem $(rj resources mem_per_worker))
 replicas=$(python3 -I -c 'import json;print(json.load(open("normalization/plan.json"))["selection_replicas"])')
 ref=$($SB --parsable -J $prefix-reference -o logs/reference_%j.out pipeline.sh reference)
 after=(--dependency=afterok:$ref --kill-on-invalid-dep=yes)
@@ -32,7 +37,7 @@ workers=()
 for ((w=0; w<n; w++)); do
     dep=afterok:$ref
     [ $w -ge $((n-g)) ] && dep=afterok:$ref,afterany:$sel  # GPU ceiling: these start after the selection
-    workers+=($($SB --parsable --dependency=$dep --kill-on-invalid-dep=yes -J $prefix-c1 -o logs/c1_%j.out \
+    workers+=($($SB --parsable "${size[@]}" --dependency=$dep --kill-on-invalid-dep=yes -J $prefix-c1 -o logs/c1_%j.out \
                 worker.sh c1 $(rj seeds c1)))
 done
 deps=$(IFS=:; echo "${workers[*]}")

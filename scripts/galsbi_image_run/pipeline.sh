@@ -78,7 +78,8 @@ PY
     ids=()
     prefix=$(rj job_prefix)
     for ((w=0; w<$(rj resources c2_workers); w++)); do
-      ids+=($(sbatch --parsable -J $prefix-c2 -o "$H/logs/c2_%j.out" "$H/worker.sh" c2 $(rj seeds c2)))
+      ids+=($(sbatch --parsable -c $(rj resources cpus_per_worker) --mem $(rj resources mem_per_worker) \
+              -J $prefix-c2 -o "$H/logs/c2_%j.out" "$H/worker.sh" c2 $(rj seeds c2)))
     done
     deps=$(IFS=:; echo "${ids[*]}")
     finish=$(sbatch --parsable --dependency="afterany:$deps" -J $prefix-finish -o "$H/logs/finish_%j.out" "$H/pipeline.sh" finish)

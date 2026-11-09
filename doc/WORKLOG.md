@@ -1,5 +1,57 @@
 # Work log
 
+## 2026-11-09 (night) — Exact sampler speed-ups and more CPUs per GPU worker
+
+Owner: "go, we can use even more CPUs per GPU if possible" (after the step profile below).
+
+Code (57f8666, 0fd1038), all exact (same random stream, row-wise results):
+- neighbour Sersic n: uniforms are drawn as before, the truncated betaprime inversion runs only when b needs
+  it (`GalSBIScenePrior(defer_neighbour_sersic=True)`, `fill_neighbour_sersic`; `log_kernel` fills first);
+- `fill_b` only at stored steps and before the post-warm-up replay audit; `final_scenes.npz` filled as before;
+- `log_intensity(photometry=...)` reuses the decoded photometry in `log_mixture_prior`;
+- xgboost `inplace_predict` dropped (needs cupy on GPU);
+- 0fd1038: the Sersic fill is a no-op for eager scenes (two scene-prior tests use a stand-in galaxy prior).
+- Checks: `scripts/check_galsbi_exact_speedups.py` (login node, 10,645 galaxies: no failures); test suite
+  (all scene-prior tests pass after 0fd1038; the rest passed before).
+
+Identity, old (200k snapshot 75cc2e5) vs new, same units and seeds, every output array compared bitwise
+(`$DATA_DIR/sbsi/speed_test_20261109/`):
+- CPU smoke 17857594 (faint g=0, tempered c2 at shear): 0 differences;
+- cip A40-16Q, 17857866, and full A40 (kng-cl-nv01), 17858817: bright20 tempered 7500 steps (178,546 values),
+  faint200 7500 steps (1,638,262), c2-style bright21x10 at (0.02071, 0.00140) 2560 steps (39,998):
+  0 differences on both GPUs.
+
+Speed (1280 steps / 512 warm-up, plus-leg c1 galaxies, bright 160 or faint 550 per slot, MPS; throughput =
+galaxy-steps per second per GPU; ± from slot-to-slot scatter of one run per arm):
+- cip A40-16Q, 10 one-core slots: bright 1.44 ± 0.01x (123 -> 86 ms/step), faint 1.47 ± 0.01x (73 -> 49).
+- Full A40, 17858817, `-c 64` (32 cores + hyperthreads), relative to old code at the production layout
+  (30 slots on 16 cores + hyperthreads):
+
+  | layout | bright | faint | GPU busy (b/f) |
+  |---|---|---|---|
+  | new, 30 on 16 cores + HT | 1.31 ± 0.04 | 1.38 ± 0.04 | 67% / 58% |
+  | new, 48 on 24 cores + HT | 1.80 ± 0.04 | 1.97 ± 0.05 | 77% / 72% |
+  | new, 32 on 32 cores | 1.75 ± 0.03 | 1.93 ± 0.05 | 74% / 66% |
+  | new, 48 on 32 cores + 16 HT | 1.92 ± 0.04 | 2.04 ± 0.05 | 76% / 72% |
+
+  0 failed runs. Peak memory 78 GB (48 slots). Setup per process grows from ~65/160 s to ~95/250 s
+  (bright/faint) at 48 slots, ~2% of a full 20480-step unit. -c 96 (48 physical cores) was not tested: 6 x 96
+  exceeds the 500-CPU cap, and no inter node had 96 free CPUs with a GPU.
+
+Template (`scripts/galsbi_image_run/`):
+- `rule.json` resources gain `cpus_per_worker`, `mem_per_worker`, `slots_per_worker`; launch.sh / pipeline.sh
+  pass `-c`/`--mem` to every c1/c2 worker; slots = min(slots_per_worker, cpus - 2, 48 MPS clients);
+  `study.py` sizes units with the same rule.
+- `worker.sh` puts one thread per physical core first, then sibling hyperthreads.
+- Recommended (launch.sh header, worker.sh fallback): 64 CPUs, 48 slots, 128G; 6 x 64 + 2 x 8 = 400 CPUs.
+- Dry run on the 200k reference with these values: 286 + 286 c1 units and 278 c2 units for 288 slots, every
+  galaxy in exactly one unit, workers submitted with `-c 64 --mem 128G`.
+- Ops: the GPU test was split (cip part first, inter test held then resized from -c 96 to -c 64) to stay at
+  six GPUs while the 200k c2 stage ran.
+
+Limitations: speeds measured on A40 only (th V100 nodes not tested; they have 96 CPUs per 4 GPUs, so only one
+64-CPU worker fits beside other jobs); short chains, one run per arm. Next: pin >= 0fd1038 for the next run.
+
 ## 2026-11-09 (night) — GalSBI image run, 100k galaxies per leg: paired result
 
 Run `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_200k_20261109` (code 75cc2e5, infer-1.0-galsbi with

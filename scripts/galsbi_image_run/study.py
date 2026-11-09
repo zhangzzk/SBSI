@@ -33,7 +33,12 @@ LEGS = ('plus', 'minus')
 D = .002
 NODES = [[0., 0.], [-D, 0.], [D, 0.], [0., -D], [0., D]]
 BANDS = (('<21', -np.inf, 21), ('21-23', 21, 23), ('23-24', 23, 24), ('24-25', 24, 25))
-SLOTS = 30  # sampler slots per worker (worker.sh: 32 cores - 2)
+MPS_CLIENTS = 48  # CUDA MPS limit of client processes per GPU (Volta and newer)
+
+
+def worker_slots(resources):
+    """Sampler slots per GPU worker, as worker.sh computes them: min(slots_per_worker, cpus - 2, 48)."""
+    return min(resources['slots_per_worker'], resources['cpus_per_worker']-2, MPS_CLIENTS)
 rule = json.loads((H/'rule.json').read_text())
 lm = lambda x: logsumexp(x)-np.log(x.size)
 two = lambda x: np.column_stack((x[:, 1]-x[:, 0], x[:, 3]-x[:, 2]))/(2*D)
@@ -55,7 +60,7 @@ def write_units(stage):
     out.mkdir(exist_ok=True)
     if (out/'units.txt').exists():
         raise SystemExit(f'{stage}/units.txt exists')
-    slots = SLOTS*rule['resources'][f'{stage}_workers']
+    slots = worker_slots(rule['resources'])*rule['resources'][f'{stage}_workers']
     lines = []
     for kind in (('bright', 'faint') if stage == 'c1' else ('bright21',)):
         legs = {}
