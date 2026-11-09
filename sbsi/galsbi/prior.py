@@ -160,8 +160,13 @@ class GalSBIContinuousPrior:
         a = total*mode-2*mode+1
         return a, total-a
 
-    def log_intensity(self, data, *, return_factors=False):
-        """Evaluate arbitrary native latent galaxies, returning -inf off support."""
+    def log_intensity(self, data, *, return_factors=False, photometry=None):
+        """Evaluate arbitrary native latent galaxies, returning -inf off support.
+
+        photometry: optional row-aligned 'm_i' and 'M_i' already computed by self.photometry from these
+        rows' z, M_B and c (e.g. by GalSBITargetCoordinates.decode); the tables are elementwise, so the
+        subset is bitwise what a recomputation would give and the call is skipped.
+        """
         keys = ('type', 'z', 'M_B', 'R_kpc', 'n', 'a', 'psi')
         d = {k: np.atleast_1d(np.asarray(data[k])) for k in keys}
         nrow = len(d['z'])
@@ -185,8 +190,9 @@ class GalSBIContinuousPrior:
             if not len(use):
                 continue
             z, M, c = d['z'][use], d['M_B'][use], d['c'][use]
-            photo = self.photometry(z, M, c)
-            inside = ((M <= np.minimum(self.magnitude_cap(z), p['lum_fct_m_max']))
+            photo = (self.photometry(z, M, c) if photometry is None else
+                     {k: np.asarray(photometry[k]).reshape(nrow)[use] for k in ('m_i', 'M_i')})
+            inside =((M <= np.minimum(self.magnitude_cap(z), p['lum_fct_m_max']))
                       & (photo['m_i'] >= p['gals_mag_min']) & (photo['m_i'] <= p['gals_mag_max']))
             valid[use] &= inside
             ms, phi, alpha = self.luminosity_parameters(z, t)
@@ -214,7 +220,7 @@ class GalSBIContinuousPrior:
             raise ValueError('positive finite surface density required')
         return self.log_intensity(data)-np.log(surface_density)
 
-    def sample(self, n_proposals, seed):
+    def sample(self, n_proposals, seed, *, defer_sersic=False):
         """Independent continuous proposals followed by the intrinsic i-band limits.
 
         Return retained latent/derived values and a binomial normalization
@@ -222,6 +228,8 @@ class GalSBIContinuousPrior:
         ``proposal_index`` identifies retained rows in the original proposal
         order, allowing exact Poisson thinning when building neighbour scenes.
         Neither the GalSBI LF grid sampler nor its morphology samplers is used.
+        defer_sersic=True draws the same Sersic uniforms (same random stream) but returns n = NaN and
+        the uniform as 'sersic_u'; fill_sersic later inverts exactly the values an eager draw gives.
         """
         if not isinstance(n_proposals, (int, np.integer)) or n_proposals < 1:
             raise ValueError('n_proposals must be a positive integer')
@@ -231,6 +239,8 @@ class GalSBIContinuousPrior:
         kinds = rng.choice(len(self.types), n_proposals, p=weights)
         d = {key: np.zeros(n_proposals) for key in ('z', 'M_B', 'R_kpc', 'n', 'a', 'psi')}
         d['type'], d['c'] = kinds, np.zeros((n_proposals, 5))
+        if defer_sersic:
+            d['sersic_u'] = np.full(n_proposals, np.nan)
         photo_all = {}
         cdf_errors = []
         for index, t in enumerate(self.types):
@@ -258,9 +268,11 @@ class GalSBIContinuousPrior:
             # uniforms to keep the stream, but skip their costly inversion.
             kept = (photo['m_i'] >= p['gals_mag_min']) & (photo['m_i'] <= p['gals_mag_max'])
             q = rng.random(n)[kept]
-            a, b = self.sersic_parameters(z[kept], t)
-            low, high = betaprime.cdf(p['sersic_n_min'], a, b), betaprime.cdf(p['sersic_n_max'], a, b)
-            d['n'][use[kept]] = betaprime.ppf(low+q*(high-low), a, b)
+            if defer_sersic:
+                d['n'][use] = np.nan
+                d['sersic_u'][use[kept]] = q
+            else:
+                d['n'][use[kept]] = self._sersic_from_uniform(z[kept], q, t)
             a, b = self.shape_parameters(t)
             d['a'][use] = rng.beta(a, b, n)*p['ell_beta_emax']
             d['psi'][use] = rng.uniform(0, 2*np.pi, n)
@@ -278,6 +290,28 @@ class GalSBIContinuousPrior:
         retained = {k: v[selected] for k, v in (d | photo_all).items()}
         retained['proposal_index'] = np.flatnonzero(selected)
         return retained, metadata
+
+    def _sersic_from_uniform(self, z, q, t):
+        """Truncated betaprime inversion of uniforms q (elementwise in z, q)."""
+        p = self.p
+        a, b = self.sersic_parameters(z, t)
+        low, high = betaprime.cdf(p['sersic_n_min'], a, b), betaprime.cdf(p['sersic_n_max'], a, b)
+        return betaprime.ppf(low+q*(high-low), a, b)
+
+    def fill_sersic(self, data, index):
+        """Invert, in place, the deferred Sersic n of rows ``index`` of a defer_sersic draw that are still NaN."""
+        if 'sersic_u' not in data:
+            return
+        index = np.asarray(index, dtype=np.int64)
+        index = index[np.isnan(data['n'][index])]
+        if not len(index):
+            return
+        if not np.isfinite(data['sersic_u'][index]).all():
+            raise ValueError('deferred Sersic rows lack their uniforms')
+        for i, t in enumerate(self.types):
+            use = index[data['type'][index] == i]
+            if len(use):
+                data['n'][use] = self._sersic_from_uniform(data['z'][use], data['sersic_u'][use], t)
 
     def grid_convergence(self):
         """Compare full and alternate-node trapezoidal luminosity normalizers."""

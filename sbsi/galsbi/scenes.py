@@ -84,10 +84,13 @@ are sampled by thinning the *pre-photometric* Poisson population, so an
 estimated post-cut surface density never enters the sampling algorithm.
 """
 
-    def __init__(self, galaxy_prior, *, aperture_arcsec=10.):
+    def __init__(self, galaxy_prior, *, aperture_arcsec=10., defer_neighbour_sersic=False):
+        """defer_neighbour_sersic: neighbours carry their Sersic uniform and n = NaN until
+        fill_neighbour_sersic inverts them (same random stream and values as an eager draw)."""
         if not np.isfinite(aperture_arcsec) or aperture_arcsec <= 0:
             raise ValueError('positive finite aperture required')
         self.galaxy = galaxy_prior
+        self.defer_neighbour_sersic = bool(defer_neighbour_sersic)
         self.aperture_arcsec = float(aperture_arcsec)
         self.area_arcsec2 = np.pi*self.aperture_arcsec**2
         self.area_sr = self.area_arcsec2/ARCSEC2_PER_SR
@@ -184,11 +187,12 @@ estimated post-cut surface density never enters the sampling algorithm.
         counts_before = rng.poisson(self.galaxy.parent_rate*self.area_sr*intensity_fraction, n_scenes)
         owner_before = np.repeat(np.arange(n_scenes), counts_before)
         if len(owner_before):
-            neighbours = self.galaxy.sample(len(owner_before), int(rng.integers(0, 2**63)))[0]
+            neighbours = self.galaxy.sample(len(owner_before), int(rng.integers(0, 2**63)),
+                                            **self._neighbour_options())[0]
             owner = owner_before[neighbours.pop('proposal_index')]
         else:
             # Supplied target dictionaries may omit generator-only fields.
-            empty = self.galaxy.sample(1, int(rng.integers(0, 2**63)))[0]
+            empty = self.galaxy.sample(1, int(rng.integers(0, 2**63)), **self._neighbour_options())[0]
             neighbours = {k: v[:0].copy() for k, v in empty.items() if k != 'proposal_index'}
             owner = np.empty(0, dtype=int)
         counts = np.bincount(owner, minlength=n_scenes)
@@ -203,6 +207,23 @@ estimated post-cut surface density never enters the sampling algorithm.
                       sampling='Poisson envelope followed by intrinsic population thinning')
         return scenes, report
 
+    def _neighbour_options(self):
+        return dict(defer_sersic=True) if self.defer_neighbour_sersic else {}
+
+    def fill_neighbour_sersic(self, scenes, rows=None):
+        """Invert deferred neighbour Sersic n in place for the scenes ``rows`` (default all).
+
+        Fills the arrays of ``scenes`` itself, so later copies (take/retained) carry the values.
+        """
+        if rows is None:
+            index = np.arange(scenes.indptr[-1])
+        else:
+            rows = np.asarray(rows)
+            counts = scenes.counts[rows]
+            index = (np.repeat(scenes.indptr[rows], counts)
+                     + np.arange(counts.sum())-np.repeat(np.cumsum(counts)-counts, counts))
+        self.galaxy.fill_sersic(scenes.neighbours, index)
+
     def log_kernel(self, scenes):
         """Scene log density up to one constant at fixed population and aperture.
 
@@ -210,6 +231,7 @@ estimated post-cut surface density never enters the sampling algorithm.
         Omits only -Sigma*A-log(Sigma); these terms are independent of the
         target, neighbour count and marks at fixed population parameters.
         """
+        self.fill_neighbour_sersic(scenes)
         owner = scenes.owner
         target = self.galaxy.log_intensity(scenes.targets)
         marks = self.galaxy.log_intensity(scenes.neighbours)-np.log(ARCSEC2_PER_SR)

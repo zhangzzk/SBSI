@@ -81,7 +81,8 @@ class GalSBITargetCoordinates:
         terms = []
         for kind in range(len(self.prior.types)):
             data['type'] = np.full(len(coordinates), kind, dtype=int)
-            terms.append(self.prior.log_intensity(data))
+            # decode already holds this photometry for the same z, M_B, c (elementwise tables)
+            terms.append(self.prior.log_intensity(data, photometry=data))
         terms = np.column_stack(terms)
         total = logsumexp(terms, axis=1)
         probabilities = np.zeros_like(terms)

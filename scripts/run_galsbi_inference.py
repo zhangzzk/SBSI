@@ -205,7 +205,9 @@ def main():
     model = load_disk_response(CANDIDATE, device=args.device, nthread=len(os.sched_getaffinity(0)))
     likelihood = SummaryLikelihood(flow, detector)
     galaxy, cosmo, _ = build_prior()
-    prior = GalSBIScenePrior(galaxy)
+    # Neighbour Sersic n enters only b (response pairs); it is inverted when b needs it, from the
+    # uniform drawn at refresh time, so the random stream and every value equal an eager draw.
+    prior = GalSBIScenePrior(galaxy, defer_neighbour_sersic=True)
     marks = SceneMarks(CANDIDATE.scene_inputs, galaxy) if CANDIDATE.scene_inputs else None
 
     # PyCosmo distances are elementwise (checked batch-independent), so
@@ -230,6 +232,7 @@ def main():
     initialization_started = time.monotonic()
     draws = previous['draws_per_chain']
     bank, _ = prior.sample(nchains*draws, args.initial_bank_seed)
+    prior.fill_neighbour_sersic(bank)
     draw_rng = np.random.default_rng([args.initial_bank_seed, 992])
     zero, ptr, features = scene_model_inputs(bank, prior, angular_distance, conditions,
         response_radius_arcsec=10., response_neighbours=20, marks=marks)
@@ -264,6 +267,8 @@ def main():
         values = np.zeros((nrows, 9))
         logk = np.full(nrows, -np.inf)
         if valid.any():
+            if with_b:
+                prior.fill_neighbour_sersic(scene, np.flatnonzero(valid))
             summary = summarize(scene.take(np.flatnonzero(valid)), aux[valid], with_b)
             logk[valid] = likelihood.log_kernel(summary, observed.loc[valid], *g0)
             values[valid] = summary.values
@@ -275,6 +280,7 @@ def main():
         """Compute the missing b of posterior-level states in place (row-wise, so bitwise the full-evaluation b)."""
         missing = np.flatnonzero(np.isnan(summaries[cold, 8]))
         if len(missing):
+            prior.fill_neighbour_sersic(scene, missing)
             ptr, features = response_pairs(scene.take(missing), prior, angular_distance, conditions,
                                            response_radius_arcsec=10., response_neighbours=20, marks=marks)
             summaries[missing, 8] = CatalogueDiskResponse(ptr, features, model).predict(
@@ -369,6 +375,8 @@ def main():
             # Check the retained state against itself, not an analytically
             # invariant proposal whose reconstructed float32 inputs can differ.
             if invariant_visits[block] % 1024 == 0:
+                if lazy_b and step >= args.warmup:
+                    fill_b(summaries, scene)  # b of posterior-level states as if filled every step
                 valid = np.isfinite(logprior)
                 audit_like, audit_summary = evaluate_scene(scene, valid, with_b=True)
                 invariant_audit['checked_states'] += int(valid.sum())
@@ -420,9 +428,12 @@ def main():
             if (step+1) % COVARIANCE['update_interval'] == 0:
                 morphology_factor = empirical_block_cholesky(np.array(recent), scales[morphology_columns],
                                                              shrinkage=COVARIANCE['shrinkage'])
-        if lazy_b and step+1 >= args.warmup:
-            fill_b(summaries, scene)
         if step >= args.warmup and (step-args.warmup) % args.profile_stride == 0:
+            # b is a row-wise function of the stored state, so filling it only when it is stored
+            # (and before the replay audit) gives the same values as filling it every step.
+            if lazy_b:
+                fill_b(summaries, scene)
+            prior.fill_neighbour_sersic(scene, np.arange(ncold))
             trace.append(x[cold].copy())
             summary_trace.append(summaries[cold].copy())
             type_probability_trace.append(type_probability[cold].copy())
@@ -449,9 +460,10 @@ def main():
     sampling_finished = time.monotonic()
     save(args.output/'invariant_replay.json', invariant_audit)
     scene = scene.take(np.arange(ncold))
+    prior.fill_neighbour_sersic(scene)
     np.savez_compressed(args.output/'final_scenes.npz',
         **{'target_'+k: v for k, v in scene.targets.items()},
-        **{'neighbour_'+k: v for k, v in scene.neighbours.items()},
+        **{'neighbour_'+k: v for k, v in scene.neighbours.items() if k != 'sersic_u'},
         indptr=scene.indptr, offset_arcsec=scene.offset_arcsec)
     histories_saved = time.monotonic()
     trace, summary_trace, comoving_trace = np.array(trace), np.array(summary_trace), np.array(comoving_trace)
