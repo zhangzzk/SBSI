@@ -1,5 +1,43 @@
 # Work log
 
+## 2026-11-09 (evening) — Where a sampler step's time goes (profile, no code change)
+
+Owner: "look deeply into the pipeline and see if we can improve the computation efficiency and speed by a lot".
+
+Profile (`$DATA_DIR/sbsi/speed_profile_20261109/`, job 17856944, cip A40-16Q slice, one process alone on the
+GPU, cProfile, 200k-run source snapshot, 640 steps / 256 warm-up / stride 16, plus-leg galaxies):
+
+- c1 bright, 160 galaxies (5120 rows, 8 levels): sampling 76 s = 119 ms/step. Share of sampling time: neighbour
+  refresh 31% (of which ~85% is the truncated betaprime Sersic cdf/ppf of new neighbours), prior density
+  `log_mixture_prior` 23% (photometry tables called 4x per row), flow+classifier likelihood ~24%, `fill_b`
+  9%, co-moving ratios 5%, scene copies ~7%.
+- c1 faint, 1022 galaxies (4088 rows): sampling 72 s = 113 ms/step. Refresh 27%, prior 23%, likelihood 17%,
+  `fill_b` 20%, co-moving ratios 13%. Setup 68 s, diagnostics 25 s (at full length ~2-3% of a unit).
+- c2 bright, 20 galaxies at (0.02071, 0.00140): 49 ms/step alone vs ~135 ms/step in production.
+- The GPU part (flow density) is a small share; every step is CPU-bound in one Python process.
+- xgboost on GPU: building the DMatrix on one thread costs more than the prediction (faint: 17 s vs 14 s).
+- Production units at full length (200k c1, 80 units each): bright 40-galaxy 149 ms/step, faint 140-galaxy
+  136 ms/step; sampling is 99% / 97% of a unit.
+- Worker layout: `-c 32` gives 16 physical cores plus their hyperthreads (c2 worker 17853252 on kng-cl-nv01:
+  CPUs 2-9,11-18 and siblings 58-65,67-74), so 30 slots share 16 cores. GPU busy 28-37% (batch test).
+
+Candidate changes (not implemented; estimated from the shares above, one profiled run each, so roughly
++-20% relative; cProfile inflates many-small-call Python code):
+
+1. Exact: draw neighbour Sersic uniforms as now but invert only when b needs them (filled in place on the
+   persistent scene). At zero shear b is needed only for stored states. ~-25% bright, ~-23% faint.
+2. Exact: `fill_b` only at profile steps (and before the invariant replay). ~-8% bright, ~-17% faint.
+3. Exact if the photometry tables are row-independent (to check bitwise): reuse decode's photometry in
+   `log_intensity` instead of recomputing per type. ~-7%.
+4. To check bitwise: xgboost `inplace_predict` instead of a new DMatrix per call. ~-2 to -5%.
+   Together 1-4: ~1.7x bright, ~2x faint per slot. Next tier (exact, more work): pandas-free likelihood
+   adapter, block-aware prior caching, one summary pass for the four co-moving nodes (~1.3x more).
+5. Layout, no code: more CPUs per GPU worker (MPS allows 48 clients on V100/A40); e.g. `-c 50` -> 25 physical
+   cores, 48 slots, ~1.5x per GPU if the GPU keeps up; 6 x 50 = 300 CPUs, inside the 500 cap; depends on
+   free cores on the GPU nodes.
+Not proposed: CUDA graphs / other density batches (rejected 2026-10-17, shift log K 3-5e-4; GPU share is small
+anyway), fewer levels or shorter chains (science settings; w8l5 failed Test 1).
+
 ## 2026-11-09 — Batch-size test; bigger sampler batches for future GalSBI image runs
 
 Owner: "run the batch-size test during c2", then "let's do batch-size test first
