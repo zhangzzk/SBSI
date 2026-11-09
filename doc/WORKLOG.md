@@ -1,5 +1,51 @@
 # Work log
 
+## 2026-11-09 — GalSBI image run at 100k galaxies per leg (launched)
+
+Owner: "go ahead with the 200k. shall we do one leg only?" Answer: two paired
+legs of 100k each (200k in total, the same cost as one 200k leg).
+- Scaled from the pilot, two paired legs give m1 ±1.6%. One 200k leg would
+  give m1 ±3.9%, with m1 not separable from c1.
+
+Run: `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_200k_20261109`
+(`rule.md`, `rule.json`, `launch.sh`, `jobs.txt`).
+- Code snapshot 75cc2e5 is identical to the magnitude-coordinate rerun, with
+  the m_model coordinate. The recipe, cuts, unit sizes and estimator are
+  unchanged.
+- New seeds: identity draw Bernoulli(5.2e-3) with seed 20261109 over cases
+  1000-1139, c1 2029100001/2034100001, c2 2029200001/2034200001, selection
+  base 2027408001, bootstrap 20261109.
+- New selection normalization with 8 replicas (the pilot had 4). Its receipts
+  are tied to the new reference.
+- No GPU preflight, because the code is the same as the completed rerun.
+- Workers have a 24 h limit. Step 2 uses 6 workers.
+
+Reference (job 17848346, 4 min):
+- Selected 100,888 plus and 100,940 minus galaxies: 98,870 on both legs,
+  2,018 plus-only and 2,070 minus-only.
+- 2253 c1 units.
+- Unmatched rows dropped across all 140 cases (`reference/selection_report.json`):
+  - plus: 193,917 shapes without a crossmatch, 5,255 unusable;
+  - minus: 197,120 shapes without a crossmatch, 5,376 unusable;
+  - no crossmatch rows without shapes and no matches without truth.
+- The `cluster` queue had about 7,800 jobs pending. The reference job was
+  allowed onto `inter` as well, where it ran on a CPU node (met-cl-vis02).
+
+Jobs:
+- selection array 17848347 (8 tasks, 2 at a time, inter A40);
+- c1 workers 17848348-51, with 17848352-53 after the selection;
+- estimate-c1 17848354, which submits 6 c2 workers and the finish job.
+At 01:30, 3 workers had 90 units sampling with no errors.
+
+Expectation from earlier evidence:
+- Forward response of like-1.0-galsbi on 4 of these scenes: +0.39% ±0.40%.
+- Mock inference (V3.9, older recipe): -0.5% ±0.8%.
+- Together: m1 ≈ -0.1% ±0.9%, plus ±1.6% statistical error.
+- Untested: the mirror symmetry of like-1.0-galsbi in c2, and the effect of
+  poor bright-galaxy (< 21) mixing.
+
+Expected finish: late on 2026-11-09 (c1 ~9 h, c2 ~3 h).
+
 ## 2026-11-09 — GalSBI image pilot rerun with the model-band coordinate
 
 Run: `$DATA_DIR/sbsi/catalogue_prior/galsbi_image_magcoord_20261108`
