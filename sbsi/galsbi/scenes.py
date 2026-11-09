@@ -214,7 +214,10 @@ estimated post-cut surface density never enters the sampling algorithm.
         """Invert deferred neighbour Sersic n in place for the scenes ``rows`` (default all).
 
         Fills the arrays of ``scenes`` itself, so later copies (take/retained) carry the values.
+        A no-op for eager scenes (no 'sersic_u' field).
         """
+        if 'sersic_u' not in scenes.neighbours:
+            return
         if rows is None:
             index = np.arange(scenes.indptr[-1])
         else:
