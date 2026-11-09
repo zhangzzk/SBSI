@@ -1,5 +1,71 @@
 # Work log
 
+## 2026-11-09 — Batch-size test; bigger sampler batches for future GalSBI image runs
+
+Owner: "run the batch-size test during c2", then "let's do batch-size test first
+and use cip", then "use bigger batches for future runs, update the scripts".
+
+Why: the 200k run's c1 took about 12 h on 6 GPUs. Per galaxy per slot, bright
+units ran at 77-89 s and faint units at 20 s, against 24 s and 5.1 s in the
+27 Oct 100k run, which used 609-/1022-galaxy units instead of 40/140.
+
+Test (`$DATA_DIR/sbsi/catalogue_prior/galsbi_image_200k_20261109/batch_test/`,
+job 17853361, 56 min, 0 of 50 sampler runs failed):
+- Same code, model, reference and recipe as c1; chains 1/8 length (2560 steps,
+  1024 warm-up); 10 slots on a cip A40-16Q slice with MPS (inter GPUs were full).
+- Speed at full chain length (± = standard error over the 10 slots):
+
+  | galaxies per process | s per galaxy per slot | galaxies per GPU-hour |
+  |---|---|---|
+  | bright 40 (current) | 42.2 ± 0.2 | 853 ± 3 |
+  | bright 160 | 22.4 ± 0.2 | 1606 ± 12 |
+  | bright 640 | 16.6 ± 0.2 | 2163 ± 20 |
+  | faint 140 (current) | 11.4 ± 0.1 | 3156 ± 25 |
+  | faint 1022 | 3.1 ± 0.0 | 11669 ± 56 |
+
+- A sampler step costs about 60-80 ms whatever the batch size: 40 → 640 bright
+  galaxies (16x) makes a step only 6.3x slower (82 → 520 ms). GPU busy 28-37%,
+  GPU memory under 4 GB for 10 processes.
+- Bigger units are 2.5x faster for bright and 3.7x for faint, which explains
+  most of the slowdown against 27 Oct.
+- Step-size adaptation is per galaxy and chain (`log_scales` rows in
+  `run_galsbi_inference.py`). Batch size changes only which random numbers each
+  galaxy gets and the batched-evaluation rounding.
+- Limitation: 10 slots on a GPU slice, not 30 on a full A40, so the gain in
+  production may differ.
+
+Template: new `scripts/galsbi_image_run/` (study.py, worker.sh, pipeline.sh,
+launch.sh), from the 200k run's scripts.
+- Unit size = min(cap, ceil(galaxies / (slots - 2))), with slots = 30 x stage
+  workers, so each slot gets about one unit. The caps live in `rule.json`
+  `unit_size_caps` (bright 640, faint 1022, bright21 640).
+- Seeds, sample fraction, cases, worker counts and job-name prefix are read
+  from `rule.json`. The run directory is set once with `sed @RUN_DIR@`, and
+  `study.py` uses its own location.
+- The estimator is unchanged: its bootstrap resamples simulation cases, not
+  sampler units.
+
+Validation:
+- `bash -n` on the shell scripts and `py_compile` on `study.py`.
+- Dry run on the 200k reference (read-only):
+  - step-1 bright: 255 per unit (178 units); faint: 879 per unit (179 units);
+    step 2: 46 per unit (176 units), for 180 slots;
+  - all 201,828 step-1 and 8,021 step-2 galaxies in exactly one unit.
+- A fake `sbatch` shows `launch.sh` would submit the same jobs, seeds,
+  fraction, case range and dependencies as the 200k launch.
+- Not yet run end-to-end with real jobs.
+
+Limitation: with one unit per slot, a stage takes two rounds when fewer
+workers start than planned. Today 4 of 5 c2 workers started and the fifth was
+queued until 18:50.
+
+200k run operations, same day:
+- estimate-c1 17848354 was cancelled and resubmitted as 17849980 (5 c2
+  workers plus the batch test).
+- The batch test moved from inter to cip (17853258 cancelled, 17853361 run).
+- c2 workers 17853252-56 were held, then released by the owner at about 14:36.
+- The 200k run itself keeps its recorded unit sizes (40/140/20).
+
 ## 2026-11-09 — GalSBI image run at 100k galaxies per leg (launched)
 
 Owner: "go ahead with the 200k. shall we do one leg only?" Answer: two paired

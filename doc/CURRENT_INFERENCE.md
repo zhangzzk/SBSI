@@ -57,6 +57,7 @@ and source provenance changed. See [the package map](REPOSITORY.md#package-layou
 |---|---|
 | Current continuous-scene sampler | `scripts/run_galsbi_inference.py` |
 | Population/reference preparation | `scripts/prepare_galsbi_population.py`, `scripts/prepare_constgold_inference_input.py`, `scripts/prepare_galsbi_image_reference.py` (GalSBI image legs) |
+| Paired GalSBI image run template | `scripts/galsbi_image_run/` (setup steps in the `launch.sh` header; run values in each run's `rule.json`; unit sizes in `study.py` `write_units`) |
 | Selection normalization and bright follow-up | `scripts/run_galsbi_bright.py`, `scripts/report_galsbi_bright.py` |
 | Core likelihood/prior/proposal implementation | `sbsi/galsbi/likelihood.py`, `sbsi/galsbi/scenes.py`, `sbsi/galsbi/coordinates.py`, `sbsi/galsbi/proposals.py` |
 
